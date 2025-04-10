@@ -1,4 +1,4 @@
-namespace SG01G02_MVC.Application.Interfaces;
+namespace SG01G02_MVC.Application.Interfaces
 {
     public interface IProductService
     {

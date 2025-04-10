@@ -1,4 +1,4 @@
-namespace SG01G02_MVC.Domain.Entities;
+namespace SG01G02_MVC.Domain.Entities
 {
     public class Product
     {
