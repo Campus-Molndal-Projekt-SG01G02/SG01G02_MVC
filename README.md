@@ -19,19 +19,58 @@ SG01G02_MVC/
 │
 ├── SG01G02_MVC.Application/
 │   ├── Interfaces/
+│   │   └── IProductService.cs
 │   └── Services/
+│       └── ProductService.cs
 │
 ├── SG01G02_MVC.Infrastructure/
 │   ├── Data/
+│   │   └── DbContextPlaceholder.cs
 │   ├── Repositories/
 │   └── External/
 │
 ├── SG01G02_MVC.Web/
 │   ├── Controllers/
+│   │   └── HomeController.cs
 │   ├── Views/
+│   │   └── Home/
+│   │       ├── Index.cshtml
+│   │       └── Privacy.cshtml
+│   ├── Models/
+│   │   └── ErrorViewModel.cs
 │   ├── wwwroot/
 │   ├── appsettings.json
 │   └── Program.cs
 │
-└── SG01G02_MVC.sln
+├── SG01G02_MVC.sln
+├── Dockerfile
+├── docker-compose.yml
+├── .env           # <-- Not tracked, keeping environment variables
+└── README.md
+```
+
+---
+
+## Build & Run (Dockerized)
+
+The project can be built and run entirely through Docker using either:
+
+### Local build (for dev/testing)
+
+```bash
+docker-compose up
+```
+This command:  
+- Starts the .NET MVC application container (web)
+- Starts a PostgreSQL container (db) with a persistent volume
+- Injects credentials from a local .env file (not tracked)
+Ensure your .env file is present with:  
+```ini
+POSTGRES_USER=your-user-name
+POSTGRES_PASSWORD=not-my-password
+```
+### Build Docker image manually and push to Docker Hub
+```bash
+docker build -t mymh/sg01g02mvc:latest .
+docker push mymh/sg01g02mvc:latest
 ```
