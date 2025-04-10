@@ -51,7 +51,7 @@ wwwroot/lib/
 # CI/CD scripts, artifacts etc
 ############################
 
-# Om du får en script-fil t.ex. `ci-deploy.ps1` så kan du ignorera tillfälliga outputs
+# If you get a script file ex. `ci-deploy.ps1` you can ignore the temporary outputs
 *.sh~
 *.bak
 *.swp
@@ -64,7 +64,7 @@ ci-artifacts/
 # Docker / Container-related
 ############################
 
-# Docker build cache och secrets
+# Docker build cache and secrets
 docker-compose.override.yml
 .docker/
 *.env
