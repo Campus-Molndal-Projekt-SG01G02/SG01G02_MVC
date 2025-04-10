@@ -1,0 +1,78 @@
+############################
+# .NET / ASP.NET / Razor
+############################
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.vs/
+
+# Publish folders
+out/
+wwwroot/lib/
+*.db
+
+############################
+# IDE-specific
+############################
+
+# VS Code
+.vscode/
+
+# Cursor (builds on VS Code, share config)
+.cursor/
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Rider-specific caches
+.idea/.idea.*
+.idea/.idea_modules/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+.idea/shelf/
+.idea/httpRequests
+
+############################
+# GitHub Actions
+############################
+
+# Keep workflow-files, ignore temporary/outputs
+.github/workflows/*.log
+.github/workflows/tmp/
+.github/workflows/**/*.temp
+
+############################
+# CI/CD scripts, artifacts etc
+############################
+
+# Om du får en script-fil t.ex. `ci-deploy.ps1` så kan du ignorera tillfälliga outputs
+*.sh~
+*.bak
+*.swp
+*.tmp
+deploy-output/
+logs/
+ci-artifacts/
+
+############################
+# Docker / Container-related
+############################
+
+# Docker build cache och secrets
+docker-compose.override.yml
+.docker/
+*.env
+.env.*
+
+############################
+# OS-specific
+############################
+
+.DS_Store
+Thumbs.db
