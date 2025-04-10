@@ -1,4 +1,4 @@
-namespace SG01G02_MVC.Infrastructure.Data;
+namespace SG01G02_MVC.Infrastructure.Data
 {
     public class DbContextPlaceholder
     {
