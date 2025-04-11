@@ -72,5 +72,5 @@ docker build -t mymh/sg01g02mvc:latest .
 ```
 #### Push to Docker Hub  
 ```bash
-docker build -t mymh/sg01g02mvc:latest .
+docker push mymh/sg01g02mvc:latest
 ```
