@@ -10,4 +10,4 @@ The app is built using the following technologies:
 - Docker
 
 # Ci/Cd Pipeline for MVC App
-Builds the MVC App into a Docker Image and sends it to the Docker Hub. Watchtower is running on the VM Appserver that will pull the image and restart the container if it detects a new image. The app is running on port 8080. And it checks every 30 seconds for a new image. 
+Builds the MVC App into a Docker Image and sends it to the Docker Hub. Watchtower is running in a Docker Container on the Azure VM Appserver that will pull the image and restart the container if it detects a new image. The app is running on port 8080. And it checks every 30 seconds for a new image. 
