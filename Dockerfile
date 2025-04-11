@@ -18,6 +18,7 @@
     
     # Expose port
     EXPOSE 80
+    EXPOSE 8080
     
     # Start application
     ENTRYPOINT ["dotnet", "SG01G02_MVC.Web.dll"]
