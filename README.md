@@ -57,7 +57,7 @@ The project can be built and run entirely through Docker using either:
 
 ### Run the application locally
 
-To start the containerized Web app:  
+#### To start the containerized Web app:  
 ```bash
 docker-compose up
 ```
@@ -65,3 +65,12 @@ This will:
 - Run the published .NET MVC app using the image from Docker Hub
 - Expose the application at http://localhost:8080
 - No local database is started — the CI/CD pipeline will inject the connection string to PostgreSQL hosted externally
+  
+#### Build the Docker image locally  
+```bash
+docker build -t mymh/sg01g02mvc:latest .
+```
+#### Push to Docker Hub  
+```bash
+docker build -t mymh/sg01g02mvc:latest .
+```
