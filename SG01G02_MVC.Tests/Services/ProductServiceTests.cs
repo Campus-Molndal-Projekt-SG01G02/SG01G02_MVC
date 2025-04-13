@@ -3,7 +3,7 @@ using SG01G02_MVC.Application.Services;
 using SG01G02_MVC.Domain.Entities;
 using System.Collections.Generic;
 
-namespace SG01G02_MVC.Application.Tests.Services
+namespace SG01G02_MVC.Tests.Services
 {
     public class ProductServiceTests
     {

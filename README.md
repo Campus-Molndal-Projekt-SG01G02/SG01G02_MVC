@@ -15,14 +15,12 @@ SG01G02_MVC/
 │   ├── Interfaces/
 │   │   └── IProductService.cs
 │   ├── Services/
-│   │       └── ProductService.cs
+│   │   └── ProductService.cs
 │   └── SG01G02_MVC.Application.csproj
 │
 ├── SG01G02_MVC.Tests/
-│   ├── SG01G02_MVC.Application.Tests/
-│   │   └── Services/
-│   │       └── ProductServiceTests.cs
-│   ├── SG01G02_MVC.Web.Tests/
+│   ├── Services/
+│   │   └── ProductServiceTests.cs
 │   └── SG01G02_MVC.Infrastructure.Tests/
 │
 ├── SG01G02_MVC.Domain/
