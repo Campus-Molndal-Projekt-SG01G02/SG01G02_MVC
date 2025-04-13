@@ -11,41 +11,49 @@ The structure below reflects this layered architecture:
   
 ```css
 SG01G02_MVC/
-├── SG01G02_MVC.Domain/
-│   └── Entities/
-│       ├── Product.cs
-│       ├── Order.cs
-│       └── CartItem.cs
-│
 ├── SG01G02_MVC.Application/
 │   ├── Interfaces/
 │   │   └── IProductService.cs
-│   └── Services/
-│       └── ProductService.cs
+│   ├── Services/
+│   └── SG01G02_MVC.Application.csproj
+│
+├── SG01G02_MVC.Domain/
+│   ├── Entities/
+│   │   ├── CartItem.cs
+│   │   ├── Order.cs
+│   │   └── Product.cs - DDD-core business concept, no framework dependency (EF) or DTO logic, only definition
+│   └── SG01G02_MVC.Domain.csproj
 │
 ├── SG01G02_MVC.Infrastructure/
 │   ├── Data/
 │   │   └── DbContextPlaceholder.cs
+│   ├── External/
 │   ├── Repositories/
-│   └── External/
+│   └── SG01G02_MVC.Infrastructure.csproj
 │
 ├── SG01G02_MVC.Web/
 │   ├── Controllers/
 │   │   └── HomeController.cs
-│   ├── Views/
-│   │   └── Home/
-│   │       ├── Index.cshtml
-│   │       └── Privacy.cshtml
 │   ├── Models/
 │   │   └── ErrorViewModel.cs
+│   ├── Views/
+│   │   ├── Home/
+│   │   │   ├── Index.cshtml
+│   │   │   └── Privacy.cshtml
+│   │   └── Shared/
+│   │       ├── _Layout.cshtml
+│   │       ├── _ViewImports.cshtml
+│   │       └── _ViewStart.cshtml
 │   ├── wwwroot/
+│   ├── appsettings.Development.json
 │   ├── appsettings.json
-│   └── Program.cs
+│   ├── Program.cs
+│   └── SG01G02_MVC.Web.csproj
 │
 ├── SG01G02_MVC.sln
 ├── Dockerfile
 ├── docker-compose.yml
-├── .env           # <-- Not tracked, keeping environment variables
+├── .gitignore
 └── README.md
 ```
 
