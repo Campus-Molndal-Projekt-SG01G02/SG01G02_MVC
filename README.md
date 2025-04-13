@@ -17,6 +17,13 @@ SG01G02_MVC/
 │   ├── Services/
 │   └── SG01G02_MVC.Application.csproj
 │
+├── SG01G02_MVC.Tests/
+│   ├── SG01G02_MVC.Application.Tests/
+│   │   └── Services/
+│   │       └── ProductServiceTests.cs
+│   ├── SG01G02_MVC.Web.Tests/
+│   └── SG01G02_MVC.Infrastructure.Tests/
+│
 ├── SG01G02_MVC.Domain/
 │   ├── Entities/
 │   │   ├── CartItem.cs
