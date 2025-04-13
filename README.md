@@ -15,6 +15,7 @@ SG01G02_MVC/
 │   ├── Interfaces/
 │   │   └── IProductService.cs
 │   ├── Services/
+│   │       └── ProductService.cs
 │   └── SG01G02_MVC.Application.csproj
 │
 ├── SG01G02_MVC.Tests/
