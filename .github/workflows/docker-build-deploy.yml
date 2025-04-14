@@ -28,6 +28,37 @@ jobs:
           echo "WATCHTOWER_TOKEN=$(az keyvault secret show --name 'watchtower-token' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
           echo "WATCHTOWER_ENDPOINT=http://$(az keyvault secret show --name 'reverse-proxy-ip' --vault-name "$VAULT_NAME" --query 'value' -o tsv):8080" >> $GITHUB_ENV
 
+      # Gör ett test här som kollar att hemligheterna är hämtade
+      - name: Verify secrets were retrieved
+        run: |
+          if [ -z "$DOCKERHUB_USERNAME" ]; then
+            echo "Error: DOCKERHUB_USERNAME is not set"
+            exit 1
+          fi
+
+          if [ -z "$DOCKERHUB_TOKEN" ]; then
+            echo "Error: DOCKERHUB_TOKEN is not set"
+            exit 1
+          fi
+
+          if [ -z "$WATCHTOWER_TOKEN" ]; then
+            echo "Error: WATCHTOWER_TOKEN is not set"
+            exit 1
+          fi
+
+          if [ -z "$WATCHTOWER_ENDPOINT" ]; then
+            echo "Error: WATCHTOWER_ENDPOINT is not set"
+            exit 1
+          fi
+
+          # Maskera hemligheterna i loggen men visa att de existerar
+          echo "DOCKERHUB_USERNAME exists"
+          echo "DOCKERHUB_TOKEN exists"
+          echo "WATCHTOWER_TOKEN exists"
+          echo "WATCHTOWER_ENDPOINT: $WATCHTOWER_ENDPOINT"
+
+          echo "All required secrets were successfully retrieved from Key Vault!"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
