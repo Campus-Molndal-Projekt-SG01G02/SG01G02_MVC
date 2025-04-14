@@ -23,10 +23,51 @@ jobs:
         id: getSecrets
         run: |
           VAULT_NAME="sg01g02kv606my1"
-          echo "DOCKERHUB_USERNAME=$(az keyvault secret show --name 'dockerhub-username' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
-          echo "DOCKERHUB_TOKEN=$(az keyvault secret show --name 'dockerhub-token' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
-          echo "WATCHTOWER_TOKEN=$(az keyvault secret show --name 'watchtower-token' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
-          echo "WATCHTOWER_ENDPOINT=http://$(az keyvault secret show --name 'reverse-proxy-ip' --vault-name "$VAULT_NAME" --query 'value' -o tsv):8080" >> $GITHUB_ENV
+
+          # Verifiera att anslutningen till Key Vault fungerar
+          echo "Checking Key Vault access..."
+          az keyvault list --query "[?name=='$VAULT_NAME'].name" -o tsv
+
+          # Kontrollera om hemligheterna finns
+          echo "Checking if secrets exist..."
+          az keyvault secret list --vault-name "$VAULT_NAME" --query "[].name" -o tsv
+
+          # Hämta hemligheterna med utökad felhantering
+          echo "Fetching dockerhub-username..."
+          DOCKERHUB_USERNAME=$(az keyvault secret show --name 'dockerhub-username' --vault-name "$VAULT_NAME" --query 'value' -o tsv)
+          if [ -z "$DOCKERHUB_USERNAME" ]; then
+            echo "Failed to retrieve dockerhub-username"
+          else
+            echo "dockerhub-username retrieved successfully"
+          fi
+          echo "DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME" >> $GITHUB_ENV
+
+          echo "Fetching dockerhub-token..."
+          DOCKERHUB_TOKEN=$(az keyvault secret show --name 'dockerhub-token' --vault-name "$VAULT_NAME" --query 'value' -o tsv)
+          if [ -z "$DOCKERHUB_TOKEN" ]; then
+            echo "Failed to retrieve dockerhub-token"
+          else
+            echo "dockerhub-token retrieved successfully"
+          fi
+          echo "DOCKERHUB_TOKEN=$DOCKERHUB_TOKEN" >> $GITHUB_ENV
+
+          echo "Fetching watchtower-token..."
+          WATCHTOWER_TOKEN=$(az keyvault secret show --name 'watchtower-token' --vault-name "$VAULT_NAME" --query 'value' -o tsv)
+          if [ -z "$WATCHTOWER_TOKEN" ]; then
+            echo "Failed to retrieve watchtower-token"
+          else
+            echo "watchtower-token retrieved successfully"
+          fi
+          echo "WATCHTOWER_TOKEN=$WATCHTOWER_TOKEN" >> $GITHUB_ENV
+
+          echo "Fetching reverse-proxy-ip..."
+          REVERSE_PROXY_IP=$(az keyvault secret show --name 'reverse-proxy-ip' --vault-name "$VAULT_NAME" --query 'value' -o tsv)
+          if [ -z "$REVERSE_PROXY_IP" ]; then
+            echo "Failed to retrieve reverse-proxy-ip"
+          else
+            echo "reverse-proxy-ip retrieved successfully"
+          fi
+          echo "WATCHTOWER_ENDPOINT=http://$REVERSE_PROXY_IP:8080" >> $GITHUB_ENV
 
       # Gör ett test här som kollar att hemligheterna är hämtade
       - name: Verify secrets were retrieved
