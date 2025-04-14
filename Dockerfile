@@ -1,24 +1,27 @@
 # --- Build stage ---
-    FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-    WORKDIR /app
-    
-    # Copy everything into the container
-    COPY . .
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /app
 
-    # Restore dependencies
-    RUN dotnet restore SG01G02_MVC.sln
-    
-    # Build and publish only.the Web layer
-    RUN dotnet publish SG01G02_MVC.Web/SG01G02_MVC.Web.csproj -c Release -o /app/publish
-    
-    # --- Runtime stage ---
-    FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
-    WORKDIR /app
-    COPY --from=build /app/publish .
-    
-    # Expose port
-    EXPOSE 80
-    EXPOSE 8080
-    
-    # Start application
-    ENTRYPOINT ["dotnet", "SG01G02_MVC.Web.dll"]
+# Copy everything into the container
+COPY . .
+
+# Restore dependencies
+RUN dotnet restore SG01G02_MVC.sln
+
+# Fix project references
+RUN dotnet build SG01G02_MVC.sln -c Release --no-restore
+
+# Build and publish only the Web layer
+RUN dotnet publish SG01G02_MVC.Web/SG01G02_MVC.Web.csproj -c Release -o /app/publish
+
+# --- Runtime stage ---
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+
+# Expose port
+EXPOSE 80
+EXPOSE 8080
+
+# Start application
+ENTRYPOINT ["dotnet", "SG01G02_MVC.Web.dll"]
