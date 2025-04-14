@@ -13,48 +13,48 @@ The structure below reflects this layered architecture:
 SG01G02_MVC/
 ├── SG01G02_MVC.Application/
 │   ├── Interfaces/
-│   │   └── IProductRepository.cs
-│   │   └── IProductService.cs
+│   │   └── IProductRepository.cs - Repository pattern abstraction for fetching products (Infrastructure will implement)
+│   │   └── IProductService.cs - Application service contract defining product-related use cases (used by Web layer)
 │   ├── Services/
-│   │   └── ProductService.cs
+│   │   └── ProductService.cs - Implements IProductService, contains use case logic, delegates to IProductRepository
 │   └── SG01G02_MVC.Application.csproj
 │
 ├── SG01G02_MVC.Domain/
 │   ├── Entities/
-│   │   ├── CartItem.cs
-│   │   ├── Order.cs
+│   │   ├── CartItem.cs - Domain model for cart line item
+│   │   ├── Order.cs - Domain model for customer order
 │   │   └── Product.cs - DDD-core business concept, no framework dependency (EF) or DTO logic, only definition
 │   └── SG01G02_MVC.Domain.csproj
 │
 ├── SG01G02_MVC.Infrastructure/
 │   ├── Data/
-│   │   └── DbContextPlaceholder.cs
+│   │   └── DbContextPlaceholder.cs - Placeholder for EF Core DbContext (will manage DB access in Infrastructure)
 │   ├── External/
 │   ├── Repositories/
+│   │   └── ProductRepository.cs - Implements IProductRepository using EF Core or mock data (depending on environment)
 │   └── SG01G02_MVC.Infrastructure.csproj
 │
 ├── SG01G02_MVC.Tests/
 │   ├── Services/
-│   │   └── ProductServiceTests.cs
+│   │   └── ProductServiceTests.cs - Unit test for ProductService using stubbed dependencies (TDD-driven)
 │   └── SG01G02_MVC.Infrastructure.Tests/
 │
 ├── SG01G02_MVC.Web/
 │   ├── Controllers/
-│   │   └── HomeController.cs
+│   │   └── HomeController.cs - Default MVC controller for routing landing page and basic views
 │   ├── Models/
-│   │   └── ErrorViewModel.cs
+│   │   └── ErrorViewModel.cs - ViewModel used for default error page rendering
 │   ├── Views/
 │   │   ├── Home/
-│   │   │   ├── Index.cshtml
-│   │   │   └── Privacy.cshtml
+│   │   │   ├── Index.cshtml - Razor view for landing page (MVP placeholder)
 │   │   └── Shared/
-│   │       ├── _Layout.cshtml
-│   │       ├── _ViewImports.cshtml
-│   │       └── _ViewStart.cshtml
+│   │       ├── _Layout.cshtml - Shared HTML layout with Bootstrap navigation and structure
+│   │       ├── _ViewImports.cshtml - Razor namespace imports for views
+│   │       └── _ViewStart.cshtml - Razor startup configuration for view rendering
 │   ├── wwwroot/
-│   ├── appsettings.Development.json
-│   ├── appsettings.json
-│   ├── Program.cs
+│   ├── appsettings.Development.json - Development environment configuration
+│   ├── appsettings.json - Base configuration shared across environments
+│   ├── Program.cs - .NET application entry point (configures Web host and services)
 │   └── SG01G02_MVC.Web.csproj
 │
 ├── SG01G02_MVC.sln
