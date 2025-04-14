@@ -93,4 +93,8 @@ jobs:
       # Notifiera Watchtower om att det finns en ny image
       - name: Notify Watchtower
         run: |
-          curl -X POST -H "Authorization: Bearer ${{ env.WATCHTOWER_TOKEN }}" ${{ env.WATCHTOWER_ENDPOINT }}/v1/update
+          echo "Sending notification to Watchtower at $WATCHTOWER_ENDPOINT"
+
+          curl -X POST -H "Authorization: Bearer ${{ env.WATCHTOWER_TOKEN }}" \
+          -m 10 ${{ env.WATCHTOWER_ENDPOINT }}/v1/update || \
+          echo "Watchtower anrop slutfördes inte i tid, men det kan ändå ha lyckats"
