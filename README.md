@@ -13,15 +13,11 @@ The structure below reflects this layered architecture:
 SG01G02_MVC/
 ├── SG01G02_MVC.Application/
 │   ├── Interfaces/
+│   │   └── IProductRepository.cs
 │   │   └── IProductService.cs
 │   ├── Services/
 │   │   └── ProductService.cs
 │   └── SG01G02_MVC.Application.csproj
-│
-├── SG01G02_MVC.Tests/
-│   ├── Services/
-│   │   └── ProductServiceTests.cs
-│   └── SG01G02_MVC.Infrastructure.Tests/
 │
 ├── SG01G02_MVC.Domain/
 │   ├── Entities/
@@ -36,6 +32,11 @@ SG01G02_MVC/
 │   ├── External/
 │   ├── Repositories/
 │   └── SG01G02_MVC.Infrastructure.csproj
+│
+├── SG01G02_MVC.Tests/
+│   ├── Services/
+│   │   └── ProductServiceTests.cs
+│   └── SG01G02_MVC.Infrastructure.Tests/
 │
 ├── SG01G02_MVC.Web/
 │   ├── Controllers/
