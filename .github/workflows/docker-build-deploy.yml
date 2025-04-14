@@ -17,6 +17,17 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Debug Azure Authentication
+        run: |
+          echo "Checking Azure authentication status..."
+          az account show
+
+          echo "Testing Key Vault access..."
+          az keyvault list --query "[?name=='sg01g02kv606my1']" --output table
+
+          echo "Listing available secrets (names only)..."
+          az keyvault secret list --vault-name sg01g02kv606my1 --query "[].name" --output table
+
       # Hämta hemligheter från Azure Key Vault
       - name: Get secrets from Key Vault
         run: |
