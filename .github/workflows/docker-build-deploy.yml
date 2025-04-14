@@ -2,9 +2,8 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build_and_deploy:
@@ -12,18 +11,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # Logga in på Azure med service principal
+      # Logga in på Azure med AZURE_CREDENTIALS från GitHub Secrets
       - name: Azure Login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Hämta hemligheter från Key Vault
+      # Hämta hemligheter från Azure Key Vault
       - name: Get secrets from Key Vault
-        id: getSecrets
         run: |
           VAULT_NAME="sg01g02kv606my1"
 
+          # Hämta värden från Key Vault och sätt dem som miljövariabler
           echo "DOCKERHUB_USERNAME=$(az keyvault secret show --name 'dockerhub-username' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
 
           echo "DOCKERHUB_TOKEN=$(az keyvault secret show --name 'dockerhub-token' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
@@ -32,7 +31,7 @@ jobs:
 
           echo "WATCHTOWER_ENDPOINT=http://$(az keyvault secret show --name 'reverse-proxy-ip' --vault-name "$VAULT_NAME" --query 'value' -o tsv):8080" >> $GITHUB_ENV
 
-      # Gör ett test här som kollar att hemligheterna är hämtade
+      # Verifiera att alla hemligheter hämtades
       - name: Verify secrets were retrieved
         run: |
           if [ -z "$DOCKERHUB_USERNAME" ]; then
@@ -63,6 +62,7 @@ jobs:
 
           echo "All required secrets were successfully retrieved from Key Vault!"
 
+      # Bygg och publicera Docker-imagen
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -77,8 +77,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: mymh/sg01g02mvc:latest
+          tags: ${{ env.DOCKERHUB_USERNAME }}/sg01g02mvc:latest
 
+      # Notifiera Watchtower om att det finns en ny image
       - name: Notify Watchtower
         run: |
-          curl -H "Authorization: Bearer ${{ env.WATCHTOWER_TOKEN }}" ${{ env.WATCHTOWER_ENDPOINT }}/v1/update
+          curl -X POST -H "Authorization: Bearer ${{ env.WATCHTOWER_TOKEN }}" ${{ env.WATCHTOWER_ENDPOINT }}/v1/update
