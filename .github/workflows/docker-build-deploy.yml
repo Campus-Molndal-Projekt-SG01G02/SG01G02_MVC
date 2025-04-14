@@ -92,9 +92,16 @@ jobs:
 
       # Notifiera Watchtower om att det finns en ny image
       - name: Notify Watchtower
+        continue-on-error: true
         run: |
           echo "Sending notification to Watchtower at $WATCHTOWER_ENDPOINT"
 
-          curl -X POST -H "Authorization: Bearer ${{ env.WATCHTOWER_TOKEN }}" \
-          -m 10 ${{ env.WATCHTOWER_ENDPOINT }}/v1/update || \
-          echo "Watchtower anrop slutfördes inte i tid, men det kan ändå ha lyckats"
+          curl -v -X POST \
+          -H "Authorization: Bearer ${{ env.WATCHTOWER_TOKEN }}" \
+          -m 15 ${{ env.WATCHTOWER_ENDPOINT }}/v1/update
+
+      - name: Watchtower Fallback Message
+        if: steps.notify.outcome == 'failure'
+        run: |
+          echo "::warning::Kunde inte notifiera Watchtower direkt, men applikationen kommer ändå att uppdateras inom 30 sekunder via automatisk polling."
+          echo "::notice::Docker-image har publicerats till DockerHub: ${{ env.DOCKERHUB_USERNAME }}/sg01g02mvc:latest"
