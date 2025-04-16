@@ -11,6 +11,21 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # Debug och Test steg
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore SG01G02_MVC.sln
+
+      - name: Build for testing
+        run: dotnet build SG01G02_MVC.sln --no-restore
+
+      - name: Run tests
+        run: dotnet test SG01G02_MVC.sln --no-build --verbosity normal
+
       # Logga in på Azure med AZURE_CREDENTIALS från GitHub Secrets
       - name: Azure Login
         uses: azure/login@v1
