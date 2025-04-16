@@ -8,7 +8,7 @@ namespace SG01G02_MVC.Infrastructure.Repositories
 
     public class ProductRepository : IProductRepository
     {
-        public IEnumerable<Product> GetAll()
+        public IEnumerable<Product> GetAllProducts()
         {
             return new List<Product>
             {
@@ -18,9 +18,9 @@ namespace SG01G02_MVC.Infrastructure.Repositories
             };
         }
 
-        public Product? GetById(int id)
+        public Product? GetProductById(int id)
         {
-            return GetAll().FirstOrDefault(p => p.Id == id);
+            return GetAllProducts().FirstOrDefault(p => p.Id == id);
         }
     }
 }
