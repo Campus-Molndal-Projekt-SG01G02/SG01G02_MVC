@@ -97,3 +97,6 @@ Can also be forced to pull the image by running the following command in the Azu
 ```bash
 curl -H "Authorization: Bearer $WATCHTOWER_TOKEN" -X POST http://$APP_IP:8080/v1/update
 ```
+
+# Blob
+TODO: Glöm inte lägga in "builder.Services.AddSingleton<BlobStorageService>();" i Program.cs.
