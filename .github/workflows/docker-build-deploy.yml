@@ -32,21 +32,20 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Debug Azure Authentication
+      - name: Verify Azure Authentication
         run: |
           echo "Checking Azure authentication status..."
-          az account show
+          az account show --query "name" -o tsv
 
           echo "Testing Key Vault access..."
-          az keyvault list --query "[?name=='sg01g02kv606my1']" --output table
-
-          echo "Listing available secrets (names only)..."
-          az keyvault secret list --vault-name sg01g02kv606my1 --query "[].name" --output table
+          # Använd Key Vault-namnet från GitHub Secrets
+          az keyvault show --name ${{ secrets.AZURE_KEY_VAULT_NAME }} --query "name" -o tsv || \
+            (echo "Error: Could not access Key Vault" && exit 1)
 
       # Hämta hemligheter från Azure Key Vault
       - name: Get secrets from Key Vault
         run: |
-          VAULT_NAME="sg01g02kv606my1"
+          VAULT_NAME="${{ secrets.AZURE_KEY_VAULT_NAME }}"
 
           # Hämta värden från Key Vault och sätt dem som miljövariabler
           echo "DOCKERHUB_USERNAME=$(az keyvault secret show --name 'dockerhub-username' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
