@@ -120,15 +120,15 @@ curl -H "Authorization: Bearer $WATCHTOWER_TOKEN" -X POST http://$APP_IP:8080/v1
 
 ### IPL handles planning and project management  
 Project Leader: Anton Lindgren  
-Project Leader: Olof Bengtsson 
-Project Leader: Pierre Nilsson 
-
+Project Leader: Olof Bengtsson  
+Project Leader: Pierre Nilsson  
+  
 ### MOV sets up infrastructure in Microsoft 365  
-MOV/MS 365 Technician: Max Oredson 
-MOV/MS 365 Technician: Pontus Kroon 
+MOV/MS 365 Technician: Max Oredson  
+MOV/MS 365 Technician: Pontus Kroon  
   
 ### JIN/External "consultant" API for the Review mechanics and integration  
   
 ### CLO handles the Azure infrastructures, CI/CD pipeline and software development  
-CI/CD: Fredrik Svärd - Ansible, Terraform, Azure Infrastructure, Secrets
-Fullstack Developer: Niklas Häll - .NET (backend and Razor/bootstrap frontend), PostgreSQL, Technical documentation for the Project Leading team
+CI/CD: Fredrik Svärd - Ansible, Terraform, Azure Infrastructure, Secrets  
+Fullstack Developer: Niklas Häll - .NET (backend and Razor/bootstrap frontend), PostgreSQL, Technical documentation for the Project Leading team  
