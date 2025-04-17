@@ -15,14 +15,15 @@ SG01G02_MVC/
 │   ├── Interfaces/
 │   │   ├── IProductRepository.cs       - Repository pattern abstraction for fetching products (Infrastructure will implement)
 │   │   ├── IProductService.cs          - Application service contract defining product-related use cases (used by Web layer)
-│   │   └── IAdminService.cs            - Contract for admin login logic (ValidateLogin); TODO: replace with Entra ID/Identity
+│   │   └── IAuthService.cs             - Auth abstraction for login validation and session-aware auth
 │   ├── Services/
 │   │   ├── ProductService.cs           - Implements IProductService, delegates to repository
-│   │   └── AdminService.cs             - Stubbed login logic using hardcoded credentials (pre-Infrastructure refactor)
+│   │   └── AuthService.cs              - Role-based login logic, delegates to IUserRepository
 │   └── SG01G02_MVC.Application.csproj
 │
 ├── SG01G02_MVC.Domain/
 │   ├── Entities/
+│   │   ├── AppUser.cs                  - Represents user identity and role (Admin, Staff, etc.)
 │   │   ├── CartItem.cs                 - Domain model for cart line item
 │   │   ├── Order.cs                    - Domain model for customer order
 │   │   └── Product.cs                  - Core DDD entity, no EF or DTO logic
@@ -35,7 +36,7 @@ SG01G02_MVC/
 │   ├── Migrations/                     - EF Migrations
 │   ├── Repositories/
 │   │   ├── ProductRepository.cs        - Implements IProductRepository using EF Core
-│   │   └── AdminUserRepository.cs      - Stubbed IAdminService implementation using hardcoded admin credentials
+│   │   └── AuthService.cs              - Implements IAuthService via EF (DB) user lookup
 │   ├── Services/
 │   │   └── BlobStorageService.cs       - Handles image uploads via Azure Blob Storage (stubbed for MVP)
 │   └── SG01G02_MVC.Infrastructure.csproj
@@ -43,7 +44,7 @@ SG01G02_MVC/
 ├── SG01G02_MVC.Tests/
 │   ├── Services/
 │   │   ├── ProductServiceTests.cs      - TDD-driven tests for ProductService
-│   │   ├── AdminServiceTests.cs        - TDD tests for ValidateLogin (MVP logic)
+│   │   ├── AuthServiceTests.cs         - TDD tests for role-based login logic
 │   │   └── FakeProductRepository.cs    - In-memory test double for repository logic
 │   └── SG01G02_MVC.Infrastructure.Tests/
 │
@@ -55,6 +56,8 @@ SG01G02_MVC/
 │   │   └── ImageController.cs          - API controller for image upload/delete to Blob Storage
 │   ├── Models/
 │   │   └── ErrorViewModel.cs           - ViewModel used for default error page rendering // TODO: NOT USED ATM
+│   ├── Setup/
+│   │   └── SeederHelper.cs             - Seeds default admin user on app startup (in Web layer to access WebApplication)
 │   ├── Views/
 │   │   ├── Catalogue/
 │   │   │   ├── Index.cshtml            - Razor view listing all products
