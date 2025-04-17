@@ -6,22 +6,28 @@ namespace SG01G02_MVC.Infrastructure.Data
     public class AppDbContext : DbContext
     {
         public DbSet<Product> Products { get; set; }
+        public DbSet<AppUser> AppUsers { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
         }
 
-        // Optional: Fluent API config
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            // Example: enforce required fields
+            
             modelBuilder.Entity<Product>(entity =>
             {
                 entity.Property(p => p.Name).IsRequired();
                 entity.Property(p => p.Price).HasColumnType("decimal(10,2)");
+            });
+
+            modelBuilder.Entity<AppUser>(entity =>
+            {
+                entity.Property(u => u.Username).IsRequired();
+                entity.Property(u => u.PasswordHash).IsRequired();
+                entity.Property(u => u.Role).IsRequired();
             });
         }
     }
