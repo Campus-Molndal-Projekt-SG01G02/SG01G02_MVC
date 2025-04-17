@@ -6,6 +6,7 @@ using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Application.Services;
 using SG01G02_MVC.Infrastructure.Repositories;
 using SG01G02_MVC.Infrastructure.Data;
+using SG01G02_MVC.Web.Setup;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
+
+// Seed default admin - NH design, keeping Program.cs clean as in Clean Architecture
+SeederHelper.SeedAdminUser(app);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
