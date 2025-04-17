@@ -32,16 +32,6 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Verify Azure Authentication
-        run: |
-          echo "Checking Azure authentication status..."
-          az account show --query "name" -o tsv
-
-          echo "Testing Key Vault access..."
-          # Använd Key Vault-namnet från GitHub Secrets
-          az keyvault show --name ${{ secrets.AZURE_KEY_VAULT_NAME }} --query "name" -o tsv || \
-            (echo "Error: Could not access Key Vault" && exit 1)
-
       # Hämta hemligheter från Azure Key Vault
       - name: Get secrets from Key Vault
         run: |
