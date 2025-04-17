@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using System;
 using System.Linq;
 
-namespace SG01G02_MVC.Web.Setup
+namespace SG01G02_MVC.Web.Services
 {
     public static class SeederHelper
     {
