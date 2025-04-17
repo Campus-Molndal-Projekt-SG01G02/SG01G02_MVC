@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="e4657274-116d-4360-ab78-76a77ad51c4f" name="mymh1@THORKEL23 2025-04-17 11:39:13" runUser="THORKEL23\mymh1" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2025-04-17T11:39:13.8851813+02:00" queuing="2025-04-17T11:39:13.8851818+02:00" start="2025-04-17T11:39:12.6856190+02:00" finish="2025-04-17T11:39:13.8942196+02:00" />
+  <TestSettings name="default" id="93af67a1-0c6b-43ea-a497-db16057ce0f1">
+    <Deployment runDeploymentRoot="mymh1_THORKEL23_2025-04-17_11_39_13" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="b093325c-a82e-4b7e-b889-c935292091ce" testId="c1d13784-f114-787f-84a5-a583978b0ef0" testName="SG01G02_MVC.Tests.Services.AdminServiceTests.ValidateLogin_ReturnsExpectedResult(username: &quot;Admin&quot;, password: &quot;password123&quot;, expected: False)" computerName="THORKEL23" duration="00:00:00.0122340" startTime="2025-04-17T11:39:13.6901441+02:00" endTime="2025-04-17T11:39:13.6901442+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b093325c-a82e-4b7e-b889-c935292091ce" />
+    <UnitTestResult executionId="a6b41b19-e69d-4982-a252-467834f51ff0" testId="30351513-1f39-6cde-a206-4bd8540ea83f" testName="SG01G02_MVC.Tests.Services.ProductServiceTests.GetAllProducts_ShouldReturnListOfProducts" computerName="THORKEL23" duration="00:00:00.0083931" startTime="2025-04-17T11:39:13.6864190+02:00" endTime="2025-04-17T11:39:13.6864604+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a6b41b19-e69d-4982-a252-467834f51ff0" />
+    <UnitTestResult executionId="0b9c2b37-fc16-4a53-aa8d-85a9463b0e52" testId="70202198-9f45-1828-9f90-6d151c3875c3" testName="SG01G02_MVC.Tests.Services.AdminServiceTests.ValidateLogin_ReturnsExpectedResult(username: &quot;admin&quot;, password: &quot;wrongpassword&quot;, expected: False)" computerName="THORKEL23" duration="00:00:00.0000181" startTime="2025-04-17T11:39:13.6922307+02:00" endTime="2025-04-17T11:39:13.6922308+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0b9c2b37-fc16-4a53-aa8d-85a9463b0e52" />
+    <UnitTestResult executionId="cff25d68-134d-400f-b278-9987f934afbc" testId="4680f0c1-5f0b-f6eb-4762-53c862921db0" testName="SG01G02_MVC.Tests.Services.AdminServiceTests.ValidateLogin_ReturnsExpectedResult(username: &quot;admin&quot;, password: &quot;password123&quot;, expected: True)" computerName="THORKEL23" duration="00:00:00.0000154" startTime="2025-04-17T11:39:13.6921776+02:00" endTime="2025-04-17T11:39:13.6921777+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cff25d68-134d-400f-b278-9987f934afbc" />
+    <UnitTestResult executionId="f454c931-5fe9-44ef-a64d-ff56178addf9" testId="b7ba5d4a-61b9-4418-fe93-9c383830d08b" testName="SG01G02_MVC.Tests.Services.AdminServiceTests.ValidateLogin_ReturnsExpectedResult(username: &quot;invalid&quot;, password: &quot;invalid&quot;, expected: False)" computerName="THORKEL23" duration="00:00:00.0004156" startTime="2025-04-17T11:39:13.6921011+02:00" endTime="2025-04-17T11:39:13.6921012+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f454c931-5fe9-44ef-a64d-ff56178addf9" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="SG01G02_MVC.Tests.Services.AdminServiceTests.ValidateLogin_ReturnsExpectedResult(username: &quot;admin&quot;, password: &quot;wrongpassword&quot;, expected: False)" storage="c:\devproj\campusmoelndal\sg01g02_mvc\sg01g02_mvc\sg01g02_mvc.tests\bin\debug\net9.0\sg01g02_mvc.tests.dll" id="70202198-9f45-1828-9f90-6d151c3875c3">
+      <Execution id="0b9c2b37-fc16-4a53-aa8d-85a9463b0e52" />
+      <TestMethod codeBase="C:\DevProj\CampusMoelndal\SG01G02_MVC\SG01G02_MVC\SG01G02_MVC.Tests\bin\Debug\net9.0\SG01G02_MVC.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="SG01G02_MVC.Tests.Services.AdminServiceTests" name="ValidateLogin_ReturnsExpectedResult" />
+    </UnitTest>
+    <UnitTest name="SG01G02_MVC.Tests.Services.ProductServiceTests.GetAllProducts_ShouldReturnListOfProducts" storage="c:\devproj\campusmoelndal\sg01g02_mvc\sg01g02_mvc\sg01g02_mvc.tests\bin\debug\net9.0\sg01g02_mvc.tests.dll" id="30351513-1f39-6cde-a206-4bd8540ea83f">
+      <Execution id="a6b41b19-e69d-4982-a252-467834f51ff0" />
+      <TestMethod codeBase="C:\DevProj\CampusMoelndal\SG01G02_MVC\SG01G02_MVC\SG01G02_MVC.Tests\bin\Debug\net9.0\SG01G02_MVC.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="SG01G02_MVC.Tests.Services.ProductServiceTests" name="GetAllProducts_ShouldReturnListOfProducts" />
+    </UnitTest>
+    <UnitTest name="SG01G02_MVC.Tests.Services.AdminServiceTests.ValidateLogin_ReturnsExpectedResult(username: &quot;Admin&quot;, password: &quot;password123&quot;, expected: False)" storage="c:\devproj\campusmoelndal\sg01g02_mvc\sg01g02_mvc\sg01g02_mvc.tests\bin\debug\net9.0\sg01g02_mvc.tests.dll" id="c1d13784-f114-787f-84a5-a583978b0ef0">
+      <Execution id="b093325c-a82e-4b7e-b889-c935292091ce" />
+      <TestMethod codeBase="C:\DevProj\CampusMoelndal\SG01G02_MVC\SG01G02_MVC\SG01G02_MVC.Tests\bin\Debug\net9.0\SG01G02_MVC.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="SG01G02_MVC.Tests.Services.AdminServiceTests" name="ValidateLogin_ReturnsExpectedResult" />
+    </UnitTest>
+    <UnitTest name="SG01G02_MVC.Tests.Services.AdminServiceTests.ValidateLogin_ReturnsExpectedResult(username: &quot;invalid&quot;, password: &quot;invalid&quot;, expected: False)" storage="c:\devproj\campusmoelndal\sg01g02_mvc\sg01g02_mvc\sg01g02_mvc.tests\bin\debug\net9.0\sg01g02_mvc.tests.dll" id="b7ba5d4a-61b9-4418-fe93-9c383830d08b">
+      <Execution id="f454c931-5fe9-44ef-a64d-ff56178addf9" />
+      <TestMethod codeBase="C:\DevProj\CampusMoelndal\SG01G02_MVC\SG01G02_MVC\SG01G02_MVC.Tests\bin\Debug\net9.0\SG01G02_MVC.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="SG01G02_MVC.Tests.Services.AdminServiceTests" name="ValidateLogin_ReturnsExpectedResult" />
+    </UnitTest>
+    <UnitTest name="SG01G02_MVC.Tests.Services.AdminServiceTests.ValidateLogin_ReturnsExpectedResult(username: &quot;admin&quot;, password: &quot;password123&quot;, expected: True)" storage="c:\devproj\campusmoelndal\sg01g02_mvc\sg01g02_mvc\sg01g02_mvc.tests\bin\debug\net9.0\sg01g02_mvc.tests.dll" id="4680f0c1-5f0b-f6eb-4762-53c862921db0">
+      <Execution id="cff25d68-134d-400f-b278-9987f934afbc" />
+      <TestMethod codeBase="C:\DevProj\CampusMoelndal\SG01G02_MVC\SG01G02_MVC\SG01G02_MVC.Tests\bin\Debug\net9.0\SG01G02_MVC.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="SG01G02_MVC.Tests.Services.AdminServiceTests" name="ValidateLogin_ReturnsExpectedResult" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="c1d13784-f114-787f-84a5-a583978b0ef0" executionId="b093325c-a82e-4b7e-b889-c935292091ce" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="30351513-1f39-6cde-a206-4bd8540ea83f" executionId="a6b41b19-e69d-4982-a252-467834f51ff0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="70202198-9f45-1828-9f90-6d151c3875c3" executionId="0b9c2b37-fc16-4a53-aa8d-85a9463b0e52" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4680f0c1-5f0b-f6eb-4762-53c862921db0" executionId="cff25d68-134d-400f-b278-9987f934afbc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b7ba5d4a-61b9-4418-fe93-9c383830d08b" executionId="f454c931-5fe9-44ef-a64d-ff56178addf9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="5" executed="5" passed="5" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 9.0.1)&#xD;
+[xUnit.net 00:00:00.10]   Discovering: SG01G02_MVC.Tests&#xD;
+[xUnit.net 00:00:00.18]   Discovered:  SG01G02_MVC.Tests&#xD;
+[xUnit.net 00:00:00.18]   Starting:    SG01G02_MVC.Tests&#xD;
+[xUnit.net 00:00:00.32]   Finished:    SG01G02_MVC.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>
