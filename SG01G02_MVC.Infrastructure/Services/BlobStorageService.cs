@@ -1,46 +1,43 @@
-using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.IO;
 using System.Threading.Tasks;
 
-public class BlobStorageService
+namespace SG01G02_MVC.Infrastructure.Services
 {
-    private readonly BlobServiceClient _blobServiceClient;
-    private readonly string _containerName;
-
-    public BlobStorageService(IConfiguration configuration)
+    public class BlobStorageService
     {
-        var connectionString = configuration.GetConnectionString("BlobStorage");
-        _containerName = configuration.GetSection("BlobStorageSettings")["ContainerName"];
-        _blobServiceClient = new BlobServiceClient(connectionString);
-    }
+        // public BlobStorageService(IConfiguration configuration)
+        // {
+        //     var connectionString = configuration.GetConnectionString("BlobStorage")
+        //         ?? throw new ArgumentNullException("BlobStorage connection string is missing");
 
-    public async Task<string> UploadImageAsync(IFormFile file)
-    {
-        var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-        var blobClient = containerClient.GetBlobClient(fileName);
+        //     _containerName = configuration["BlobStorageSettings:ContainerName"]
+        //         ?? throw new ArgumentNullException("Blob container name is missing");
 
-        using var stream = file.OpenReadStream();
-        await blobClient.UploadAsync(stream, new BlobHttpHeaders { ContentType = file.ContentType });
+        //     _blobServiceClient = new BlobServiceClient(connectionString);
+        // }
 
-        return blobClient.Uri.ToString();
-    }
+        // Stub properties to keep compiler happy
+        // private readonly BlobServiceClient _blobServiceClient;
+        // private readonly string _containerName;
 
-    public async Task<bool> DeleteImageAsync(string blobName)
-    {
-        var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-        var blobClient = containerClient.GetBlobClient(blobName);
-        return await blobClient.DeleteIfExistsAsync();
-    }
+        public async Task<string> UploadImageAsync(IFormFile file)
+        {
+            // TODO: Replace with real Azure Blob Storage call
+            await Task.Delay(10); // Simulate async delay
+            return "/images/placeholder.jpg"; // Dummy image path
+        }
 
-    public string GetBlobUrl(string blobName)
-    {
-        var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-        var blobClient = containerClient.GetBlobClient(blobName);
-        return blobClient.Uri.ToString();
+        public async Task<bool> DeleteImageAsync(string blobName)
+        {
+            // TODO: Replace with real Azure Blob deletion
+            await Task.Delay(10); // Simulate async delay
+            return true;
+        }
+
+        public string GetBlobUrl(string blobName)
+        {
+            // TODO: Replace with actual blob URI
+            return $"/images/{blobName}";
+        }
     }
 }

@@ -4,7 +4,7 @@ namespace SG01G02_MVC.Application.Interfaces
 {
     public interface IProductRepository
     {
-        IEnumerable<Product> GetAll();
-        Product? GetById(int id);
+        IEnumerable<Product> GetAllProducts();
+        Product? GetProductById(int id);
     }
 }

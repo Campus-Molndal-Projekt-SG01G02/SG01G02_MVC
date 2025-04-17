@@ -13,48 +13,57 @@ The structure below reflects this layered architecture:
 SG01G02_MVC/
 ├── SG01G02_MVC.Application/
 │   ├── Interfaces/
-│   │   └── IProductRepository.cs - Repository pattern abstraction for fetching products (Infrastructure will implement)
-│   │   └── IProductService.cs - Application service contract defining product-related use cases (used by Web layer)
+│   │   └── IProductRepository.cs       - Repository pattern abstraction for fetching products (Infrastructure will implement)
+│   │   └── IProductService.cs          - Application service contract defining product-related use cases (used by Web layer)
 │   ├── Services/
-│   │   └── ProductService.cs - Implements IProductService, contains use case logic, delegates to IProductRepository
+│   │   └── ProductService.cs           - Implements IProductService, contains use case logic, delegates to IProductRepository
 │   └── SG01G02_MVC.Application.csproj
 │
 ├── SG01G02_MVC.Domain/
 │   ├── Entities/
-│   │   ├── CartItem.cs - Domain model for cart line item
-│   │   ├── Order.cs - Domain model for customer order
-│   │   └── Product.cs - DDD-core business concept, no framework dependency (EF) or DTO logic, only definition
+│   │   ├── CartItem.cs                 - Domain model for cart line item
+│   │   ├── Order.cs                    - Domain model for customer order
+│   │   └── Product.cs                  - Core DDD entity, no EF or DTO logic
 │   └── SG01G02_MVC.Domain.csproj
 │
 ├── SG01G02_MVC.Infrastructure/
 │   ├── Data/
-│   │   └── DbContextPlaceholder.cs - Placeholder for EF Core DbContext (will manage DB access in Infrastructure)
+│   │   └── AppDbContext.cs             - EF Core DbContext for managing database access
 │   ├── External/
+│   ├── Migrations/                     - EF Migrations
 │   ├── Repositories/
-│   │   └── ProductRepository.cs - Implements IProductRepository using EF Core or mock data (depending on environment)
+│   │   └── ProductRepository.cs        - Implements IProductRepository using EF Core or mock data (depending on environment)
+│   ├── Services/
+│   │   └── BlobStorageService.cs       - Handles image uploads via Azure Blob Storage (stubbed for MVP)
 │   └── SG01G02_MVC.Infrastructure.csproj
 │
 ├── SG01G02_MVC.Tests/
 │   ├── Services/
-│   │   └── ProductServiceTests.cs - Unit test for ProductService using stubbed dependencies (TDD-driven)
+│   │   ├── ProductServiceTests.cs      - TDD-driven tests for ProductService
+│   │   └── FakeProductRepository.cs    - In-memory test double for repository logic
 │   └── SG01G02_MVC.Infrastructure.Tests/
 │
 ├── SG01G02_MVC.Web/
 │   ├── Controllers/
-│   │   └── HomeController.cs - Default MVC controller for routing landing page and basic views
+│   │   ├── CatalogueController.cs      - Handles product listing and detail views
+│   │   ├── HomeController.cs           - Default MVC controller for routing landing page and basic views
+│   │   └── ImageController.cs          - API controller for image upload/delete to Blob Storage
 │   ├── Models/
-│   │   └── ErrorViewModel.cs - ViewModel used for default error page rendering
+│   │   └── ErrorViewModel.cs           - ViewModel used for default error page rendering // TODO: NOT USED ATM
 │   ├── Views/
+│   │   ├── Catalogue/
+│   │   │   ├── Index.cshtml            - Razor view listing all products
+│   │   │   └── Details.cshtml          - Razor view showing a single product
 │   │   ├── Home/
-│   │   │   ├── Index.cshtml - Razor view for landing page (MVP placeholder)
+│   │   │   └── Index.cshtml            - Razor view for landing page (MVP placeholder)
 │   │   └── Shared/
-│   │       ├── _Layout.cshtml - Shared HTML layout with Bootstrap navigation and structure
-│   │       ├── _ViewImports.cshtml - Razor namespace imports for views
-│   │       └── _ViewStart.cshtml - Razor startup configuration for view rendering
-│   ├── wwwroot/
-│   ├── appsettings.Development.json - Development environment configuration
-│   ├── appsettings.json - Base configuration shared across environments
-│   ├── Program.cs - .NET application entry point (configures Web host and services)
+│   │       ├── _Layout.cshtml          - Shared HTML layout with Bootstrap navigation and structure
+│   │       ├── _ViewImports.cshtml     - Razor namespace imports for views
+│   │       └── _ViewStart.cshtml       - Razor startup configuration for view rendering
+│   ├── wwwroot/                        - Static content root (CSS, JS, images)
+│   ├── appsettings.Development.json    - Environmentals for local development
+│   ├── appsettings.json                - Base configuration shared across environments
+│   ├── Program.cs                      - .NET application entry point (configures Web host and services)
 │   └── SG01G02_MVC.Web.csproj
 │
 ├── SG01G02_MVC.sln
@@ -98,5 +107,19 @@ Can also be forced to pull the image by running the following command in the Azu
 curl -H "Authorization: Bearer $WATCHTOWER_TOKEN" -X POST http://$APP_IP:8080/v1/update
 ```
 
-# Blob
-TODO: Glöm inte lägga in "builder.Services.AddSingleton<BlobStorageService>();" i Program.cs.
+## Team behind this project, their roles and responsibilities:
+
+### IPL handles planning and project management  
+Project Leader: Anton Lindgren  
+Project Leader: Olof Bengtsson 
+Project Leader: Pierre Nilsson 
+
+### MOV sets up infrastructure in Microsoft 365  
+MOV/MS 365 Technician: Max Oredson 
+MOV/MS 365 Technician: Pontus Kroon 
+  
+### JIN/External "consultant" API for the Review mechanics and integration  
+  
+### CLO handles the Azure infrastructures, CI/CD pipeline and software development  
+CI/CD: Fredrik Svärd - Ansible, Terraform, Azure Infrastructure, Secrets
+Fullstack Developer: Niklas Häll - .NET (backend and Razor/bootstrap frontend), PostgreSQL, Technical documentation for the Project Leading team

@@ -1,0 +1,42 @@
+@model SG01G02_MVC.Domain.Entities.Product
+
+@{
+    ViewData["Title"] = "Product Details";
+}
+
+<div class="container mt-4">
+    <h2>@Model.Name</h2>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-6">
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" class="img-fluid mb-3" alt="@Model.Name" />
+            }
+            else
+            {
+                <div class="alert alert-secondary">
+                    No image available.
+                </div>
+            }
+        </div>
+        <div class="col-md-6">
+            <dl class="row">
+                <dt class="col-sm-4">Description</dt>
+                <dd class="col-sm-8">@Model.Description</dd>
+
+                <dt class="col-sm-4">Price</dt>
+                <dd class="col-sm-8">@($"{Model.Price:C}")</dd>
+            </dl>
+
+            <button class="btn btn-primary mt-3" disabled>
+                Add to Cart (coming soon)
+                </button>
+
+            <a asp-controller="Catalogue" asp-action="Index" class="btn btn-outline-secondary">
+                ← Back to Catalogue
+            </a>
+        </div>
+    </div>
+</div>
