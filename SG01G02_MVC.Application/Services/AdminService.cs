@@ -8,7 +8,7 @@ namespace SG01G02_MVC.Application.Services
     {
         public bool ValidateLogin(string username, string password)
         {
-            return username == "admin" && password == "securepassword123";
+            return username == "admin" && password == "password123";
         }
     }
 }
