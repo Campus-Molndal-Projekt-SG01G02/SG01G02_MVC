@@ -13,10 +13,12 @@ The structure below reflects this layered architecture:
 SG01G02_MVC/
 ├── SG01G02_MVC.Application/
 │   ├── Interfaces/
-│   │   └── IProductRepository.cs       - Repository pattern abstraction for fetching products (Infrastructure will implement)
-│   │   └── IProductService.cs          - Application service contract defining product-related use cases (used by Web layer)
+│   │   ├── IProductRepository.cs       - Repository pattern abstraction for fetching products (Infrastructure will implement)
+│   │   ├── IProductService.cs          - Application service contract defining product-related use cases (used by Web layer)
+│   │   └── IAdminService.cs            - Contract for admin login logic (ValidateLogin); TODO: replace with Entra ID/Identity
 │   ├── Services/
-│   │   └── ProductService.cs           - Implements IProductService, contains use case logic, delegates to IProductRepository
+│   │   ├── ProductService.cs           - Implements IProductService, delegates to repository
+│   │   └── AdminService.cs             - Stubbed login logic using hardcoded credentials (pre-Infrastructure refactor)
 │   └── SG01G02_MVC.Application.csproj
 │
 ├── SG01G02_MVC.Domain/
@@ -32,7 +34,8 @@ SG01G02_MVC/
 │   ├── External/
 │   ├── Migrations/                     - EF Migrations
 │   ├── Repositories/
-│   │   └── ProductRepository.cs        - Implements IProductRepository using EF Core or mock data (depending on environment)
+│   │   ├── ProductRepository.cs        - Implements IProductRepository using EF Core
+│   │   └── AdminUserRepository.cs      - Stubbed IAdminService implementation using hardcoded admin credentials
 │   ├── Services/
 │   │   └── BlobStorageService.cs       - Handles image uploads via Azure Blob Storage (stubbed for MVP)
 │   └── SG01G02_MVC.Infrastructure.csproj
@@ -40,6 +43,7 @@ SG01G02_MVC/
 ├── SG01G02_MVC.Tests/
 │   ├── Services/
 │   │   ├── ProductServiceTests.cs      - TDD-driven tests for ProductService
+│   │   ├── AdminServiceTests.cs        - TDD tests for ValidateLogin (MVP logic)
 │   │   └── FakeProductRepository.cs    - In-memory test double for repository logic
 │   └── SG01G02_MVC.Infrastructure.Tests/
 │
@@ -47,6 +51,7 @@ SG01G02_MVC/
 │   ├── Controllers/
 │   │   ├── CatalogueController.cs      - Handles product listing and detail views
 │   │   ├── HomeController.cs           - Default MVC controller for routing landing page and basic views
+│   │   ├── AdminController.cs          - Admin panel for CRUD operations (Index, Create, Edit, Delete)
 │   │   └── ImageController.cs          - API controller for image upload/delete to Blob Storage
 │   ├── Models/
 │   │   └── ErrorViewModel.cs           - ViewModel used for default error page rendering // TODO: NOT USED ATM
@@ -54,6 +59,11 @@ SG01G02_MVC/
 │   │   ├── Catalogue/
 │   │   │   ├── Index.cshtml            - Razor view listing all products
 │   │   │   └── Details.cshtml          - Razor view showing a single product
+│   │   ├── Admin/
+│   │   │   ├── Index.cshtml            - Admin dashboard placeholder
+│   │   │   ├── Create.cshtml           - Form to create a new product (TODO)
+│   │   │   ├── Edit.cshtml             - Form to edit existing product (TODO)
+│   │   │   └── Delete.cshtml           - Confirmation page for product deletion (TODO)
 │   │   ├── Home/
 │   │   │   └── Index.cshtml            - Razor view for landing page (MVP placeholder)
 │   │   └── Shared/
@@ -71,7 +81,6 @@ SG01G02_MVC/
 ├── docker-compose.yml
 ├── .gitignore
 └── README.md
-```
 
 ---
 
