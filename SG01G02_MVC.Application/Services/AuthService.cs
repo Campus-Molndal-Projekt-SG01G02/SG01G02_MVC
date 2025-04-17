@@ -4,7 +4,6 @@ using SG01G02_MVC.Domain.Entities;
 namespace SG01G02_MVC.Application.Services
 {
     /// Authenticates users using the IUserRepository.
-    /// Replaces legacy AdminService with real DB-based logic.
     public class AuthService : IAuthService
     {
         private readonly IUserRepository _userRepository;
