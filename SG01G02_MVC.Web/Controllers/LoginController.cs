@@ -39,7 +39,7 @@ namespace SG01G02_MVC.Web.Controllers
             return user.Role switch
             {
                 "Admin" => RedirectToAction("Index", "Admin"),
-                "Staff" => RedirectToAction("Index", "Staff"),
+                "Staff" => RedirectToAction("Index", "Home"), // TODO: Implement Staff page and adjust to "Staff"
                 "Customer" => RedirectToAction("Index", "Home"), // or a future Account page
                 _ => RedirectToAction("Index", "Home")
             };
