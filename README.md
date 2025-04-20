@@ -53,6 +53,7 @@ SG01G02_MVC/
 │   │   ├── CatalogueController.cs      - Handles product listing and detail views
 │   │   ├── HomeController.cs           - Default MVC controller for routing landing page and basic views
 │   │   ├── AdminController.cs          - Admin panel for CRUD operations (Index, Create, Edit, Delete)
+│   │   ├── StaffController.cs          - TODO: Extend to list all orders (read-only) once OrderService is ready. (Role: Staff only)
 │   │   ├── ImageController.cs          - Handles image upload/delete (API)
 │   │   └── LoginController.cs          - Shared login/logout for all roles
 │   ├── Models/
@@ -69,6 +70,8 @@ SG01G02_MVC/
 │   │   │   ├── Create.cshtml           - Form to create a new product (TODO)
 │   │   │   ├── Edit.cshtml             - Form to edit existing product (TODO)
 │   │   │   └── Delete.cshtml           - Confirmation page for product deletion (TODO)
+│   │   ├── Staff/
+│   │   │   ├── Index.cshtml            - Staff dashboard placeholder
 │   │   ├── Home/
 │   │   │   └── Index.cshtml            - Razor view for landing page (MVP placeholder)
 │   │   └── Shared/
@@ -86,7 +89,6 @@ SG01G02_MVC/
 ├── docker-compose.yml
 ├── .gitignore
 └── README.md
-
 ---
 
 ## Build & Run (Dockerized)

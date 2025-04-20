@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Web.Services;
+using SG01G02_MVC.Web.Models;
 
 namespace SG01G02_MVC.Web.Controllers
 {
@@ -22,25 +23,29 @@ namespace SG01G02_MVC.Web.Controllers
         }
 
         [HttpPost]
-        public IActionResult Index(string username, string password)
+        public IActionResult Index(LoginViewModel model)
         {
-            var user = _authService.ValidateLogin(username, password);
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = _authService.ValidateLogin(model.Username, model.Password);
 
             if (user == null)
             {
                 ViewBag.LoginFailed = true;
-                return View();
+                return View(model);
             }
 
             _session.Username = user.Username;
             _session.Role = user.Role;
 
-            // Redirect based on role
             return user.Role switch
             {
                 "Admin" => RedirectToAction("Index", "Admin"),
-                "Staff" => RedirectToAction("Index", "Home"), // TODO: Implement Staff page and adjust to "Staff"
-                "Customer" => RedirectToAction("Index", "Home"), // or a future Account page
+                "Staff" => RedirectToAction("Index", "Staff"),
+                "Customer" => RedirectToAction("Index", "Home"),
                 _ => RedirectToAction("Index", "Home")
             };
         }

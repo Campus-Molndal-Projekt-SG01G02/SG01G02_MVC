@@ -1,0 +1,14 @@
+@{
+    ViewData["Title"] = "Staff Dashboard";
+}
+
+<h2>Staff Dashboard</h2>
+
+@if (ViewBag.Message != null)
+{
+    <div class="alert alert-info">
+        @ViewBag.Message
+    </div>
+}
+
+<!-- TODO: Render orders (read-only) here -->
