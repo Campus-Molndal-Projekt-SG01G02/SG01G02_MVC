@@ -123,6 +123,12 @@ Can also be forced to pull the image by running the following command in the Azu
 curl -H "Authorization: Bearer $WATCHTOWER_TOKEN" -X POST http://$APP_IP:8080/v1/update
 ```
 
+## Log-in rules:
+
+We have three roles (admin, staff, customer) which is handled through the database. Access rules are controlled via session and role handling in Razor. Session is 30 minutes or until log-off and roles are set upon validation on log-in. Using Data annotation and safety measures like hashed passwords to handle secure logins.
+
+---
+
 ## Team behind this project, their roles and responsibilities:
 
 ### IPL handles planning and project management  
