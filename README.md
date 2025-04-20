@@ -54,11 +54,13 @@ SG01G02_MVC/
 │   │   ├── HomeController.cs           - Default MVC controller for routing landing page and basic views
 │   │   ├── AdminController.cs          - Admin panel for CRUD operations (Index, Create, Edit, Delete)
 │   │   ├── StaffController.cs          - TODO: Extend to list all orders (read-only) once OrderService is ready. (Role: Staff only)
-│   │   └── ImageController.cs          - API controller for image upload/delete to Blob Storage
+│   │   ├── ImageController.cs          - Handles image upload/delete (API)
+│   │   └── LoginController.cs          - Shared login/logout for all roles
 │   ├── Models/
 │   │   └── ErrorViewModel.cs           - ViewModel used for default error page rendering // TODO: NOT USED ATM
 │   ├── Setup/
-│   │   └── SeederHelper.cs             - Seeds default admin user on app startup (in Web layer to access WebApplication)
+│   │   ├── SeederHelper.cs             - Seeds default admin user on startup (used in Program.cs)
+│   │   └── UserSessionService.cs       - Wraps access to session data (role, username)
 │   ├── Views/
 │   │   ├── Catalogue/
 │   │   │   ├── Index.cshtml            - Razor view listing all products
