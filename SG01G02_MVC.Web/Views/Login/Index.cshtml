@@ -1,24 +1,27 @@
+@model SG01G02_MVC.Web.Models.LoginViewModel
+
 @{
     ViewData["Title"] = "Login";
 }
 
 <h2>Login</h2>
 
-<form method="post">
+<form asp-action="Index" method="post">
     <div class="form-group">
-        <label for="username">Username</label>
-        <input name="username" id="username" class="form-control" required />
+        <label asp-for="Username"></label>
+        <input asp-for="Username" class="form-control" />
+        <span asp-validation-for="Username" class="text-danger"></span>
     </div>
 
-    <div class="form-group mt-2">
-        <label for="password">Password</label>
-        <input type="password" name="password" id="password" class="form-control" required />
+    <div class="form-group">
+        <label asp-for="Password"></label>
+        <input asp-for="Password" class="form-control" />
+        <span asp-validation-for="Password" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary mt-3">Login</button>
-
-    @if (ViewBag.LoginFailed == true)
-    {
-        <div class="alert alert-danger mt-3">Invalid credentials</div>
-    }
+    <button type="submit" class="btn btn-primary">Login</button>
 </form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
