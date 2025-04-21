@@ -1,8 +1,5 @@
-using Xunit;
 using SG01G02_MVC.Application.Services;
-using SG01G02_MVC.Domain.Entities;
-using System.Collections.Generic;
-using SG01G02_MVC.Tests.Services;
+using SG01G02_MVC.Application.DTOs;
 
 namespace SG01G02_MVC.Tests.Services
 {
@@ -20,7 +17,7 @@ namespace SG01G02_MVC.Tests.Services
 
             // Assert
             Assert.NotNull(result);
-            Assert.IsType<List<Product>>(result);
+            Assert.IsAssignableFrom<IEnumerable<ProductDto>>(result);
         }
     }
 }

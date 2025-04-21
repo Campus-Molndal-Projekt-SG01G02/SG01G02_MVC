@@ -1,7 +1,5 @@
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Domain.Entities;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace SG01G02_MVC.Tests.Services
 {
@@ -9,8 +7,8 @@ namespace SG01G02_MVC.Tests.Services
     {
         private readonly List<Product> _products = new()
         {
-            new Product { Id = 1, Name = "Test Product 1", Price = 100 },
-            new Product { Id = 2, Name = "Test Product 2", Price = 200 }
+            new Product { Id = 1, Name = "Test Product 1", Price = 10.0m },
+            new Product { Id = 2, Name = "Test Product 2", Price = 20.0m }
         };
 
         public IEnumerable<Product> GetAllProducts()
@@ -21,6 +19,33 @@ namespace SG01G02_MVC.Tests.Services
         public Product? GetProductById(int id)
         {
             return _products.FirstOrDefault(p => p.Id == id);
+        }
+
+        public Task CreateProductAsync(Product product)
+        {
+            _products.Add(product);
+            return Task.CompletedTask;
+        }
+
+        public Task UpdateProductAsync(Product product)
+        {
+            var existing = _products.FirstOrDefault(p => p.Id == product.Id);
+            if (existing != null)
+            {
+                existing.Name = product.Name;
+                existing.Price = product.Price;
+            }
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteProductAsync(int id)
+        {
+            var product = _products.FirstOrDefault(p => p.Id == id);
+            if (product != null)
+            {
+                _products.Remove(product);
+            }
+            return Task.CompletedTask;
         }
     }
 }

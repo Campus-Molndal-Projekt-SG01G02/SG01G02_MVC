@@ -6,5 +6,8 @@ namespace SG01G02_MVC.Application.Interfaces
     {
         IEnumerable<Product> GetAllProducts();
         Product? GetProductById(int id);
+        Task CreateProductAsync(Product product);
+        Task UpdateProductAsync(Product product);
+        Task DeleteProductAsync(int id);
     }
 }
