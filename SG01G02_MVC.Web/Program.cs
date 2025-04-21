@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Application.Services;
@@ -20,7 +17,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddHttpContextAccessor(); // Needed to access HttpContext in services
-builder.Services.AddScoped<UserSessionService>();
+builder.Services.AddScoped<IUserSessionService, UserSessionService>();
 
 // Add session support
 builder.Services.AddDistributedMemoryCache();

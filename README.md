@@ -12,6 +12,8 @@ The structure below reflects this layered architecture:
 ```css
 SG01G02_MVC/
 ├── SG01G02_MVC.Application/
+│   ├── DTOs/
+│   │   └── ProductDto.cs               - Data Transfer Object used in Application and Web layers
 │   ├── Interfaces/
 │   │   ├── IProductRepository.cs       - Repository pattern abstraction for fetching products (Infrastructure will implement)
 │   │   ├── IProductService.cs          - Application service contract defining product-related use cases (used by Web layer)
@@ -42,6 +44,9 @@ SG01G02_MVC/
 │   └── SG01G02_MVC.Infrastructure.csproj
 │
 ├── SG01G02_MVC.Tests/
+│   ├── Controllers/
+│   │   ├── AdminControllerTests.cs     - Unit tests for Admin access and redirection logic
+│   │   └── LoginControllerTests.cs     - Unit tests for login flow using mock services
 │   ├── Services/
 │   │   ├── ProductServiceTests.cs      - TDD-driven tests for ProductService
 │   │   ├── AuthServiceTests.cs         - TDD tests for role-based login logic
@@ -57,8 +62,9 @@ SG01G02_MVC/
 │   │   ├── ImageController.cs          - Handles image upload/delete (API)
 │   │   └── LoginController.cs          - Shared login/logout for all roles
 │   ├── Models/
-│   │   └── ErrorViewModel.cs           - ViewModel used for default error page rendering // TODO: NOT USED ATM
-│   ├── Setup/
+│   │   ├── ErrorViewModel.cs           - ViewModel for error page rendering // TODO: not used yet
+│   │   └── LoginViewModel.cs           - ViewModel for login form input validation
+│   ├── Services/
 │   │   ├── SeederHelper.cs             - Seeds default admin user on startup (used in Program.cs)
 │   │   └── UserSessionService.cs       - Wraps access to session data (role, username)
 │   ├── Views/
@@ -89,6 +95,8 @@ SG01G02_MVC/
 ├── docker-compose.yml
 ├── .gitignore
 └── README.md
+```
+
 ---
 
 ## Build & Run (Dockerized)

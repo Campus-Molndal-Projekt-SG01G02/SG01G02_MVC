@@ -8,9 +8,9 @@ namespace SG01G02_MVC.Web.Controllers
     public class LoginController : Controller
     {
         private readonly IAuthService _authService;
-        private readonly UserSessionService _session;
+        private readonly IUserSessionService _session;
 
-        public LoginController(IAuthService authService, UserSessionService session)
+        public LoginController(IAuthService authService, IUserSessionService session)
         {
             _authService = authService;
             _session = session;

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace SG01G02_MVC.Web.Services
 {
-    public class UserSessionService
+    public class UserSessionService : IUserSessionService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
 
