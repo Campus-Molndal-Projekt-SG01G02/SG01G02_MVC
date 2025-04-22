@@ -50,7 +50,8 @@ namespace SG01G02_MVC.Application.Services
             {
                 Id = product.Id,
                 Name = product.Name,
-                Price = product.Price
+                Price = product.Price,
+                Description = product.Description   
             };
         }
 
@@ -60,7 +61,8 @@ namespace SG01G02_MVC.Application.Services
             {
                 Id = dto.Id,
                 Name = dto.Name,
-                Price = dto.Price
+                Price = dto.Price,
+                Description = dto.Description
             };
         }
     }
