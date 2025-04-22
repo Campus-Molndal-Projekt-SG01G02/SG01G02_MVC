@@ -1,42 +1,49 @@
 @model SG01G02_MVC.Domain.Entities.Product
+@inject SG01G02_MVC.Web.Services.IUserSessionService _session
 
 @{
-    ViewData["Title"] = "Product Details";
+    ViewData["Title"] = Model.Name;
 }
 
 <div class="container mt-4">
     <h2>@Model.Name</h2>
     <hr />
 
-    <div class="row">
-        <div class="col-md-6">
-            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+    <dl class="row">
+        <dt class="col-sm-2">Description</dt>
+        <dd class="col-sm-10">@Model.Description</dd>
+
+        <dt class="col-sm-2">Price</dt>
+        <dd class="col-sm-10">@($"{Model.Price:C}")</dd>
+
+        <dt class="col-sm-2">Stock Status</dt>
+        <dd class="col-sm-10">
+            @if (Model.StockQuantity > 0)
             {
-                <img src="@Model.ImageUrl" class="img-fluid mb-3" alt="@Model.Name" />
+                <span class="text-success">In Stock</span>
             }
             else
             {
-                <div class="alert alert-secondary">
-                    No image available.
-                </div>
+                <span class="text-danger">Out of Stock</span>
             }
-        </div>
-        <div class="col-md-6">
-            <dl class="row">
-                <dt class="col-sm-4">Description</dt>
-                <dd class="col-sm-8">@Model.Description</dd>
+        </dd>
+    </dl>
 
-                <dt class="col-sm-4">Price</dt>
-                <dd class="col-sm-8">@($"{Model.Price:C}")</dd>
-            </dl>
-
-            <button class="btn btn-primary mt-3" disabled>
-                Add to Cart (coming soon)
-                </button>
-
-            <a asp-controller="Catalogue" asp-action="Index" class="btn btn-outline-secondary">
-                ← Back to Catalogue
+    @if (_session?.Role == "Admin")
+    {
+        <div class="mt-3">
+            <a asp-controller="Admin" asp-action="EditProduct" asp-route-id="@Model.Id" class="btn btn-outline-warning me-2">
+                Edit Product
+            </a>
+            <a asp-controller="Admin" asp-action="DeleteProduct" asp-route-id="@Model.Id" class="btn btn-outline-danger me-2">
+                Delete Product
+            </a>
+            <a asp-controller="Admin" asp-action="AddProduct" class="btn btn-outline-success">
+                Add New Product
             </a>
         </div>
-    </div>
+    }
+    <a asp-controller="Catalogue" asp-action="Index" class="btn btn-secondary">
+        Back to Catalogue
+    </a>
 </div>

@@ -3,6 +3,7 @@ using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Application.DTOs;
 using SG01G02_MVC.Web.Models;
 using SG01G02_MVC.Infrastructure.Data;
+using SG01G02_MVC.Web.Services;
 
 namespace SG01G02_MVC.Web.Controllers
 {
@@ -10,78 +11,77 @@ namespace SG01G02_MVC.Web.Controllers
     {
         private readonly IProductService _productService;
         private readonly AppDbContext _context;
+        private readonly IUserSessionService _session;
 
-        public AdminController(IProductService productService, AppDbContext context)
+        public AdminController(IProductService productService, AppDbContext context, IUserSessionService session)
         {
             _productService = productService;
             _context = context;
+            _session = session;
         }
 
+        // Admin Landing Page (Dashboard)
         public IActionResult Index()
         {
-            // Gracefully handle if database is unavailable (e.g. CI/CD fallback)
             if (!_context.Database.CanConnect())
-            {
-                // Views/Shared/DatabaseUnavailable.cshtml
                 return View("DatabaseUnavailable");
-            }
 
-            // Auth check: only allow authenticated Admins
-            if (!User.Identity?.IsAuthenticated ?? true || !User.IsInRole("Admin"))
-            {
+            if (_session?.Role != "Admin")
                 return RedirectToAction("Index", "Login");
-            }
 
             var products = _productService.GetAllProducts();
             return View(products);
         }
 
+        // CREATE Product
         [HttpGet]
-        public IActionResult Create()
+        public IActionResult AddProduct()
         {
-            return View();
+            return View("Create"); // Reuse Create.cshtml
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(ProductViewModel model)
+        public async Task<IActionResult> AddProduct(ProductViewModel model)
         {
             if (!ModelState.IsValid)
-                return View(model);
+                return View("Create", model);
 
             await _productService.CreateProductAsync(MapToDto(model));
             return RedirectToAction("Index");
         }
 
+        // EDIT Product
         [HttpGet]
-        public IActionResult Edit(int id)
+        public IActionResult EditProduct(int id)
         {
             var dto = _productService.GetProductById(id);
             if (dto == null)
                 return NotFound();
 
             var vm = MapToViewModel(dto);
-            return View(vm);
+            return View("Edit", vm);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(int id, ProductViewModel model)
+        public async Task<IActionResult> EditProduct(int id, ProductViewModel model)
         {
             if (!ModelState.IsValid)
-                return View(model);
+                return View("Edit", model);
 
             await _productService.UpdateProductAsync(MapToDto(model));
             return RedirectToAction("Index");
         }
 
+        // DELETE Product
         [HttpGet]
-        public IActionResult Delete(int id)
+        public IActionResult DeleteProduct(int id)
         {
             var dto = _productService.GetProductById(id);
             if (dto == null)
                 return NotFound();
 
             var vm = MapToViewModel(dto);
-            return View(vm);
+            return View("Delete", vm);
         }
 
         [HttpPost]
@@ -91,15 +91,17 @@ namespace SG01G02_MVC.Web.Controllers
             return RedirectToAction("Index");
         }
 
-        // --- Private Mapping Helpers ---
-
+        // Mapping Helpers (DTO <-> ViewModel)
         private ProductDto MapToDto(ProductViewModel vm)
         {
             return new ProductDto
             {
                 Id = vm.Id,
                 Name = vm.Name,
-                Price = vm.Price
+                Description = vm.Description,
+                Price = vm.Price,
+                StockQuantity = vm.StockQuantity,
+                ImageUrl = vm.ImageUrl
             };
         }
 
@@ -109,7 +111,10 @@ namespace SG01G02_MVC.Web.Controllers
             {
                 Id = dto.Id,
                 Name = dto.Name,
-                Price = dto.Price
+                Description = dto.Description,
+                Price = dto.Price,
+                StockQuantity = dto.StockQuantity,
+                ImageUrl = dto.ImageUrl
             };
         }
     }

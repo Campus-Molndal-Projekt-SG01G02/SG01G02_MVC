@@ -51,7 +51,9 @@ namespace SG01G02_MVC.Application.Services
                 Id = product.Id,
                 Name = product.Name,
                 Price = product.Price,
-                Description = product.Description   
+                Description = product.Description,
+                StockQuantity = product.StockQuantity,
+                ImageUrl = product.ImageUrl
             };
         }
 
@@ -62,7 +64,9 @@ namespace SG01G02_MVC.Application.Services
                 Id = dto.Id,
                 Name = dto.Name,
                 Price = dto.Price,
-                Description = dto.Description
+                Description = dto.Description,
+                StockQuantity = dto.StockQuantity,
+                ImageUrl = dto.ImageUrl
             };
         }
     }
