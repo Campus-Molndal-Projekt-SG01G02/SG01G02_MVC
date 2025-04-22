@@ -6,10 +6,11 @@ using SG01G02_MVC.Web.Models;
 using SG01G02_MVC.Application.Interfaces;
 using System.Security.Claims;
 using SG01G02_MVC.Application.DTOs;
+using SG01G02_MVC.Tests.Helpers;
 
 namespace SG01G02_MVC.Tests.Controllers
 {
-    public class AdminControllerTests
+    public class AdminControllerTests : TestBase
     {
         [Fact]
         public void Index_UnauthenticatedUser_ShouldRedirectToLogin()

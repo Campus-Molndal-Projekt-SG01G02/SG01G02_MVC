@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SG01G02_MVC.Application.Interfaces;
-using SG01G02_MVC.Domain.Entities;
+using SG01G02_MVC.Web.Models;
+using SG01G02_MVC.Application.DTOs;
 
 namespace SG01G02_MVC.Web.Controllers
 {
@@ -8,26 +9,23 @@ namespace SG01G02_MVC.Web.Controllers
     {
         private readonly IProductService _productService;
 
-public CatalogueController(IProductService productService)
-{
-    _productService = productService;
-}
+        public CatalogueController(IProductService productService)
+        {
+            _productService = productService;
+        }
 
         public IActionResult Index()
         {
-            var products = _productService.GetAllProducts();
-            return View(products);
-        }
+            var dtos = _productService.GetAllProducts();
 
-        public IActionResult Details(int id)
-        {
-            var product = _productService.GetProductById(id);
-            if (product == null)
+            var viewModels = dtos.Select(dto => new ProductViewModel
             {
-                return NotFound();
-            }
+                Id = dto.Id,
+                Name = dto.Name,
+                Price = dto.Price
+            }).ToList();
 
-            return View(product);
+            return View(viewModels);
         }
     }
 }
