@@ -17,7 +17,8 @@ namespace SG01G02_MVC.Tests.Controllers
         {
             // Arrange
             var mockProductService = new Mock<IProductService>();
-            var controller = new AdminController(mockProductService.Object);
+            var context = GetInMemoryDbContext(); // Inherit from TestBase
+            var controller = new AdminController(mockProductService.Object, context);
 
             controller.ControllerContext = new ControllerContext()
             {
@@ -38,7 +39,8 @@ namespace SG01G02_MVC.Tests.Controllers
         {
             // Arrange
             var mockProductService = new Mock<IProductService>();
-            var controller = new AdminController(mockProductService.Object);
+            var context = GetInMemoryDbContext(); // Inherit from TestBase
+            var controller = new AdminController(mockProductService.Object, context);
 
             var identity = new ClaimsIdentity(new[]
             {
@@ -64,7 +66,8 @@ namespace SG01G02_MVC.Tests.Controllers
         {
             // Arrange
             var mockService = new Mock<IProductService>();
-            var controller = new AdminController(mockService.Object);
+                var context = GetInMemoryDbContext(); // Inherit from TestBase
+            var controller = new AdminController(mockService.Object, context);
             var product = new ProductViewModel { Name = "Test", Price = 10 };
 
             // Act
@@ -80,7 +83,8 @@ namespace SG01G02_MVC.Tests.Controllers
         public async Task Edit_ValidProduct_RedirectsToIndex()
         {
             var mockService = new Mock<IProductService>();
-            var controller = new AdminController(mockService.Object);
+            var context = GetInMemoryDbContext(); // Inherit from TestBase
+            var controller = new AdminController(mockService.Object, context);
             var product = new ProductViewModel { Id = 1, Name = "Updated", Price = 15 };
 
             var result = await controller.Edit(1, product);
@@ -94,7 +98,8 @@ namespace SG01G02_MVC.Tests.Controllers
         public async Task Delete_Confirmed_DeletesProductAndRedirects()
         {
             var mockService = new Mock<IProductService>();
-            var controller = new AdminController(mockService.Object);
+            var context = GetInMemoryDbContext(); // Inherit from TestBase
+            var controller = new AdminController(mockService.Object, context);
 
             var result = await controller.DeleteConfirmed(1);
 
