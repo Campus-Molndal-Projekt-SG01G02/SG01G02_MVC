@@ -116,9 +116,19 @@ jobs:
         run: |
           echo "Sending notification to Watchtower at $WATCHTOWER_ENDPOINT"
 
-          curl -v -X POST \
-          -H "Authorization: Bearer ${{ env.WATCHTOWER_TOKEN }}" \
-          -m 15 ${{ env.WATCHTOWER_ENDPOINT }}/v1/update
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer ${{ env.WATCHTOWER_TOKEN }}" \
+            -m 15 ${{ env.WATCHTOWER_ENDPOINT }}/v1/update)
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          if [[ $HTTP_CODE -ge 200 && $HTTP_CODE -lt 300 ]]; then
+            echo "✅ Watchtower notification successful: $BODY"
+          else
+            echo "❌ Watchtower notification failed with code $HTTP_CODE: $BODY"
+            exit 1
+          fi
 
       - name: Watchtower Fallback Message
         if: steps.notify.outcome == 'failure'
