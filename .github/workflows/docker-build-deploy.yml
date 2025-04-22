@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Debug och Test steg
+      # Debug and Test Steps
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -26,12 +26,13 @@ jobs:
       - name: Run tests
         run: dotnet test SG01G02_MVC.sln --no-build --verbosity normal
 
-      # Logga in på Azure med AZURE_CREDENTIALS från GitHub Secrets
+      # Log in to Azure
       - name: Azure Login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      # Verifiera Azure-autentisering
       - name: Verify Azure Authentication
         run: |
           echo "Checking Azure authentication status..."
@@ -42,7 +43,7 @@ jobs:
           az keyvault show --name ${{ secrets.AZURE_KEY_VAULT_NAME }} --query "name" -o tsv || \
             (echo "Error: Could not access Key Vault" && exit 1)
 
-      # Hämta hemligheter från Azure Key Vault
+      # Get secrets from Azure Key Vault
       - name: Get secrets from Key Vault
         run: |
           VAULT_NAME="${{ secrets.AZURE_KEY_VAULT_NAME }}"
@@ -56,7 +57,9 @@ jobs:
 
           echo "WATCHTOWER_ENDPOINT=http://$(az keyvault secret show --name 'reverse-proxy-ip' --vault-name "$VAULT_NAME" --query 'value' -o tsv):8080" >> $GITHUB_ENV
 
-      # Verifiera att alla hemligheter hämtades
+          echo "POSTGRES_CONNECTION_STRING=$(az keyvault secret show --name 'db-connection-string' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
+
+      # Verify secrets were retrieved
       - name: Verify secrets were retrieved
         run: |
           if [ -z "$DOCKERHUB_USERNAME" ]; then
@@ -84,35 +87,105 @@ jobs:
           echo "✅ DOCKERHUB_TOKEN exists"
           echo "✅ WATCHTOWER_TOKEN exists"
           echo "✅ WATCHTOWER_ENDPOINT: $WATCHTOWER_ENDPOINT"
+          echo "✅ POSTGRES_CONNECTION_STRING exists"
 
           echo "All required secrets were successfully retrieved from Key Vault!"
 
-      # Bygg och publicera Docker-imagen
+      # Build Docker image
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      # Log in to DockerHub
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      # Build Docker image locally for testing
+      - name: Build Docker image locally
+        run: |
+          echo "Building Docker image locally for testing..."
+          docker build -t test-image:${{ github.sha }} .
+          echo "IMAGE_ID=test-image:${{ github.sha }}" >> $GITHUB_ENV
+
+      # Run smoke test on the Docker image
+      - name: Run Docker smoke test
+        id: smoke_test
+        run: |
+          echo "Starting container for smoke test..."
+
+          # Skapa ett testdatabas-nätverk om det behövs
+          docker network create test_network || true
+
+          # Starta containern för testning
+          docker run -d --name test-container \
+            --network test_network \
+            -p 5000:8080 \
+            -e POSTGRES_CONNECTION_STRING="${{ env.POSTGRES_CONNECTION_STRING }}" \
+            -e ASPNETCORE_ENVIRONMENT="Production" \
+            ${{ env.IMAGE_ID }}
+
+          echo "Waiting for container to initialize..."
+          sleep 10
+
+          # Utför healthcheck
+          MAX_RETRIES=5
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "Health check attempt $((RETRY_COUNT+1)) of $MAX_RETRIES"
+
+            # Kör healthcheck
+            HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health || echo "failed")
+
+            if [ "$HEALTH_STATUS" = "200" ]; then
+              echo "✅ Health check passed! Container is healthy."
+              # Stoppa och ta bort test-containern
+              docker stop test-container
+              docker rm test-container
+              exit 0
+            fi
+
+            RETRY_COUNT=$((RETRY_COUNT+1))
+
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "Health check failed with status $HEALTH_STATUS. Retrying in 5 seconds..."
+              sleep 5
+            fi
+          done
+
+          # Visa container logs för felsökning
+          echo "::error::Health check failed after $MAX_RETRIES attempts."
+          echo "::error::Container logs:"
+          docker logs test-container
+
+          # Stoppa och ta bort test-containern
+          docker stop test-container
+          docker rm test-container
+
+          # Avbryt pipeline om smoketestet misslyckas
+          exit 1
+
+      # Tagging and pushing Docker image if smoke test is successful
+      - name: Tag and push Docker image
+        if: success()
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           tags: ${{ env.DOCKERHUB_USERNAME }}/sg01g02mvc:latest
 
+      # Wait for Docker image to be available
       - name: Wait for Docker image to be available
         run: |
           echo "Waiting 10 seconds for Docker image to be fully available..."
           sleep 10
 
-      # Notifiera Watchtower om att det finns en ny image
+      # Notify Watchtower if the image is successfully pushed
       - name: Notify Watchtower
         id: notify
-        continue-on-error: true
+        continue-on-error: false
         run: |
           echo "Sending notification to Watchtower at $WATCHTOWER_ENDPOINT"
 
@@ -130,6 +203,7 @@ jobs:
             exit 1
           fi
 
+      # Fallback message if Watchtower notification fails
       - name: Watchtower Fallback Message
         if: steps.notify.outcome == 'failure'
         run: |
