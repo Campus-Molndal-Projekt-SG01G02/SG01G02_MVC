@@ -13,6 +13,8 @@ obj/
 out/
 wwwroot/lib/
 *.db
+*.db-wal
+*.db-shm
 
 .secrets
 

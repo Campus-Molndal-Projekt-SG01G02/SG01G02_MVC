@@ -2,26 +2,37 @@ using Microsoft.AspNetCore.Mvc;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Application.DTOs;
 using SG01G02_MVC.Web.Models;
+using SG01G02_MVC.Infrastructure.Data;
 
 namespace SG01G02_MVC.Web.Controllers
 {
     public class AdminController : Controller
     {
         private readonly IProductService _productService;
+        private readonly AppDbContext _context;
 
-        public AdminController(IProductService productService)
+        public AdminController(IProductService productService, AppDbContext context)
         {
             _productService = productService;
+            _context = context;
         }
 
         public IActionResult Index()
         {
-            if (!User.Identity?.IsAuthenticated ?? true || User.IsInRole("Admin") == false)
+            // Gracefully handle if database is unavailable (e.g. CI/CD fallback)
+            if (!_context.Database.CanConnect())
+            {
+                // Views/Shared/DatabaseUnavailable.cshtml
+                return View("DatabaseUnavailable");
+            }
+
+            // Auth check: only allow authenticated Admins
+            if (!User.Identity?.IsAuthenticated ?? true || !User.IsInRole("Admin"))
             {
                 return RedirectToAction("Index", "Login");
             }
 
-            var products = _productService.GetAllProducts(); // or async
+            var products = _productService.GetAllProducts();
             return View(products);
         }
 

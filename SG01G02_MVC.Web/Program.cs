@@ -30,8 +30,30 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-// Seed default admin - NH design, keeping Program.cs clean as in Clean Architecture
-SeederHelper.SeedAdminUser(app);
+// Try to connect to the SQLite database, and seed admin user if available.
+// If the DB is missing (e.g. during CI/CD), log a warning and render fallback view if needed.
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    try
+    {
+        if (db.Database.CanConnect())
+        {
+            // Seed default admin - NH design, keeping Program.cs clean as in Clean Architecture
+            SeederHelper.SeedAdminUser(app);
+        }
+        else
+        {
+            Console.WriteLine("WARNING: Could not connect to SQLite database. No seeding will occur.");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Database check failed: {ex.Message}");
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
