@@ -1,4 +1,5 @@
 @model IEnumerable<SG01G02_MVC.Web.Models.ProductViewModel>
+@inject SG01G02_MVC.Web.Services.IUserSessionService _session
 
 @{
     ViewData["Title"] = "Product Catalogue";
@@ -32,9 +33,21 @@
                         <td>@product.Description</td>
                         <td>@($"{product.Price:C}")</td>
                         <td>
-                            <a asp-controller="Product" asp-action="Details" asp-route-id="@product.Id" class="btn btn-sm btn-primary">
+                            <a asp-controller="Catalogue" asp-action="Details" asp-route-id="@product.Id" class="btn btn-sm btn-primary">
                                 Details
                             </a>
+                            @if (_session?.Role == "Admin")
+                            {
+                                <a asp-controller="Admin" asp-action="EditProduct" asp-route-id="@product.Id" class="btn btn-sm btn-outline-warning ms-2">
+                                    Edit Product
+                                </a>
+                                <a asp-controller="Admin" asp-action="AddProduct" asp-route-id="@product.Id" class="btn btn-sm btn-outline-warning ms-2">
+                                    Add Product
+                                </a>
+                                <a asp-controller="Admin" asp-action="DeleteProduct" asp-route-id="@product.Id" class="btn btn-sm btn-outline-warning ms-2">
+                                    Delete Product
+                                </a>
+                            }
                         </td>
                     </tr>
                 }

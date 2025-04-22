@@ -7,9 +7,9 @@ namespace SG01G02_MVC.Infrastructure.Repositories
     {
         private readonly List<Product> _products = new()
         {
-            new Product { Id = 1, Name = "Blueberry Jam", Price = 49.99m },
-            new Product { Id = 2, Name = "Frozen Blueberries", Price = 79.99m },
-            new Product { Id = 3, Name = "Dried Blueberries", Price = 59.00m }
+            new Product { Id = 1, Name = "Blueberry Jam", Price = 49.99m, StockQuantity = 5, ImageUrl = "images/jam.jpg" },
+            new Product { Id = 2, Name = "Frozen Blueberries", Price = 79.99m, StockQuantity = 0, ImageUrl = "images/frozen.jpg" },
+            new Product { Id = 3, Name = "Dried Blueberries", Price = 59.00m, StockQuantity = 12, ImageUrl = "images/dried.jpg" }
         };
 
         public IEnumerable<Product> GetAllProducts()
@@ -35,6 +35,8 @@ namespace SG01G02_MVC.Infrastructure.Repositories
             {
                 existing.Name = product.Name;
                 existing.Price = product.Price;
+                existing.StockQuantity = product.StockQuantity;
+                existing.ImageUrl = product.ImageUrl;
             }
             return Task.CompletedTask;
         }
