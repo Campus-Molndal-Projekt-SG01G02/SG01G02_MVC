@@ -32,6 +32,16 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Verify Azure Authentication
+        run: |
+          echo "Checking Azure authentication status..."
+          az account show --query "name" -o tsv
+
+          echo "Testing Key Vault access..."
+          # Använd Key Vault-namnet från GitHub Secrets
+          az keyvault show --name ${{ secrets.AZURE_KEY_VAULT_NAME }} --query "name" -o tsv || \
+            (echo "Error: Could not access Key Vault" && exit 1)
+
       # Hämta hemligheter från Azure Key Vault
       - name: Get secrets from Key Vault
         run: |
@@ -94,8 +104,14 @@ jobs:
           push: true
           tags: ${{ env.DOCKERHUB_USERNAME }}/sg01g02mvc:latest
 
+      - name: Wait for Docker image to be available
+        run: |
+          echo "Waiting 10 seconds for Docker image to be fully available..."
+          sleep 10
+
       # Notifiera Watchtower om att det finns en ny image
       - name: Notify Watchtower
+        id: notify
         continue-on-error: true
         run: |
           echo "Sending notification to Watchtower at $WATCHTOWER_ENDPOINT"
