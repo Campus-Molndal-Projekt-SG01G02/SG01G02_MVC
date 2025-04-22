@@ -13,8 +13,25 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+// Configure Entity Framework Core with SQLite or PostgreSQL
+// Use SQLite by default, but allow for PostgreSQL connection string from environment variables
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    var postgresConnString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
+
+    if (!string.IsNullOrEmpty(postgresConnString))
+    {
+        Console.WriteLine("Använder PostgreSQL-anslutning från miljövariabel");
+        options.UseNpgsql(postgresConnString);
+    }
+    else
+    {
+        Console.WriteLine("Använder SQLite-anslutning från appsettings");
+        options.UseSqlite(connectionString);
+    }
+});
 
 builder.Services.AddHttpContextAccessor(); // Needed to access HttpContext in services
 builder.Services.AddScoped<IUserSessionService, UserSessionService>();
@@ -41,12 +58,20 @@ using (var scope = app.Services.CreateScope())
     {
         if (db.Database.CanConnect())
         {
+            Console.WriteLine($"Ansluten till databas med provider: {db.Database.ProviderName}");
+
+            if (db.Database.ProviderName?.Contains("Npgsql") == true)
+            {
+                Console.WriteLine("Applying PostgreSQL-database migrations...");
+                db.Database.Migrate();
+            }
+
             // Seed default admin - NH design, keeping Program.cs clean as in Clean Architecture
             SeederHelper.SeedAdminUser(app);
         }
         else
         {
-            Console.WriteLine("WARNING: Could not connect to SQLite database. No seeding will occur.");
+            Console.WriteLine("WARNING: Could not connect to database. No seeding will occur.");
         }
     }
     catch (Exception ex)
