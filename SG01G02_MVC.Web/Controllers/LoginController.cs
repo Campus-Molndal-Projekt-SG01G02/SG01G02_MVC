@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Web.Services;
 using SG01G02_MVC.Web.Models;
@@ -23,7 +25,7 @@ namespace SG01G02_MVC.Web.Controllers
         }
 
         [HttpPost]
-        public IActionResult Index(LoginViewModel model)
+        public async Task<IActionResult> Index(LoginViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -38,6 +40,19 @@ namespace SG01G02_MVC.Web.Controllers
                 return View(model);
             }
 
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Role, user.Role)
+            };
+
+            var identity = new ClaimsIdentity(claims, "CookieAuth");
+            var principal = new ClaimsPrincipal(identity);
+
+            // Sign in via CookieAuth
+            await HttpContext.SignInAsync("CookieAuth", principal);
+
+            // Store in session too (for navbar etc)
             _session.Username = user.Username;
             _session.Role = user.Role;
 
@@ -51,9 +66,10 @@ namespace SG01G02_MVC.Web.Controllers
         }
 
         [HttpPost]
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
             _session.Clear();
+            await HttpContext.SignOutAsync("CookieAuth");
             return RedirectToAction("Index", "Home");
         }
     }

@@ -13,84 +13,94 @@ The structure below reflects this layered architecture:
 SG01G02_MVC/
 ├── SG01G02_MVC.Application/
 │   ├── DTOs/
-│   │   └── ProductDto.cs               - Data Transfer Object used in Application and Web layers
+│   │   └── ProductDto.cs                           - Data Transfer Object used in Application and Web layers
 │   ├── Interfaces/
-│   │   ├── IProductRepository.cs       - Repository pattern abstraction for fetching products (Infrastructure will implement)
-│   │   ├── IProductService.cs          - Application service contract defining product-related use cases (used by Web layer)
-│   │   └── IAuthService.cs             - Auth abstraction for login validation and session-aware auth
+│   │   ├── IAuthService.cs                         - Auth abstraction for login validation and session-aware auth
+│   │   ├── IProductRepository.cs                   - Repository pattern abstraction for fetching products (Infrastructure will implement)
+│   │   ├── IProductService.cs                      - Application service contract defining product-related use cases (used by Web layer)
+│   │   └── IUserRepository.cs                      - Interface to access and validate user credentials from a data source
 │   ├── Services/
-│   │   ├── ProductService.cs           - Implements IProductService, delegates to repository
-│   │   └── AuthService.cs              - Role-based login logic, delegates to IUserRepository
+│   │   ├── AuthService.cs                          - Role-based login logic, delegates to IUserRepository
+│   │   └── ProductService.cs                       - Implements IProductService, delegates to repository
 │   └── SG01G02_MVC.Application.csproj
 │
 ├── SG01G02_MVC.Domain/
 │   ├── Entities/
-│   │   ├── AppUser.cs                  - Represents user identity and role (Admin, Staff, etc.)
-│   │   ├── CartItem.cs                 - Domain model for cart line item
-│   │   ├── Order.cs                    - Domain model for customer order
-│   │   └── Product.cs                  - Core DDD entity, no EF or DTO logic
+│   │   ├── AppUser.cs                              - Represents user identity and role (Admin, Staff, etc.)
+│   │   ├── CartItem.cs                             - Domain model for cart line item
+│   │   ├── Order.cs                                - Domain model for customer order
+│   │   └── Product.cs                              - Core DDD entity, no EF or DTO logic
 │   └── SG01G02_MVC.Domain.csproj
 │
 ├── SG01G02_MVC.Infrastructure/
 │   ├── Data/
-│   │   └── AppDbContext.cs             - EF Core DbContext for managing database access
+│   │   └── AppDbContext.cs                         - EF Core DbContext for managing database access
 │   ├── External/
-│   ├── Migrations/                     - EF Migrations
+│   ├── Migrations/                                 - EF Migrations
 │   ├── Repositories/
-│   │   ├── ProductRepository.cs        - Implements IProductRepository using EF Core
-│   │   └── AuthService.cs              - Implements IAuthService via EF (DB) user lookup
+│   │   ├── ProductRepository.cs                    - Implements IProductRepository using EF Core
+│   │   └── UserRepository.cs                       - Implements IUserRepository for validating users from the database
 │   ├── Services/
-│   │   └── BlobStorageService.cs       - Handles image uploads via Azure Blob Storage (stubbed for MVP)
+│   │   └── BlobStorageService.cs                   - Handles image uploads via Azure Blob Storage (stubbed for MVP)
 │   └── SG01G02_MVC.Infrastructure.csproj
 │
 ├── SG01G02_MVC.Tests/
 │   ├── Controllers/
-│   │   ├── AdminControllerTests.cs     - Unit tests for Admin access and redirection logic
-│   │   └── LoginControllerTests.cs     - Unit tests for login flow using mock services
-│   ├── Services/
-│   │   ├── ProductServiceTests.cs      - TDD-driven tests for ProductService
-│   │   ├── AuthServiceTests.cs         - TDD tests for role-based login logic
-│   │   └── FakeProductRepository.cs    - In-memory test double for repository logic
+│   │   ├── AdminControllerTests.cs                 - Unit tests for Admin access and redirection logic
+│   │   └── LoginControllerTests.cs                 - Unit tests for login flow using mock services
 │   ├── Helpers/
-│   │   └── TestBase.cs                 - Shared test utilities like in-memory DbContext factory
+│   │   └── TestBase.cs                             - Shared test utilities like in-memory DbContext factory
+│   ├── Services/
+│   │   ├── AuthServiceTests.cs                     - TDD tests for role-based login logic
+│   │   ├── FakeProductRepository.cs                - In-memory test double for repository logic
+│   │   └── ProductServiceTests.cs                  - TDD-driven tests for ProductService
 │   └── SG01G02_MVC.Infrastructure.Tests/
 │
 ├── SG01G02_MVC.Web/
 │   ├── Controllers/
-│   │   ├── CatalogueController.cs      - Handles product listing and detail views
-│   │   ├── HomeController.cs           - Default MVC controller for routing landing page and basic views
-│   │   ├── AdminController.cs          - Admin panel for CRUD operations (Index, Create, Edit, Delete)
-│   │   ├── StaffController.cs          - TODO: Extend to list all orders (read-only) once OrderService is ready. (Role: Staff only)
-│   │   ├── ImageController.cs          - Handles image upload/delete (API)
-│   │   └── LoginController.cs          - Shared login/logout for all roles
+│   │   ├── AdminController.cs                      - Admin panel for CRUD operations (Index, Create, Edit, Delete)
+│   │   ├── CartController.cs                       - Placeholder controller for future shopping cart logic
+│   │   ├── CatalogueController.cs                  - Handles product listing and detail views
+│   │   ├── HomeController.cs                       - Default MVC controller for routing landing page and basic views
+│   │   ├── ImageController.cs                      - Handles image upload/delete (API)
+│   │   ├── LoginController.cs                      - Shared login/logout for all roles
+│   │   └── StaffController.cs                      - Read-only dashboard for staff to view orders (future)
 │   ├── Models/
-│   │   ├── ErrorViewModel.cs           - ViewModel for error page rendering // TODO: not used yet
-│   │   └── LoginViewModel.cs           - ViewModel for login form input validation
-│   │   └── ProductViewModel.cs         - Presentation model used in views for products
+│   │   ├── ErrorViewModel.cs                       - ViewModel for error page rendering // TODO: not used yet
+│   │   ├── LoginViewModel.cs                       - ViewModel for login form input validation
+│   │   └── ProductViewModel.cs                     - Presentation model used in views for products
 │   ├── Services/
-│   │   ├── SeederHelper.cs             - Seeds default admin user on startup (used in Program.cs)
-│   │   └── UserSessionService.cs       - Wraps access to session data (role, username)
+│   │   ├── IUserSessionService.cs                  - Interface for abstracting session access (username, role)
+│   │   ├── SeederHelper.cs                         - Seeds default admin user on startup (used in Program.cs)
+│   │   └── UserSessionService.cs                   - Wraps access to session data (role, username)
 │   ├── Views/
-│   │   ├── Catalogue/
-│   │   │   ├── Index.cshtml            - Razor view listing all products
-│   │   │   └── Details.cshtml          - Razor view showing a single product
 │   │   ├── Admin/
-│   │   │   ├── Index.cshtml            - Admin dashboard placeholder
-│   │   │   ├── Create.cshtml           - Form to create a new product (TODO)
-│   │   │   ├── Edit.cshtml             - Form to edit existing product (TODO)
-│   │   │   └── Delete.cshtml           - Confirmation page for product deletion (TODO)
-│   │   ├── Staff/
-│   │   │   ├── Index.cshtml            - Staff dashboard placeholder
+│   │   │   ├── Create.cshtml                       - Form to create a new product
+│   │   │   ├── Delete.cshtml                       - Confirmation page for product deletion
+│   │   │   ├── Edit.cshtml                         - Form to edit existing product
+│   │   │   └── Index.cshtml                        - Admin dashboard showing list of products
+│   │   ├── Cart/
+│   │   │   └── Index.cshtml                        - Placeholder view for shopping cart
+│   │   ├── Catalogue/
+│   │   │   ├── Details.cshtml                      - Razor view showing a single product
+│   │   │   └── Index.cshtml                        - Razor view listing all products
 │   │   ├── Home/
-│   │   │   └── Index.cshtml            - Razor view for landing page (MVP placeholder)
-│   │   └── Shared/
-│   │       ├── _Layout.cshtml          - Shared HTML layout with Bootstrap navigation and structure
-│   │       ├── _ViewImports.cshtml     - Razor namespace imports for views
-│   │       └── _ViewStart.cshtml       - Razor startup configuration for view rendering
-│   ├── wwwroot/                        - Static content root (CSS, JS, images)
-│   ├── appsettings.Development.json    - Environmentals for local development
-│   ├── appsettings.json                - Base configuration shared across environments
-│   ├── Program.cs                      - .NET application entry point (configures Web host and services)
+│   │   │   └── Index.cshtml                        - Razor view for landing page (MVP placeholder)
+│   │   ├── Login/
+│   │   │   └── Index.cshtml                        - Login form view for credential input
+│   │   ├── Staff/
+│   │   │   ├── Index.cshtml                        - Staff dashboard placeholder
+│   │   ├── Shared/
+│   │   │   ├── _Layout.cshtml                      - Shared HTML layout with Bootstrap navigation and structure
+│   │   │   ├── _ValidationSScriptPartial.cshtml    - Script partial for client-side validation (TODO: review use)
+│   │   │   ├── DatabaseUnavailable.cshtml          - Fallback view if database connection fails (CI/CD safe)
+│   │   │   └── Error.cshtml                        - Default error handling page
+│   │   ├── _ViewImports.cshtml                     - Razor namespace imports for views
+│   │   └── _ViewStart.cshtml                       - Razor startup configuration for view rendering
+│   ├── wwwroot/                                    - Static content root (CSS, JS, images)
+│   ├── appsettings.Development.json                - Environmentals for local development
+│   ├── appsettings.json                            - Base configuration shared across environments
+│   ├── Program.cs                                  - .NET application entry point (configures Web host and services)
 │   └── SG01G02_MVC.Web.csproj
 │
 ├── SG01G02_MVC.sln

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Application.DTOs;
 using SG01G02_MVC.Web.Models;
@@ -25,9 +26,6 @@ namespace SG01G02_MVC.Web.Controllers
         {
             if (!_context.Database.CanConnect())
                 return View("DatabaseUnavailable");
-
-            if (_session?.Role != "Admin")
-                return RedirectToAction("Index", "Login");
 
             var products = _productService.GetAllProducts();
             return View(products);
