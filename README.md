@@ -51,6 +51,8 @@ SG01G02_MVC/
 │   │   ├── ProductServiceTests.cs      - TDD-driven tests for ProductService
 │   │   ├── AuthServiceTests.cs         - TDD tests for role-based login logic
 │   │   └── FakeProductRepository.cs    - In-memory test double for repository logic
+│   ├── Helpers/
+│   │   └── TestBase.cs                 - Shared test utilities like in-memory DbContext factory
 │   └── SG01G02_MVC.Infrastructure.Tests/
 │
 ├── SG01G02_MVC.Web/
@@ -64,6 +66,7 @@ SG01G02_MVC/
 │   ├── Models/
 │   │   ├── ErrorViewModel.cs           - ViewModel for error page rendering // TODO: not used yet
 │   │   └── LoginViewModel.cs           - ViewModel for login form input validation
+│   │   └── ProductViewModel.cs         - Presentation model used in views for products
 │   ├── Services/
 │   │   ├── SeederHelper.cs             - Seeds default admin user on startup (used in Program.cs)
 │   │   └── UserSessionService.cs       - Wraps access to session data (role, username)
