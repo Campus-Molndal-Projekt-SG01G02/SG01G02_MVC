@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Web.Models;
-using SG01G02_MVC.Application.DTOs;
+using SG01G02_MVC.Domain.Entities;
 
 namespace SG01G02_MVC.Web.Controllers
 {
@@ -22,10 +22,30 @@ namespace SG01G02_MVC.Web.Controllers
             {
                 Id = dto.Id,
                 Name = dto.Name,
-                Price = dto.Price
+                Price = dto.Price,
+                Description = dto.Description
             }).ToList();
 
             return View(viewModels);
+        }
+
+        public IActionResult Details(int id)
+        {
+            var product = _productService.GetProductById(id);
+            if (product == null)
+                return NotFound();
+
+            var model = new Product
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                StockQuantity = product.StockQuantity,
+                ImageUrl = product.ImageUrl
+            };
+
+            return View("Details", model);
         }
     }
 }

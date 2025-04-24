@@ -1,34 +1,66 @@
 using Moq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
-using SG01G02_MVC.Web.Controllers;
-using SG01G02_MVC.Web.Models;
-using SG01G02_MVC.Application.Interfaces;
 using System.Security.Claims;
+using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Application.DTOs;
 using SG01G02_MVC.Tests.Helpers;
+using SG01G02_MVC.Web.Controllers;
+using SG01G02_MVC.Web.Models;
+using SG01G02_MVC.Web.Services;
 
 namespace SG01G02_MVC.Tests.Controllers
 {
     public class AdminControllerTests : TestBase
     {
+        // Helper method to create a controller with mocked dependencies
+        private (AdminController controller, Mock<IProductService> mockService) CreateController(Mock<IProductService>? productService = null,
+            Mock<IUserSessionService>? sessionService = null)
+        {
+            var mockSession = sessionService ?? new Mock<IUserSessionService>();
+            mockSession.Setup(s => s.Role).Returns("Admin"); // Default role is admin for testing, override if needed
+
+            var mockProductService = productService ?? new Mock<IProductService>();
+            var context = GetInMemoryDbContext();
+
+            var controller = new AdminController(
+                mockProductService.Object,
+                context,
+                mockSession.Object
+            );
+
+            return (controller, mockProductService);
+        }
+
         [Fact]
         public void Index_UnauthenticatedUser_ShouldRedirectToLogin()
         {
-            // Arrange
-            var mockProductService = new Mock<IProductService>();
-            var context = GetInMemoryDbContext(); // Inherit from TestBase
-            var controller = new AdminController(mockProductService.Object, context);
+            var mockSession = new Mock<IUserSessionService>();
+            mockSession.Setup(s => s.Role).Returns("Customer"); // Not admin
 
-            controller.ControllerContext = new ControllerContext()
+            var context = GetInMemoryDbContext();
+            context.Database.EnsureCreated(); // ✅ Simulate DB being connectable
+
+            var mockProductService = new Mock<IProductService>();
+            var controller = new AdminController(mockProductService.Object, context, mockSession.Object);
+
+            // Simulate authenticated user
+            var identity = new ClaimsIdentity(new[]
             {
-                HttpContext = new DefaultHttpContext() // No user = not authenticated
+                new Claim(ClaimTypes.Name, "notadmin"),
+                new Claim(ClaimTypes.Role, "Customer")
+            }, "mock");
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(identity)
+                }
             };
 
-            // Act
             var result = controller.Index();
 
-            // Assert
             var redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
             Assert.Equal("Login", redirectResult.ControllerName);
@@ -37,10 +69,7 @@ namespace SG01G02_MVC.Tests.Controllers
         [Fact]
         public void Index_AuthenticatedAdminUser_ShouldReturnView()
         {
-            // Arrange
-            var mockProductService = new Mock<IProductService>();
-            var context = GetInMemoryDbContext(); // Inherit from TestBase
-            var controller = new AdminController(mockProductService.Object, context);
+            var (controller, _) = CreateController();
 
             var identity = new ClaimsIdentity(new[]
             {
@@ -48,32 +77,24 @@ namespace SG01G02_MVC.Tests.Controllers
                 new Claim(ClaimTypes.Role, "Admin")
             }, "mock");
 
-            var user = new ClaimsPrincipal(identity);
             controller.ControllerContext = new ControllerContext()
             {
-                HttpContext = new DefaultHttpContext() { User = user }
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) }
             };
 
-            // Act
             var result = controller.Index();
 
-            // Assert
             Assert.IsType<ViewResult>(result);
         }
 
         [Fact]
         public async Task Create_ValidProduct_RedirectsToIndex()
         {
-            // Arrange
-            var mockService = new Mock<IProductService>();
-                var context = GetInMemoryDbContext(); // Inherit from TestBase
-            var controller = new AdminController(mockService.Object, context);
+            var (controller, mockService) = CreateController();
             var product = new ProductViewModel { Name = "Test", Price = 10 };
 
-            // Act
-            var result = await controller.Create(product);
+            var result = await controller.AddProduct(product);
 
-            // Assert
             var redirect = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirect.ActionName);
             mockService.Verify(s => s.CreateProductAsync(It.IsAny<ProductDto>()), Times.Once);
@@ -82,12 +103,10 @@ namespace SG01G02_MVC.Tests.Controllers
         [Fact]
         public async Task Edit_ValidProduct_RedirectsToIndex()
         {
-            var mockService = new Mock<IProductService>();
-            var context = GetInMemoryDbContext(); // Inherit from TestBase
-            var controller = new AdminController(mockService.Object, context);
+            var (controller, mockService) = CreateController();
             var product = new ProductViewModel { Id = 1, Name = "Updated", Price = 15 };
 
-            var result = await controller.Edit(1, product);
+            var result = await controller.EditProduct(1, product);
 
             var redirect = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirect.ActionName);
@@ -97,9 +116,7 @@ namespace SG01G02_MVC.Tests.Controllers
         [Fact]
         public async Task Delete_Confirmed_DeletesProductAndRedirects()
         {
-            var mockService = new Mock<IProductService>();
-            var context = GetInMemoryDbContext(); // Inherit from TestBase
-            var controller = new AdminController(mockService.Object, context);
+            var (controller, mockService) = CreateController();
 
             var result = await controller.DeleteConfirmed(1);
 

@@ -23,12 +23,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
     if (!string.IsNullOrEmpty(postgresConnString))
     {
-        Console.WriteLine("Använder PostgreSQL-anslutning från miljövariabel");
+        Console.WriteLine("Using PostgreSQL-connection from environment variable");
         options.UseNpgsql(postgresConnString);
     }
     else
     {
-        Console.WriteLine("Använder SQLite-anslutning från appsettings");
+        Console.WriteLine("Using SQLite-connection from appsettings");
         options.UseSqlite(connectionString);
     }
 });
@@ -45,6 +45,13 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(30); // Set session timeout
 });
 
+// Add authentication
+builder.Services.AddAuthentication("CookieAuth")
+    .AddCookie("CookieAuth", config =>
+    {
+        config.LoginPath = "/Login/Index"; // fallback if unauthenticated
+    });
+
 var app = builder.Build();
 
 // Try to connect to the SQLite database, and seed admin user if available.
@@ -58,7 +65,7 @@ using (var scope = app.Services.CreateScope())
     {
         if (db.Database.CanConnect())
         {
-            Console.WriteLine($"Ansluten till databas med provider: {db.Database.ProviderName}");
+            Console.WriteLine($"Connected to database with provider: {db.Database.ProviderName}");
 
             if (db.Database.ProviderName?.Contains("Npgsql") == true)
             {
@@ -89,7 +96,8 @@ if (!app.Environment.IsDevelopment())
 // Use routing, authorization, and static assets
 app.UseRouting();
 app.UseSession(); // Enables session before authorization - very important!
-app.UseAuthorization();
+app.UseAuthentication(); // Handles ClaimsPrincipal + CookieAuth
+app.UseAuthorization(); // Enables [Authorize] attribute
 app.MapStaticAssets();
 app.MapControllerRoute(
     name: "default",
