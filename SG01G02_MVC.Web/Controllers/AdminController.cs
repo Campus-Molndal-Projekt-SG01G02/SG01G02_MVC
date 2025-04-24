@@ -19,16 +19,13 @@ namespace SG01G02_MVC.Web.Controllers
 
         public IActionResult Index()
         {
-            // Auth check: only allow authenticated Admins
             if (!User.Identity?.IsAuthenticated ?? true || !User.IsInRole("Admin"))
             {
                 return RedirectToAction("Index", "Login");
             }
 
-            // Gracefully handle if database is unavailable (e.g. CI/CD fallback)
             if (!_context.Database.CanConnect())
             {
-                // Views/Shared/DatabaseUnavailable.cshtml
                 return View("DatabaseUnavailable");
             }
 
