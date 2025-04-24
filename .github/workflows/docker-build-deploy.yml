@@ -29,20 +29,22 @@ jobs:
         continue-on-error: true
         run: dotnet test SG01G02_MVC.sln --no-build --verbosity normal
 
-      # Generate test report if tests fail
-      - name: Generate test report
+      # Generate a summary report when tests fail
+      - name: Generate Test Report
         if: steps.tests.outcome == 'failure'
         run: |
-          echo "::warning::Tests failed - See test results for details"
-          echo "## 🔴 Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "Tests are failing. The following issues need to be fixed:" >> $GITHUB_STEP_SUMMARY
+          echo "::warning::Tests have failed – see details below"
+          echo "## ❌ Test Failures Summary" >> $GITHUB_STEP_SUMMARY
+          echo "The following issues need to be addressed:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### LoginControllerTests" >> $GITHUB_STEP_SUMMARY
-          echo "- `Login_ValidCredentials_ShouldRedirectToHome`: Metoden har ändrats till async, uppdatera testet med `async Task` och använd `await`" >> $GITHUB_STEP_SUMMARY
-          echo "- `Login_InvalidCredentials_ShouldReturnViewWithError`: Metoden har ändrats till async, uppdatera testet med `async Task` och använd `await`" >> $GITHUB_STEP_SUMMARY
+
+          echo "### 📝 LoginControllerTests" >> $GITHUB_STEP_SUMMARY
+          echo "- **Login_ValidCredentials_ShouldRedirectToHome**: The action is now `async`. Update the test method to `async Task` and use `await`." >> $GITHUB_STEP_SUMMARY
+          echo "- **Login_InvalidCredentials_ShouldReturnViewWithError**: The action is now `async`. Update the test method to `async Task` and use `await`." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### AdminControllerTests" >> $GITHUB_STEP_SUMMARY
-          echo "- `Index_UnauthenticatedUser_ShouldRedirectToLogin`: Förväntar sig RedirectToActionResult men får ViewResult. Antingen behöver testet uppdateras eller implementeringen korrigeras." >> $GITHUB_STEP_SUMMARY
+
+          echo "### 🛡️ AdminControllerTests" >> $GITHUB_STEP_SUMMARY
+          echo "- **Index_UnauthenticatedUser_ShouldRedirectToLogin**: Expected a `RedirectToActionResult` but got a `ViewResult`. Adjust the test or the implementation accordingly." >> $GITHUB_STEP_SUMMARY
 
       # Report success if all tests pass
       - name: Report test success
