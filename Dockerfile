@@ -19,6 +19,10 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 
+# Sätt miljövariabel från build-arg
+ARG POSTGRES_CONNECTION_STRING
+ENV POSTGRES_CONNECTION_STRING=$POSTGRES_CONNECTION_STRING
+
 # Expose port
 EXPOSE 80
 EXPOSE 8080
