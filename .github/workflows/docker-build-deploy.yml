@@ -1,8 +1,6 @@
 name: Build and Deploy
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -89,7 +87,7 @@ jobs:
 
           echo "WATCHTOWER_TOKEN=$(az keyvault secret show --name 'watchtower-token' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
 
-          echo "WATCHTOWER_ENDPOINT=http://$(az keyvault secret show --name 'reverse-proxy-ip' --vault-name "$VAULT_NAME" --query 'value' -o tsv):8080" >> $GITHUB_ENV
+          echo "WATCHTOWER_ENDPOINT=http://$(az keyvault secret show --name 'reverse-proxy-ip' --vault-name \"$VAULT_NAME\" --query 'value' -o tsv):8080/v1/update" >> $GITHUB_ENV
 
           echo "POSTGRES_CONNECTION_STRING=$(az keyvault secret show --name 'PostgresConnectionString' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
 
@@ -201,7 +199,7 @@ jobs:
 
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer ${{ env.WATCHTOWER_TOKEN }}" \
-            -m 15 ${{ env.WATCHTOWER_ENDPOINT }}/v1/update)
+            -m 15 "$WATCHTOWER_ENDPOINT")
 
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | sed '$d')
