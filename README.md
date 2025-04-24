@@ -166,5 +166,5 @@ MOV/MS 365 Technician: Pontus Kroon
 ### JIN/External "consultant" API for the Review mechanics and integration  
   
 ### CLO handles the Azure infrastructures, CI/CD pipeline and software development  
-CI/CD: Fredrik Svärd - Ansible, Terraform, Azure Infrastructure, Secrets  
+CI/CD: Fredrik Svärd - Terraform (infrastructure), Ansible (configuration), Azure Cloud, Azure Keyvault, Azure Blob storage for images and state, GitHub Secrets. 
 Fullstack Developer: Niklas Häll - .NET (backend and Razor/bootstrap frontend), PostgreSQL, Technical documentation for the Project Leading team  
