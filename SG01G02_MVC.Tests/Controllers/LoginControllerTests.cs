@@ -1,13 +1,15 @@
+using System.Threading.Tasks;
 using Moq;
 using Microsoft.AspNetCore.Mvc;
 using SG01G02_MVC.Web.Controllers;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Web.Models;
 using SG01G02_MVC.Web.Services;
+using Xunit;
 
 namespace SG01G02_MVC.Tests.Controllers
 {
-        public class LoginControllerTests
+    public class LoginControllerTests
     {
         [Fact]
         public async Task Login_ValidCredentials_ShouldRedirectToHome()
@@ -22,7 +24,7 @@ namespace SG01G02_MVC.Tests.Controllers
             var model = new LoginViewModel { Username = "user", Password = "correctpass" };
 
             // Act
-            var result = await Task.FromResult(controller.Index(model));
+            var result = await controller.Index(model);
 
             // Assert
             var redirectResult = Assert.IsType<RedirectToActionResult>(result);
@@ -43,7 +45,7 @@ namespace SG01G02_MVC.Tests.Controllers
             var model = new LoginViewModel { Username = "user", Password = "wrongpass" };
 
             // Act
-            var result = await Task.FromResult(controller.Index(model));
+            var result = await controller.Index(model);
 
             // Assert
             var viewResult = Assert.IsType<ViewResult>(result);
