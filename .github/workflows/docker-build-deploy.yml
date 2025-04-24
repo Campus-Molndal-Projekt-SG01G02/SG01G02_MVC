@@ -39,12 +39,12 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "### 📝 LoginControllerTests" >> $GITHUB_STEP_SUMMARY
-          echo "- **Login_ValidCredentials_ShouldRedirectToHome**: The action is now `async`. Update the test method to `async Task` and use `await`." >> $GITHUB_STEP_SUMMARY
-          echo "- **Login_InvalidCredentials_ShouldReturnViewWithError**: The action is now `async`. Update the test method to `async Task` and use `await`." >> $GITHUB_STEP_SUMMARY
+          echo "- **Login_ValidCredentials_ShouldRedirectToHome**: The action is now \`async\`. Update the test method signature to \`async Task\` and use \`await\`." >> $GITHUB_STEP_SUMMARY
+          echo "- **Login_InvalidCredentials_ShouldReturnViewWithError**: The action is now \`async\`. Update the test method signature to \`async Task\` and use \`await\`." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "### 🛡️ AdminControllerTests" >> $GITHUB_STEP_SUMMARY
-          echo "- **Index_UnauthenticatedUser_ShouldRedirectToLogin**: Expected a `RedirectToActionResult` but got a `ViewResult`. Adjust the test or the implementation accordingly." >> $GITHUB_STEP_SUMMARY
+          echo "- **Index_UnauthenticatedUser_ShouldRedirectToLogin**: Expected a \`RedirectToActionResult\` but got a \`ViewResult\`. Adjust the test or the implementation accordingly." >> $GITHUB_STEP_SUMMARY
 
       # Report success if all tests pass
       - name: Report test success
