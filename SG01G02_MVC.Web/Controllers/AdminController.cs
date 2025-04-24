@@ -4,6 +4,7 @@ using SG01G02_MVC.Application.DTOs;
 using SG01G02_MVC.Web.Models;
 using SG01G02_MVC.Infrastructure.Data;
 using SG01G02_MVC.Web.Services;
+using System.Threading.Tasks;
 
 namespace SG01G02_MVC.Web.Controllers
 {
@@ -25,15 +26,12 @@ namespace SG01G02_MVC.Web.Controllers
 
         public IActionResult Index()
         {
-            if (!User.Identity?.IsAuthenticated ?? true || !User.IsInRole("Admin"))
-            {
+            // use session.Role for auth-check (easier to mock in tests)
+            if (_session.Role != "Admin")
                 return RedirectToAction("Index", "Login");
-            }
 
             if (!_context.Database.CanConnect())
-            {
                 return View("DatabaseUnavailable");
-            }
 
             var products = _productService.GetAllProducts();
             return View(products);
