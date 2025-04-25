@@ -206,6 +206,8 @@ jobs:
 
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer ${{ env.WATCHTOWER_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"target": "app-container"}' \
             -m 15 "$WATCHTOWER_ENDPOINT")
 
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
