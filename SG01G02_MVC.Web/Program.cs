@@ -4,6 +4,9 @@ using SG01G02_MVC.Application.Services;
 using SG01G02_MVC.Infrastructure.Repositories;
 using SG01G02_MVC.Infrastructure.Data;
 using SG01G02_MVC.Web.Services;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,9 +50,27 @@ builder.Services.AddSession(options =>
 
 // Add authentication
 builder.Services.AddAuthentication("CookieAuth")
-    .AddCookie("CookieAuth", config =>
+.AddCookie("CookieAuth", config =>
+{
+    config.LoginPath = "/Login/Index"; // fallback if unauthenticated
+});
+
+// Health checks
+builder.Services.AddHealthChecks()
+    .AddCheck("Database", () =>
     {
-        config.LoginPath = "/Login/Index"; // fallback if unauthenticated
+        try
+        {
+            using var scope = builder.Services.BuildServiceProvider().CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            return db.Database.CanConnect()
+                ? HealthCheckResult.Healthy("Database connection is working.")
+                : HealthCheckResult.Unhealthy("Cannot connect to database.");
+        }
+        catch (Exception ex)
+        {
+            return HealthCheckResult.Unhealthy($"Database error: {ex.Message}");
+        }
     });
 
 var app = builder.Build();
@@ -103,6 +124,28 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+ResponseWriter = async (context, report) =>
+{
+    context.Response.ContentType = "application/json";
+
+    var result = new
+    {
+        Status = report.Status.ToString(),
+        Checks = report.Entries.Select(e => new
+        {
+            Name = e.Key,
+            Status = e.Value.Status.ToString(),
+            Description = e.Value.Description
+        })
+    };
+
+    await context.Response.WriteAsync(JsonSerializer.Serialize(result));
+}
+});
 
 // Run the application
 app.Run();

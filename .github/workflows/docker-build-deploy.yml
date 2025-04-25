@@ -97,7 +97,11 @@ jobs:
 
           echo "WATCHTOWER_ENDPOINT=http://$(az keyvault secret show --name 'reverse-proxy-ip' --vault-name \"$VAULT_NAME\" --query 'value' -o tsv):8080/v1/update" >> $GITHUB_ENV
 
+          #   POSTGRES_CONNECTION_STRING="Host=10.0.4.4;Database=appdb;Username=postgres;Password=RÄTT_LÖSENORD_HÄR"
+
           echo "POSTGRES_CONNECTION_STRING=$(az keyvault secret show --name 'PostgresConnectionString' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
+
+
 
       # Verify secrets were retrieved
       - name: Verify secrets were retrieved
