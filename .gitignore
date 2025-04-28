@@ -17,6 +17,7 @@ wwwroot/lib/
 *.db-shm
 
 .secrets
+/actions-runner/*
 
 ############################
 # IDE-specific
