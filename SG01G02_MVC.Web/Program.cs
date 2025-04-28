@@ -8,11 +8,11 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Text.Json;
 using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Setup Azure Key Vault in non-development environments
+bool keyVaultAvailable = false;
 if (!builder.Environment.IsDevelopment())
 {
     var keyVaultUrl = Environment.GetEnvironmentVariable("KEY_VAULT_URL");
@@ -34,6 +34,7 @@ if (!builder.Environment.IsDevelopment())
                 new DefaultAzureCredential());
 
             Console.WriteLine($"Successfully connected to Azure Key Vault: {keyVaultUrl}");
+            keyVaultAvailable = true;
         }
         catch (Exception ex)
         {
@@ -49,23 +50,27 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-// Configure Entity Framework Core with SQLite or PostgreSQL
-// Configure database context (use PostgreSQL in production and
-// development with SQLite as fallback in development)
+// Configure database context
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     // Try to get PostgreSQL connection string first from environment variable
     var postgresConnString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
 
-    // If not found in environment variables, check configuration (from Key Vault in production)
-    if (string.IsNullOrEmpty(postgresConnString))
+    // If not found in environment variables AND Key Vault is available, check configuration
+    if (string.IsNullOrEmpty(postgresConnString) && keyVaultAvailable)
     {
         postgresConnString = builder.Configuration["PostgresConnectionString"];
     }
 
     if (!string.IsNullOrEmpty(postgresConnString))
     {
-        Console.WriteLine("Using PostgreSQL connection");
+        // Mask the connection string for logging (remove the password)
+        var sanitizedConnString = System.Text.RegularExpressions.Regex.Replace(
+            postgresConnString,
+            "Password=([^;]*)",
+            "Password=***");
+
+        Console.WriteLine($"Using PostgreSQL connection: {sanitizedConnString}");
         options.UseNpgsql(postgresConnString);
     }
     else if (builder.Environment.IsDevelopment())
@@ -184,7 +189,6 @@ ResponseWriter = async (context, report) =>
         {
             Name = e.Key,
             Status = e.Value.Status.ToString(),
-            Description = e.Value.Description
         })
     };
 
