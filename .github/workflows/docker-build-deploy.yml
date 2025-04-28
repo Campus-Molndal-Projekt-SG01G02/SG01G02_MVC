@@ -41,23 +41,23 @@ jobs:
         run: |
           echo "::warning::Tests have failed – see details below"
 
-          echo '## ❌ Test Failures Summary' >> $GITHUB_STEP_SUMMARY
+          echo '## Test Failures Summary' >> $GITHUB_STEP_SUMMARY
           echo 'The following issues need to be addressed:' >> $GITHUB_STEP_SUMMARY
           echo '' >> $GITHUB_STEP_SUMMARY
 
-          echo '### 📝 LoginControllerTests' >> $GITHUB_STEP_SUMMARY
+          echo '### LoginControllerTests' >> $GITHUB_STEP_SUMMARY
           echo '- **Login_ValidCredentials_ShouldRedirectToHome**: The action is now `async`. Update the test method signature to `async Task` and use `await`.' >> $GITHUB_STEP_SUMMARY
           echo '- **Login_InvalidCredentials_ShouldReturnViewWithError**: The action is now `async`. Update the test method signature to `async Task` and use `await`.' >> $GITHUB_STEP_SUMMARY
           echo '' >> $GITHUB_STEP_SUMMARY
 
-          echo '### 🛡️ AdminControllerTests' >> $GITHUB_STEP_SUMMARY
+          echo '### AdminControllerTests' >> $GITHUB_STEP_SUMMARY
           echo '- **Index_UnauthenticatedUser_ShouldRedirectToLogin**: Expected a `RedirectToActionResult` but got a `ViewResult`. Adjust the test or the implementation accordingly.' >> $GITHUB_STEP_SUMMARY
 
       # Report success if all tests pass
       - name: Report test success
         if: steps.tests.outcome == 'success'
         run: |
-          echo "## ✅ Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
           echo "All tests passed successfully!" >> $GITHUB_STEP_SUMMARY
 
   deploy:
@@ -124,11 +124,11 @@ jobs:
           fi
 
           # Maskera hemligheterna i loggen men visa att de existerar
-          echo "✅ DOCKERHUB_USERNAME exists"
-          echo "✅ DOCKERHUB_TOKEN exists"
-          echo "✅ WATCHTOWER_TOKEN exists"
-          echo "✅ WATCHTOWER_ENDPOINT: $WATCHTOWER_ENDPOINT"
-          echo "✅ POSTGRES_CONNECTION_STRING exists"
+          echo "- DOCKERHUB_USERNAME exists"
+          echo "- DOCKERHUB_TOKEN exists"
+          echo "- WATCHTOWER_TOKEN exists"
+          echo "- WATCHTOWER_ENDPOINT: $WATCHTOWER_ENDPOINT"
+          echo "- POSTGRES_CONNECTION_STRING exists"
 
           echo "All required secrets were successfully retrieved from Key Vault!"
 
@@ -147,7 +147,10 @@ jobs:
       - name: Build Docker image locally
         run: |
           echo "Building Docker image locally for testing..."
-          docker build -t test-image:${{ github.sha }} .
+          docker build -t test-image:${{ github.sha }} \
+            --build-arg POSTGRES_CONNECTION_STRING="${{ env.POSTGRES_CONNECTION_STRING }}" \
+            --build-arg KEY_VAULT_NAME="${{ secrets.AZURE_KEY_VAULT_NAME }}" \
+            .
           echo "IMAGE_ID=test-image:${{ github.sha }}" >> $GITHUB_ENV
 
       # Run smoke test on the Docker image
@@ -156,26 +159,26 @@ jobs:
         run: |
           echo "Starting container for smoke test..."
 
-          # Starta containern för testning
           docker run -d --name test-container \
             -p 5000:8080 \
             -e ASPNETCORE_ENVIRONMENT="Production" \
+            -e POSTGRES_CONNECTION_STRING="${{ env.POSTGRES_CONNECTION_STRING }}" \
+            -e KEY_VAULT_NAME="${{ secrets.AZURE_KEY_VAULT_NAME }}" \
             ${{ env.IMAGE_ID }}
 
           echo "Waiting for container to initialize..."
           sleep 10
 
-          # Kontrollera att containern kör
           CONTAINER_STATUS=$(docker inspect --format='{{.State.Running}}' test-container)
 
           if [ "$CONTAINER_STATUS" = "true" ]; then
-            echo "✅ Container is running!"
+            echo "Container is running!"
             # Stoppa och ta bort test-containern
             docker stop test-container
             docker rm test-container
             exit 0
           else
-            echo "❌ Container failed to start properly."
+            echo "Container failed to start properly."
             docker logs test-container
             docker stop test-container || true
             docker rm test-container || true
@@ -192,6 +195,7 @@ jobs:
           tags: ${{ env.DOCKERHUB_USERNAME }}/sg01g02mvc:latest
           build-args: |
             POSTGRES_CONNECTION_STRING=${{ env.POSTGRES_CONNECTION_STRING }}
+            KEY_VAULT_NAME=${{ secrets.AZURE_KEY_VAULT_NAME }}
 
       # Wait for Docker image to be available
       - name: Wait for Docker image to be available
@@ -216,9 +220,9 @@ jobs:
           BODY=$(echo "$RESPONSE" | sed '$d')
 
           if [[ $HTTP_CODE -ge 200 && $HTTP_CODE -lt 300 ]]; then
-            echo "✅ Watchtower notification successful: $BODY"
+            echo "Watchtower notification successful: $BODY"
           else
-            echo "❌ Watchtower notification failed with code $HTTP_CODE: $BODY"
+            echo "Watchtower notification failed with code $HTTP_CODE: $BODY"
             exit 1
           fi
 
