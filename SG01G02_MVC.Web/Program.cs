@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Setup Azure Key Vault in non-development environments
 bool keyVaultAvailable = false;
-if (!builder.Environment.IsDevelopment())
+if (!builder.Environment.IsDevelopment() && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")))
 {
     var keyVaultUrl = Environment.GetEnvironmentVariable("KEY_VAULT_URL");
     var keyVaultName = Environment.GetEnvironmentVariable("KEY_VAULT_NAME");
@@ -34,7 +34,6 @@ if (!builder.Environment.IsDevelopment())
                 new DefaultAzureCredential());
 
             Console.WriteLine($"Successfully connected to Azure Key Vault: {keyVaultUrl}");
-            keyVaultAvailable = true;
         }
         catch (Exception ex)
         {
@@ -114,12 +113,17 @@ builder.Services.AddHealthChecks()
         {
             using var scope = builder.Services.BuildServiceProvider().CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            return db.Database.CanConnect()
+            var canConnect = db.Database.CanConnect();
+
+            Console.WriteLine($"Health check - Database connection: {(canConnect ? "Success" : "Failed")}");
+
+            return canConnect
                 ? HealthCheckResult.Healthy("Database connection is working.")
                 : HealthCheckResult.Unhealthy("Cannot connect to database.");
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"Health check - Database error: {ex.Message}");
             return HealthCheckResult.Unhealthy($"Database error: {ex.Message}");
         }
     });

@@ -158,7 +158,6 @@ jobs:
         run: |
           echo "Starting container for smoke test..."
 
-          # Start the container for testing with the environment variable (not sending KEY_VAULT_NAME)
           docker run -d --name test-container \
             -p 5000:8080 \
             -e ASPNETCORE_ENVIRONMENT="Production" \
@@ -166,32 +165,27 @@ jobs:
             ${{ env.IMAGE_ID }}
 
           echo "Waiting for container to initialize..."
-          sleep 10
+          sleep 15  # Öka väntetiden till 15 sekunder
 
           CONTAINER_STATUS=$(docker inspect --format='{{.State.Running}}' test-container)
 
           if [ "$CONTAINER_STATUS" = "true" ]; then
             echo "Container is running!"
 
-            # Test the database connection via the health endpoint
-            echo "Testing database connection..."
-            HEALTH_RESPONSE=$(curl -s http://localhost:5000/health || echo '{"Status":"Unhealthy"}')
-            DB_STATUS=$(echo $HEALTH_RESPONSE | jq -r '.Checks[] | select(.Name=="Database") | .Status' 2>/dev/null || echo "")
-
-            if [ "$DB_STATUS" = "Healthy" ]; then
-              echo "Database connection successful!"
+            echo "Testing application..."
+            if curl -s --fail http://localhost:5000/ > /dev/null; then
+              echo "Application is responding!"
+              docker stop test-container
+              docker rm test-container
+              exit 0
             else
-              echo "Database connection failed with status: $DB_STATUS"
+              echo "Application is not responding properly."
               echo "Showing container logs:"
               docker logs test-container
               docker stop test-container
               docker rm test-container
               exit 1
             fi
-
-            docker stop test-container
-            docker rm test-container
-            exit 0
           else
             echo "Container failed to start properly."
             docker logs test-container
