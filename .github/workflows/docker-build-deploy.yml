@@ -153,32 +153,30 @@ jobs:
             .
           echo "IMAGE_ID=test-image:${{ github.sha }}" >> $GITHUB_ENV
 
-      # Run smoke test on the Docker image
       - name: Run Docker smoke test
         id: smoke_test
         run: |
           echo "Starting container for smoke test..."
 
-          # Starta containern för testning med miljövariabeln
+          # Start the container for testing with the environment variable (not sending KEY_VAULT_NAME)
           docker run -d --name test-container \
             -p 5000:8080 \
             -e ASPNETCORE_ENVIRONMENT="Production" \
             -e POSTGRES_CONNECTION_STRING="${{ env.POSTGRES_CONNECTION_STRING }}" \
-            -e KEY_VAULT_NAME="${{ secrets.AZURE_KEY_VAULT_NAME }}" \
             ${{ env.IMAGE_ID }}
 
           echo "Waiting for container to initialize..."
           sleep 10
 
-          # Kontrollera att containern kör
           CONTAINER_STATUS=$(docker inspect --format='{{.State.Running}}' test-container)
 
           if [ "$CONTAINER_STATUS" = "true" ]; then
             echo "Container is running!"
 
-            # Testa databaskopplingen via health endpoint
+            # Test the database connection via the health endpoint
             echo "Testing database connection..."
-            DB_STATUS=$(curl -s http://localhost:5000/health | jq -r '.Checks[] | select(.Name=="Database") | .Status')
+            HEALTH_RESPONSE=$(curl -s http://localhost:5000/health || echo '{"Status":"Unhealthy"}')
+            DB_STATUS=$(echo $HEALTH_RESPONSE | jq -r '.Checks[] | select(.Name=="Database") | .Status' 2>/dev/null || echo "")
 
             if [ "$DB_STATUS" = "Healthy" ]; then
               echo "Database connection successful!"
@@ -191,7 +189,6 @@ jobs:
               exit 1
             fi
 
-            # Stoppa och ta bort test-containern
             docker stop test-container
             docker rm test-container
             exit 0
