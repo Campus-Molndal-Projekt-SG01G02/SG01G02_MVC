@@ -159,6 +159,7 @@ jobs:
         run: |
           echo "Starting container for smoke test..."
 
+          # Starta containern för testning med miljövariabeln
           docker run -d --name test-container \
             -p 5000:8080 \
             -e ASPNETCORE_ENVIRONMENT="Production" \
@@ -169,10 +170,27 @@ jobs:
           echo "Waiting for container to initialize..."
           sleep 10
 
+          # Kontrollera att containern kör
           CONTAINER_STATUS=$(docker inspect --format='{{.State.Running}}' test-container)
 
           if [ "$CONTAINER_STATUS" = "true" ]; then
             echo "Container is running!"
+
+            # Testa databaskopplingen via health endpoint
+            echo "Testing database connection..."
+            DB_STATUS=$(curl -s http://localhost:5000/health | jq -r '.Checks[] | select(.Name=="Database") | .Status')
+
+            if [ "$DB_STATUS" = "Healthy" ]; then
+              echo "Database connection successful!"
+            else
+              echo "Database connection failed with status: $DB_STATUS"
+              echo "Showing container logs:"
+              docker logs test-container
+              docker stop test-container
+              docker rm test-container
+              exit 1
+            fi
+
             # Stoppa och ta bort test-containern
             docker stop test-container
             docker rm test-container
