@@ -54,66 +54,31 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 // development with SQLite as fallback in development)
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    if (builder.Environment.IsDevelopment())
+    // Try to get PostgreSQL connection string first from environment variable
+    var postgresConnString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
+
+    // If not found in environment variables, check configuration (from Key Vault in production)
+    if (string.IsNullOrEmpty(postgresConnString))
     {
-        // Local development - try PostgreSQL first, fallback to SQLite
-        var postgresConnString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
+        postgresConnString = builder.Configuration["PostgresConnectionString"];
+    }
 
-        // Try to build PostgreSQL connection string from individual settings if not found
-        if (string.IsNullOrEmpty(postgresConnString))
-        {
-            var dbUser = builder.Configuration["PostgresUser"];
-            var dbPassword = builder.Configuration["PostgresPassword"];
-            var dbHost = builder.Configuration["PostgresHost"] ?? "localhost";
-            var dbPort = builder.Configuration["PostgresPort"] ?? "5432";
-            var dbName = builder.Configuration["PostgresDatabase"] ?? "appdb";
-
-            if (!string.IsNullOrEmpty(dbUser) && !string.IsNullOrEmpty(dbPassword))
-            {
-                postgresConnString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword}";
-                Console.WriteLine("Built PostgreSQL connection string from configuration settings");
-            }
-        }
-
-        if (!string.IsNullOrEmpty(postgresConnString))
-        {
-            Console.WriteLine("Using PostgreSQL connection in development");
-            options.UseNpgsql(postgresConnString);
-        }
-        else
-        {
-            var sqliteConnString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=app.db";
-            Console.WriteLine("Using SQLite connection as fallback in development");
-            options.UseSqlite(sqliteConnString);
-        }
+    if (!string.IsNullOrEmpty(postgresConnString))
+    {
+        Console.WriteLine("Using PostgreSQL connection");
+        options.UseNpgsql(postgresConnString);
+    }
+    else if (builder.Environment.IsDevelopment())
+    {
+        // Only allow SQLite fallback in development
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        Console.WriteLine("Using SQLite connection (development only)");
+        options.UseSqlite(connectionString);
     }
     else
     {
-        // Production - PostgreSQL only with Key Vault integration
-        var postgresConnString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
-
-        // Try to build connection string from Key Vault secrets if not found
-        if (string.IsNullOrEmpty(postgresConnString))
-        {
-            var dbUser = builder.Configuration["PostgresUser"];
-            var dbPassword = builder.Configuration["PostgresPassword"];
-            var dbHost = builder.Configuration["PostgresHost"] ?? "10.0.4.4"; // Default to VM IP
-            var dbPort = builder.Configuration["PostgresPort"] ?? "5432";
-            var dbName = builder.Configuration["PostgresDatabase"] ?? "appdb";
-
-            if (!string.IsNullOrEmpty(dbUser) && !string.IsNullOrEmpty(dbPassword))
-            {
-                postgresConnString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword}";
-                Console.WriteLine("Built PostgreSQL connection string from Key Vault secrets");
-            }
-            else
-            {
-                throw new InvalidOperationException("PostgreSQL connection information is missing. Ensure Key Vault secrets are properly configured.");
-            }
-        }
-
-        Console.WriteLine("Using PostgreSQL connection in production");
-        options.UseNpgsql(postgresConnString);
+        // In production, if PostgreSQL connection is not available, throw an exception
+        throw new InvalidOperationException("PostgreSQL connection string is missing in production environment.");
     }
 });
 
