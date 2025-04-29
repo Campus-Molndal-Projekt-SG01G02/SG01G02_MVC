@@ -38,6 +38,7 @@ SG01G02_MVC/
 │   ├── External/
 │   ├── Migrations/                                 - EF Migrations
 │   ├── Repositories/
+│   │   ├── EfProductRepository.cs                  - TODO:
 │   │   ├── ProductRepository.cs                    - Implements IProductRepository using EF Core
 │   │   └── UserRepository.cs                       - Implements IUserRepository for validating users from the database
 │   ├── Services/
@@ -49,7 +50,8 @@ SG01G02_MVC/
 │   │   ├── AdminControllerTests.cs                 - Unit tests for Admin access and redirection logic
 │   │   └── LoginControllerTests.cs                 - Unit tests for login flow using mock services
 │   ├── Helpers/
-│   │   └── TestBase.cs                             - Shared test utilities like in-memory DbContext factory
+│   │   ├── TestBase.cs                             - TODO: 
+│   │   └── TestDbContextFactory.cs                 - TODO: 
 │   ├── Services/
 │   │   ├── AuthServiceTests.cs                     - TDD tests for role-based login logic
 │   │   ├── FakeProductRepository.cs                - In-memory test double for repository logic
