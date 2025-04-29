@@ -14,6 +14,7 @@ SG01G02_MVC/
 ├── SG01G02_MVC.Application/
 │   ├── DTOs/
 │   │   └── ProductDto.cs                           - Data Transfer Object used in Application and Web layers
+│   │   └── ReviewDto.cs                            - TODO
 │   ├── Interfaces/
 │   │   ├── IAuthService.cs                         - Auth abstraction for login validation and session-aware auth
 │   │   ├── IProductRepository.cs                   - Repository pattern abstraction for fetching products (Infrastructure will implement)
