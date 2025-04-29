@@ -4,8 +4,8 @@ namespace SG01G02_MVC.Application.Interfaces
 {
     public interface IProductRepository
     {
-        IEnumerable<Product> GetAllProducts();
-        Product? GetProductById(int id);
+        Task<IEnumerable<Product>> GetAllProducts();
+        Task<Product?> GetProductById(int id);
         Task CreateProductAsync(Product product);
         Task UpdateProductAsync(Product product);
         Task DeleteProductAsync(int id);
