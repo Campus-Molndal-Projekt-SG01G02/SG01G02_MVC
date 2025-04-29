@@ -13,15 +13,15 @@ namespace SG01G02_MVC.Application.Services
             _repository = repository;
         }
 
-        public IEnumerable<ProductDto> GetAllProducts()
+        public async Task<IEnumerable<ProductDto>> GetAllProducts()
         {
-            var products = _repository.GetAllProducts();
+            var products = await _repository.GetAllProducts();
             return products.Select(MapToDto);
         }
 
-        public ProductDto? GetProductById(int id)
+        public async Task<ProductDto?> GetProductById(int id)
         {
-            var product = _repository.GetProductById(id);
+            var product = await _repository.GetProductById(id);
             return product == null ? null : MapToDto(product);
         }
 
