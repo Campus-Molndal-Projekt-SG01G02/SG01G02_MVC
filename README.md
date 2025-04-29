@@ -19,6 +19,7 @@ SG01G02_MVC/
 │   │   ├── IAuthService.cs                         - Auth abstraction for login validation and session-aware auth
 │   │   ├── IProductRepository.cs                   - Repository pattern abstraction for fetching products (Infrastructure will implement)
 │   │   ├── IProductService.cs                      - Application service contract defining product-related use cases (used by Web layer)
+│   │   ├── IReviewService.cs                       - TODO:
 │   │   └── IUserRepository.cs                      - Interface to access and validate user credentials from a data source
 │   ├── Services/
 │   │   ├── AuthService.cs                          - Role-based login logic, delegates to IUserRepository
