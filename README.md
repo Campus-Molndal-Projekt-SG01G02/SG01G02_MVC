@@ -146,6 +146,29 @@ Can also be forced to pull the image by running the following command in the Azu
 curl -H "Authorization: Bearer $WATCHTOWER_TOKEN" -X POST http://$APP_IP:8080/v1/update
 ```
 
+# Local Development Database (SQLite)
+### This section is for developers only.  
+Production environments always use PostgreSQL (via Azure Key Vault / CI/CD).  
+SQLite is used only as a fallback for local development.  
+  
+### How to Apply EF Core Migrations Locally (SQLite)
+1. Add migration if needed:
+
+```bash
+dotnet ef migrations add <MigrationName> --project SG01G02_MVC.Infrastructure --startup-project SG01G02_MVC.Web
+```
+
+2. Apply migration to your local SQLite dev database:
+
+```bash
+dotnet ef database update --project SG01G02_MVC.Infrastructure --startup-project SG01G02_MVC.Web
+```
+
+### Security Warning:
+- The SQLite .db file must never be committed to Git or uploaded to any shared storage.
+- The database contains seeded login credentials and is for dev use only.
+- Check that .gitignore includes: *.db
+
 ---
 
 ## Log-in rules:
