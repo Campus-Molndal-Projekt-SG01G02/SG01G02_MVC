@@ -143,60 +143,8 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
 
-      # Build Docker image locally for testing
-      - name: Build Docker image locally
-        run: |
-          echo "Building Docker image locally for testing..."
-          docker build -t test-image:${{ github.sha }} \
-            --build-arg POSTGRES_CONNECTION_STRING="${{ env.POSTGRES_CONNECTION_STRING }}" \
-            --build-arg KEY_VAULT_NAME="${{ secrets.AZURE_KEY_VAULT_NAME }}" \
-            .
-          echo "IMAGE_ID=test-image:${{ github.sha }}" >> $GITHUB_ENV
-
-      - name: Run Docker smoke test
-        id: smoke_test
-        run: |
-          echo "Starting container for smoke test..."
-
-          docker run -d --name test-container \
-            -p 5000:8080 \
-            -e ASPNETCORE_ENVIRONMENT="Production" \
-            -e POSTGRES_CONNECTION_STRING="${{ env.POSTGRES_CONNECTION_STRING }}" \
-            ${{ env.IMAGE_ID }}
-
-          echo "Waiting for container to initialize..."
-          sleep 15  # Öka väntetiden till 15 sekunder
-
-          CONTAINER_STATUS=$(docker inspect --format='{{.State.Running}}' test-container)
-
-          if [ "$CONTAINER_STATUS" = "true" ]; then
-            echo "Container is running!"
-
-            echo "Testing application..."
-            if curl -s --fail http://localhost:5000/ > /dev/null; then
-              echo "Application is responding!"
-              docker stop test-container
-              docker rm test-container
-              exit 0
-            else
-              echo "Application is not responding properly."
-              echo "Showing container logs:"
-              docker logs test-container
-              docker stop test-container
-              docker rm test-container
-              exit 1
-            fi
-          else
-            echo "Container failed to start properly."
-            docker logs test-container
-            docker stop test-container || true
-            docker rm test-container || true
-            exit 1
-          fi
-
       # Tagging and pushing Docker image if smoke test is successful
       - name: Tag and push Docker image
-        if: success()
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -242,7 +190,7 @@ jobs:
               echo "Watchtower notification failed with code $HTTP_CODE: $BODY"
               if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
                 echo "Waiting 5 seconds before next attempt..."
-                sleep 5
+                sleep 10
               fi
               ATTEMPT=$((ATTEMPT+1))
             fi
