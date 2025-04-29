@@ -14,9 +14,9 @@ namespace SG01G02_MVC.Web.Controllers
             _productService = productService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var dtos = _productService.GetAllProducts();
+            var dtos = await _productService.GetAllProducts();
 
             var viewModels = dtos.Select(dto => new ProductViewModel
             {
@@ -29,9 +29,9 @@ namespace SG01G02_MVC.Web.Controllers
             return View(viewModels);
         }
 
-        public IActionResult Details(int id)
+        public async Task<IActionResult> Details(int id)
         {
-            var product = _productService.GetProductById(id);
+            var product = await _productService.GetProductById(id);
             if (product == null)
                 return NotFound();
 

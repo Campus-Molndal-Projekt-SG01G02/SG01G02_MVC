@@ -54,9 +54,9 @@ namespace SG01G02_MVC.Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult EditProduct(int id)
+        public async Task<IActionResult> EditProduct(int id)
         {
-            var dto = _productService.GetProductById(id);
+            var dto = await _productService.GetProductById(id);
             if (dto == null)
                 return NotFound();
 
@@ -75,9 +75,9 @@ namespace SG01G02_MVC.Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var dto = _productService.GetProductById(id);
+            var dto = await _productService.GetProductById(id);
             if (dto == null)
                 return NotFound();
 

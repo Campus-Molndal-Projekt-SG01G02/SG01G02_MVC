@@ -11,14 +11,15 @@ namespace SG01G02_MVC.Tests.Services
             new Product { Id = 2, Name = "Test Product 2", Price = 20.0m }
         };
 
-        public IEnumerable<Product> GetAllProducts()
+        public Task<IEnumerable<Product>> GetAllProducts()
         {
-            return _products;
+            return Task.FromResult<IEnumerable<Product>>(_products);
         }
 
-        public Product? GetProductById(int id)
+        public Task<Product?> GetProductById(int id)
         {
-            return _products.FirstOrDefault(p => p.Id == id);
+            var product = _products.FirstOrDefault(p => p.Id == id);
+            return Task.FromResult(product);
         }
 
         public Task CreateProductAsync(Product product)
