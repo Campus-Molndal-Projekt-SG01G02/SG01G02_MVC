@@ -1,0 +1,148 @@
+name: Manual Smoke Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_type:
+        description: 'Type of deployment'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+
+jobs:
+  smoketest:
+    name: Docker Smoke Test
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Uppdatera Dockerfile med in-memory-stöd
+      - name: Add InMemory package to Dockerfile
+        run: |
+          echo "Modifying Dockerfile to add InMemory package support"
+          # Lägger till importering av paketet efter WORKDIR-raden
+          sed -i '/WORKDIR \/app/a RUN dotnet add SG01G02_MVC.Web/SG01G02_MVC.Web.csproj package Microsoft.EntityFrameworkCore.InMemory' Dockerfile
+
+          # Visa den uppdaterade Dockerfile
+          echo "Updated Dockerfile:"
+          cat Dockerfile
+
+      # Bygg Docker-avbildningen för test
+      - name: Build Docker image for testing
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: false
+          load: true
+          tags: sg01g02mvc:smoketest
+          build-args: |
+            POSTGRES_CONNECTION_STRING=dummy-connection-string-for-testing
+            KEY_VAULT_NAME=dummy-key-vault-for-testing
+
+      # Kör smoketestet
+      - name: Run Smoke Test
+        id: smoketest
+        run: |
+          echo "Starting smoke test for Docker image..."
+
+          # Kör Docker-containern med testläge och in-memory-databas
+          CONTAINER_ID=$(docker run -d -p 8080:80 \
+            -e ASPNETCORE_ENVIRONMENT=Testing \
+            -e USE_IN_MEMORY_DB=true \
+            sg01g02mvc:smoketest)
+
+          # Vänta på att containern startar
+          echo "Waiting for container to start..."
+          sleep 15
+
+          # Kontrollera om containern körs
+          if ! docker ps | grep -q "$CONTAINER_ID"; then
+            echo "::error::Container failed to start!"
+            docker logs "$CONTAINER_ID"
+            docker stop "$CONTAINER_ID" || true
+            docker rm "$CONTAINER_ID" || true
+            exit 1
+          fi
+
+          echo "Container is running with ID: $CONTAINER_ID"
+
+          # Testa health check-endpointen
+          echo "Testing health check endpoint..."
+          HEALTH_RESPONSE=$(curl -s http://localhost:8080/health || echo "Failed to connect")
+          echo "Health check response: $HEALTH_RESPONSE"
+
+          HEALTH_STATUS=$(echo $HEALTH_RESPONSE | grep -o '"Status":"Healthy"' || echo "")
+
+          if [ -z "$HEALTH_STATUS" ]; then
+            echo "::error::Health check failed, response: $HEALTH_RESPONSE"
+            docker logs "$CONTAINER_ID"
+            docker stop "$CONTAINER_ID"
+            docker rm "$CONTAINER_ID"
+            exit 1
+          fi
+
+          echo "✅ Health check successful"
+
+          # Testa inloggningssidan
+          echo "Testing login page..."
+          LOGIN_CHECK=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/Login/Index || echo "Failed")
+
+          if [ "$LOGIN_CHECK" != "200" ]; then
+            echo "::error::Login page check failed with status code: $LOGIN_CHECK"
+            docker logs "$CONTAINER_ID"
+            docker stop "$CONTAINER_ID"
+            docker rm "$CONTAINER_ID"
+            exit 1
+          fi
+
+          echo "✅ Login page returned status code: $LOGIN_CHECK"
+
+          # Testa hemsidan
+          echo "Testing home page..."
+          HOME_CHECK=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/ || echo "Failed")
+
+          if [ "$HOME_CHECK" != "200" ]; then
+            echo "::error::Home page check failed with status code: $HOME_CHECK"
+            docker logs "$CONTAINER_ID"
+            docker stop "$CONTAINER_ID"
+            docker rm "$CONTAINER_ID"
+            exit 1
+          fi
+
+          echo "✅ Home page returned status code: $HOME_CHECK"
+
+          # Städa upp
+          docker stop "$CONTAINER_ID"
+          docker rm "$CONTAINER_ID"
+
+          echo "✅ Smoke test successful! Docker image works as expected."
+
+          # Lägg till resultat i workflow summary
+          echo "## 🚀 Smoke Test Resultat" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Containern startade korrekt" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Health check returnerade 'Healthy'" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Inloggningssidan laddades korrekt" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Hemsidan laddades korrekt" >> $GITHUB_STEP_SUMMARY
+          echo "Docker-avbildningen är funktionstestad och redo för distribution!" >> $GITHUB_STEP_SUMMARY
+
+      # Städa upp efter testet
+      - name: Cleanup
+        if: always()
+        run: |
+          echo "Cleaning up Docker resources..."
+          # Ta bort test-avbildningen
+          docker rmi sg01g02mvc:smoketest || true
+
+          # Kontrollera och stoppa eventuella kvarvarande containrar
+          CONTAINERS=$(docker ps -q --filter "ancestor=sg01g02mvc:smoketest")
+          if [ ! -z "$CONTAINERS" ]; then
+            echo "Stopping leftover containers: $CONTAINERS"
+            docker stop $CONTAINERS
+            docker rm $CONTAINERS
+          fi
