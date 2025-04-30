@@ -1,10 +1,10 @@
 name: Build and Deploy
 
 on:
-  push:
-    branches: [ main ]
-    paths-ignore:
-      - '.github/workflows/**'
+  # push:
+  #   branches: [ main ]
+  #   paths-ignore:
+  #     - '.github/workflows/**'
 
   pull_request:
     branches: [ main ]
@@ -12,6 +12,14 @@ on:
       - '.github/workflows/**'
 
   workflow_dispatch:
+    inputs:
+      deployment_type:
+        description: 'Type of deployment'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
 
 jobs:
   build_and_test:
