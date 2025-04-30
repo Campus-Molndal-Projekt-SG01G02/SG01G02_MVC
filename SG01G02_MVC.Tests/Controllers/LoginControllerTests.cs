@@ -1,77 +1,56 @@
+using System.Threading.Tasks;
+using Moq;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authentication;
-using System.Security.Claims;
+using SG01G02_MVC.Web.Controllers;
 using SG01G02_MVC.Application.Interfaces;
-using SG01G02_MVC.Web.Services;
 using SG01G02_MVC.Web.Models;
+using SG01G02_MVC.Web.Services;
+using Xunit;
 
-namespace SG01G02_MVC.Web.Controllers
+namespace SG01G02_MVC.Tests.Controllers
 {
-    public class LoginController : Controller
+    public class LoginControllerTests
     {
-        private readonly IAuthService _authService;
-        private readonly IUserSessionService _session;
-
-        public LoginController(IAuthService authService, IUserSessionService session)
+        [Fact]
+        public async Task Login_ValidCredentials_ShouldRedirectToHome()
         {
-            _authService = authService;
-            _session = session;
+            // Arrange
+            var mockAuthService = new Mock<IAuthService>();
+            mockAuthService.Setup(s => s.ValidateLogin("user", "correctpass"))
+                .Returns(new SG01G02_MVC.Domain.Entities.AppUser { Username = "user", Role = "Customer" });
+
+            var mockSession = new Mock<IUserSessionService>();
+            var controller = new LoginController(mockAuthService.Object, mockSession.Object);
+            var model = new LoginViewModel { Username = "user", Password = "correctpass" };
+
+            // Act
+            var result = await controller.Index(model);
+
+            // Assert
+            var redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Home", redirectResult.ControllerName);
+            Assert.Equal("Index", redirectResult.ActionName);
         }
 
-        [HttpGet]
-        public IActionResult Index()
+        [Fact]
+        public async Task Login_InvalidCredentials_ShouldReturnViewWithError()
         {
-            return View();
-        }
+            // Arrange
+            var mockAuthService = new Mock<IAuthService>();
+            mockAuthService.Setup(s => s.ValidateLogin("user", "wrongpass"))
+                .Returns((SG01G02_MVC.Domain.Entities.AppUser?)null);
 
-        [HttpPost]
-        public async Task<IActionResult> Index(LoginViewModel model)
-        {
-            if (!ModelState.IsValid)
-                return View(model);
+            var mockSession = new Mock<IUserSessionService>();
+            var controller = new LoginController(mockAuthService.Object, mockSession.Object);
+            var model = new LoginViewModel { Username = "user", Password = "wrongpass" };
 
-            var user = _authService.ValidateLogin(model.Username, model.Password);
-            if (user == null)
-            {
-                ViewBag.LoginFailed = true;
-                return View(model);
-            }
+            // Act
+            var result = await controller.Index(model);
 
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role)
-            };
-            var identity = new ClaimsIdentity(claims, "CookieAuth");
-            var principal = new ClaimsPrincipal(identity);
-
-            // swallow if auth services aren't wired up (unit tests)
-            try
-            {
-                await HttpContext.SignInAsync("CookieAuth", principal);
-            }
-            catch
-            {
-            }
-
-            _session.Username = user.Username;
-            _session.Role = user.Role;
-
-            return user.Role switch
-            {
-                "Admin"    => RedirectToAction("Index", "Admin"),
-                "Staff"    => RedirectToAction("Index", "Staff"),
-                "Customer" => RedirectToAction("Index", "Home"),
-                _          => RedirectToAction("Index", "Home")
-            };
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Logout()
-        {
-            _session.Clear();
-            await HttpContext.SignOutAsync("CookieAuth");
-            return RedirectToAction("Index", "Home");
+            // Assert
+            var viewResult = Assert.IsType<ViewResult>(result);
+            Assert.Equal(model, viewResult.Model);
+            Assert.True(controller.ModelState.IsValid); // Not required, but doesn't hurt
         }
     }
 }
