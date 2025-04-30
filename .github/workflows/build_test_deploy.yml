@@ -63,10 +63,12 @@ jobs:
           echo "Waiting for container to start..."
           sleep 15
 
-          # Check if the container is running
-          if ! docker ps | grep -q "$CONTAINER_ID"; then
-            echo "::error::Container failed to start!"
-            docker logs "$CONTAINER_ID" || echo "Kunde inte hämta loggar"
+          # Check if the container is running using docker inspect instead of docker ps | grep
+          CONTAINER_STATE=$(docker inspect --format='{{.State.Status}}' "$CONTAINER_ID")
+
+          if [ "$CONTAINER_STATE" != "running" ]; then
+            echo "::error::Container failed to start! State: $CONTAINER_STATE"
+            docker logs "$CONTAINER_ID" || echo "Could not retrieve logs"
             docker stop "$CONTAINER_ID" 2>/dev/null || true
             docker rm "$CONTAINER_ID" 2>/dev/null || true
             exit 1
