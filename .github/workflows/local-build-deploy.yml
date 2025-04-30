@@ -74,10 +74,10 @@ jobs:
           fi
 
           # Maskera hemligheterna i loggen men visa att de existerar
-          echo "✅ DOCKERHUB_USERNAME exists"
-          echo "✅ DOCKERHUB_TOKEN exists"
-          echo "✅ WATCHTOWER_TOKEN exists"
-          echo "✅ WATCHTOWER_ENDPOINT: $WATCHTOWER_ENDPOINT"
+          echo "DOCKERHUB_USERNAME exists"
+          echo "DOCKERHUB_TOKEN exists"
+          echo "WATCHTOWER_TOKEN exists"
+          echo "WATCHTOWER_ENDPOINT: $WATCHTOWER_ENDPOINT"
 
           echo "All required secrets are set correctly!"
 
