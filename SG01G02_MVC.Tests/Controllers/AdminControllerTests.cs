@@ -33,7 +33,7 @@ namespace SG01G02_MVC.Tests.Controllers
         }
 
         [Fact]
-        public void Index_UnauthenticatedUser_ShouldRedirectToLogin()
+        public async Task Index_UnauthenticatedUser_ShouldRedirectToLogin()
         {
             var mockSession = new Mock<IUserSessionService>();
             mockSession.Setup(s => s.Role).Returns("Customer"); // Not admin
@@ -59,7 +59,7 @@ namespace SG01G02_MVC.Tests.Controllers
                 }
             };
 
-            var result = controller.Index();
+            var result = await controller.Index();
 
             var redirectResult = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirectResult.ActionName);
@@ -67,7 +67,7 @@ namespace SG01G02_MVC.Tests.Controllers
         }
 
         [Fact]
-        public void Index_AuthenticatedAdminUser_ShouldReturnView()
+        public async Task Index_AuthenticatedAdminUser_ShouldReturnView()
         {
             var (controller, _) = CreateController();
 
@@ -82,8 +82,7 @@ namespace SG01G02_MVC.Tests.Controllers
                 HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) }
             };
 
-            var result = controller.Index();
-
+            var result = await controller.Index(); // ✅ add await
             Assert.IsType<ViewResult>(result);
         }
 
