@@ -18,6 +18,11 @@ on:
         options:
           - full
 
+# Concurrency control to prevent multiple runs of the same workflow
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   smoketest:
     name: Docker Smoke Test
