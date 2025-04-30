@@ -12,12 +12,12 @@ namespace SG01G02_MVC.Infrastructure.Repositories
             new Product { Id = 3, Name = "Dried Blueberries", Price = 59.00m, StockQuantity = 12, ImageUrl = "images/dried.jpg" }
         };
 
-        public Task<IEnumerable<Product>> GetAllProducts()
+        public Task<IEnumerable<Product>> GetAllProductsAsync()
         {
             return Task.FromResult(_products.AsEnumerable());
         }
 
-        public Task<Product?> GetProductById(int id)
+        public Task<Product?> GetProductByIdAsync(int id)
         {
             return Task.FromResult(_products.FirstOrDefault(p => p.Id == id));
         }
