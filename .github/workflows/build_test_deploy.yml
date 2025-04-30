@@ -88,9 +88,12 @@ jobs:
             HEALTH_RESPONSE=$(curl -s http://localhost:8080/health || echo "Failed to connect")
             echo "Health check response: $HEALTH_RESPONSE"
 
-            HEALTH_STATUS=$(echo $HEALTH_RESPONSE | grep -o '"Status":"Healthy"' || echo "")
+            HEALTH_STATUS=$(echo $HEALTH_RESPONSE | grep -o '"status":"Healthy"' || echo "")
 
-            if [ -z "$HEALTH_STATUS" ]; then
+            if [ -n "$HEALTH_STATUS" ]; then
+              echo "Health check is healthy! Continuing with tests."
+              break
+            else
               RETRY_COUNT=$((RETRY_COUNT+1))
               echo "Retry $RETRY_COUNT of $MAX_RETRIES..."
               sleep 5
@@ -104,6 +107,8 @@ jobs:
             docker stop "$CONTAINER_ID"
             docker rm "$CONTAINER_ID"
             exit 1
+          else
+            echo "Health check successful with response: $HEALTH_RESPONSE"
           fi
 
           echo "Health check successful"
