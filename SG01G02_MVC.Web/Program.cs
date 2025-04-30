@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.InMemory;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Application.Services;
 using SG01G02_MVC.Infrastructure.Repositories;
@@ -42,50 +43,76 @@ if (!builder.Environment.IsDevelopment() && string.IsNullOrEmpty(Environment.Get
     }
 }
 
+/// <summary>
+/// This adds functionallity for CI/CD to be able to run smoketest.
+/// If environment is test, then it uses an in memory db for testing (smoketest).
+/// What it does:
+/// - Calls /health to check that the server responds and
+///   is healthy and that the database is reachable.
+/// - Test the login page (/Login/Index) to ensure it responds.
+/// - Test the homepage to ensure it responds.
+///
+/// Otherwise, it uses the PostgreSQL database connection string from the environment variable.
+/// If not found, it falls back to SQLite in development.
+/// </summary>
+
+if (builder.Environment.IsEnvironment("Testing") || Environment.GetEnvironmentVariable("USE_IN_MEMORY_DB") == "true")
+{
+    Console.WriteLine("Using in-memory database for testing");
+
+    // Register in-memory database for testing
+    builder.Services.AddDbContext<AppDbContext>(options =>
+    {
+        options.UseInMemoryDatabase("TestingDb");
+        Console.WriteLine("Configured in-memory database for testing");
+    });
+}
+else
+{
+    // Configure database context
+    builder.Services.AddDbContext<AppDbContext>(options =>
+    {
+        // Try to get PostgreSQL connection string first from environment variable
+        var postgresConnString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
+
+        // If not found in environment variables AND Key Vault is available, check configuration
+        if (string.IsNullOrEmpty(postgresConnString) && keyVaultAvailable)
+        {
+            postgresConnString = builder.Configuration["PostgresConnectionString"];
+        }
+
+        if (!string.IsNullOrEmpty(postgresConnString))
+        {
+            // Mask the connection string for logging (remove the password)
+            var sanitizedConnString = System.Text.RegularExpressions.Regex.Replace(
+                postgresConnString,
+                "Password=([^;]*)",
+                "Password=***");
+
+            Console.WriteLine($"Using PostgreSQL connection: {sanitizedConnString}");
+            options.UseNpgsql(postgresConnString);
+        }
+        else if (builder.Environment.IsDevelopment())
+        {
+            // Only allow SQLite fallback in development
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            Console.WriteLine("Using SQLite connection (development only)");
+            options.UseSqlite(connectionString);
+        }
+        else
+        {
+            // In production, if PostgreSQL connection is not available, throw an exception
+            throw new InvalidOperationException("PostgreSQL connection string is missing in production environment.");
+        }
+    });
+}
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IProductRepository, EfProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-
-// Configure database context
-builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    // Try to get PostgreSQL connection string first from environment variable
-    var postgresConnString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
-
-    // If not found in environment variables AND Key Vault is available, check configuration
-    if (string.IsNullOrEmpty(postgresConnString) && keyVaultAvailable)
-    {
-        postgresConnString = builder.Configuration["PostgresConnectionString"];
-    }
-
-    if (!string.IsNullOrEmpty(postgresConnString))
-    {
-        // Mask the connection string for logging (remove the password)
-        var sanitizedConnString = System.Text.RegularExpressions.Regex.Replace(
-            postgresConnString,
-            "Password=([^;]*)",
-            "Password=***");
-
-        Console.WriteLine($"Using PostgreSQL connection: {sanitizedConnString}");
-        options.UseNpgsql(postgresConnString);
-    }
-    else if (builder.Environment.IsDevelopment())
-    {
-        // Only allow SQLite fallback in development
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-        Console.WriteLine("Using SQLite connection (development only)");
-        options.UseSqlite(connectionString);
-    }
-    else
-    {
-        // In production, if PostgreSQL connection is not available, throw an exception
-        throw new InvalidOperationException("PostgreSQL connection string is missing in production environment.");
-    }
-});
-
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserSessionService, UserSessionService>();
 
@@ -105,28 +132,27 @@ builder.Services.AddAuthentication("CookieAuth")
     config.LoginPath = "/Login/Index"; // fallback if unauthenticated
 });
 
-// Health checks
-builder.Services.AddHealthChecks()
-    .AddCheck("Database", () =>
+// Health checks used by CI/CD
+builder.Services.AddHealthChecks().AddCheck("Database", () =>
+{
+    try
     {
-        try
-        {
-            using var scope = builder.Services.BuildServiceProvider().CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var canConnect = db.Database.CanConnect();
+        using var scope = builder.Services.BuildServiceProvider().CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var canConnect = db.Database.CanConnect();
 
-            Console.WriteLine($"Health check - Database connection: {(canConnect ? "Success" : "Failed")}");
+        Console.WriteLine($"Health check - Database connection: {(canConnect ? "Success" : "Failed")}");
 
-            return canConnect
-                ? HealthCheckResult.Healthy("Database connection is working.")
-                : HealthCheckResult.Unhealthy("Cannot connect to database.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Health check - Database error: {ex.Message}");
-            return HealthCheckResult.Unhealthy($"Database error: {ex.Message}");
-        }
-    });
+        return canConnect
+            ? HealthCheckResult.Healthy("Database connection is working.")
+            : HealthCheckResult.Unhealthy("Cannot connect to database.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Health check - Database error: {ex.Message}");
+        return HealthCheckResult.Unhealthy($"Database error: {ex.Message}");
+    }
+});
 
 var app = builder.Build();
 
