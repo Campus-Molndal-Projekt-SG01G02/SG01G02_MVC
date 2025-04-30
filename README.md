@@ -40,8 +40,11 @@ SG01G02_MVC/
 │   ├── External/
 │   ├── Migrations/                                 - EF Migrations
 │   ├── Repositories/
+│   │   ├── CartRepository.cs                       - TODO:
 │   │   ├── EfProductRepository.cs                  - TODO:
+│   │   ├── OrderRepository.cs                      - TODO:
 │   │   ├── ProductRepository.cs                    - Implements IProductRepository using EF Core
+│   │   ├── ReviewRepository.cs                     - TODO:
 │   │   └── UserRepository.cs                       - Implements IUserRepository for validating users from the database
 │   ├── Services/
 │   │   └── BlobStorageService.cs                   - Handles image uploads via Azure Blob Storage (stubbed for MVP)
