@@ -33,7 +33,7 @@ namespace SG01G02_MVC.Web.Controllers
             if (!_context.Database.CanConnect())
                 return View("DatabaseUnavailable");
 
-            var products = await _productService.GetAllProducts();
+            var products = await _productService.GetAllProductsAsync();
             return View(products);
         }
 
@@ -56,7 +56,7 @@ namespace SG01G02_MVC.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> EditProduct(int id)
         {
-            var dto = await _productService.GetProductById(id);
+            var dto = await _productService.GetProductByIdAsync(id);
             if (dto == null)
                 return NotFound();
 
@@ -77,7 +77,7 @@ namespace SG01G02_MVC.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
-            var dto = await _productService.GetProductById(id);
+            var dto = await _productService.GetProductByIdAsync(id);
             if (dto == null)
                 return NotFound();
 

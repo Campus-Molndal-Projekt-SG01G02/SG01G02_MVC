@@ -16,7 +16,7 @@ namespace SG01G02_MVC.Web.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var dtos = await _productService.GetAllProducts();
+            var dtos = await _productService.GetAllProductsAsync();
 
             var viewModels = dtos.Select(dto => new ProductViewModel
             {
@@ -31,7 +31,7 @@ namespace SG01G02_MVC.Web.Controllers
 
         public async Task<IActionResult> Details(int id)
         {
-            var product = await _productService.GetProductById(id);
+            var product = await _productService.GetProductByIdAsync(id);
             if (product == null)
                 return NotFound();
 

@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Http;
 
 namespace SG01G02_MVC.Web.Controllers
 {
+    // Controller uses no async dependencies (yet)
+
     public class StaffController : Controller
     {
         public IActionResult Index()
