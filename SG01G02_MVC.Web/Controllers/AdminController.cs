@@ -24,7 +24,7 @@ namespace SG01G02_MVC.Web.Controllers
             _session = session;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             // use session.Role for auth-check (easier to mock in tests)
             if (_session.Role != "Admin")
@@ -33,7 +33,7 @@ namespace SG01G02_MVC.Web.Controllers
             if (!_context.Database.CanConnect())
                 return View("DatabaseUnavailable");
 
-            var products = _productService.GetAllProducts();
+            var products = await _productService.GetAllProducts();
             return View(products);
         }
 
