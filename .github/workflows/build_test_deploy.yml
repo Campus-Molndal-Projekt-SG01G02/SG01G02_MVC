@@ -57,11 +57,12 @@ jobs:
           CONTAINER_ID=$(docker run -d -p 8080:80 \
             -e ASPNETCORE_ENVIRONMENT=Testing \
             -e USE_IN_MEMORY_DB=true \
+            -e ASPNETCORE_URLS="http://0.0.0.0:80" \
             sg01g02mvc:smoketest)
 
-          # Wait for the container to start
+          # Wait for the container to start - increase to 30 seconds
           echo "Waiting for container to start..."
-          sleep 15
+          sleep 30
 
           # Check if the container is running using docker inspect instead of docker ps | grep
           CONTAINER_STATE=$(docker inspect --format='{{.State.Status}}' "$CONTAINER_ID")
@@ -77,15 +78,28 @@ jobs:
           echo "Container is running with ID: $CONTAINER_ID"
           docker logs "$CONTAINER_ID"
 
-          # Test the health check endpoint
+          # Test the health check endpoint with retry mechanism
           echo "Testing health check endpoint..."
-          HEALTH_RESPONSE=$(curl -s http://localhost:8080/health || echo "Failed to connect")
-          echo "Health check response: $HEALTH_RESPONSE"
+          MAX_RETRIES=5
+          RETRY_COUNT=0
+          HEALTH_STATUS=""
 
-          HEALTH_STATUS=$(echo $HEALTH_RESPONSE | grep -o '"Status":"Healthy"' || echo "")
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ -z "$HEALTH_STATUS" ]; do
+            HEALTH_RESPONSE=$(curl -s http://localhost:8080/health || echo "Failed to connect")
+            echo "Health check response: $HEALTH_RESPONSE"
+
+            HEALTH_STATUS=$(echo $HEALTH_RESPONSE | grep -o '"Status":"Healthy"' || echo "")
+
+            if [ -z "$HEALTH_STATUS" ]; then
+              RETRY_COUNT=$((RETRY_COUNT+1))
+              echo "Retry $RETRY_COUNT of $MAX_RETRIES..."
+              sleep 5
+            fi
+          done
 
           if [ -z "$HEALTH_STATUS" ]; then
-            echo "::error::Health check failed, response: $HEALTH_RESPONSE"
+            echo "::error::Health check failed after $MAX_RETRIES retries, response: $HEALTH_RESPONSE"
+            echo "::error::Container logs:"
             docker logs "$CONTAINER_ID"
             docker stop "$CONTAINER_ID"
             docker rm "$CONTAINER_ID"
