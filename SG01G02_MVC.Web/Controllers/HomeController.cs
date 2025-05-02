@@ -29,6 +29,8 @@ namespace SG01G02_MVC.Web.Controllers
         //     return Content($"Provider: {provider}\nDatabase: {dbName}\nCanConnect: {canConnect}");
         // }
 
+        // TODO: Temporary line just to trigger workflow and a second branch
+
         public IActionResult Index()
         {
             return View();
