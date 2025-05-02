@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using SG01G02_MVC.Web.Models;
+using Microsoft.EntityFrameworkCore;
+using SG01G02_MVC.Infrastructure.Data;
 
 namespace SG01G02_MVC.Web.Controllers
 {
@@ -8,28 +10,24 @@ namespace SG01G02_MVC.Web.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         
-        // TEMPORARILY COMMENTED OUT FOR CI/CD BUILD FIX
-        // private readonly AppDbContext _context;
+        private readonly AppDbContext _context;
 
-        // public HomeController(ILogger<HomeController> logger, AppDbContext context)
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, AppDbContext context)
         {
             _logger = logger;
-            // _context = context;
+            _context = context;
         }
 
-        // TEMPORARY PATCH: DISABLED DB TEST ENDPOINT
-        // [HttpGet("dbinfo")]
-        // public IActionResult DbInfo()
-        // {
-        //     var provider = _context.Database.ProviderName ?? "Unknown";
-        //     var canConnect = _context.Database.CanConnect();
-        //     var dbName = _context.Database.GetDbConnection().Database;
-        //
-        //     return Content($"Provider: {provider}\nDatabase: {dbName}\nCanConnect: {canConnect}");
-        // }
-
-        // TODO: Temporary line just to trigger workflow and a second branch
+        // TODO: We will protect this via [Authorize(Roles = "Admin")] in the future!
+        [HttpGet("dbinfo")]
+        public IActionResult DbInfo()
+        {
+            var provider = _context.Database.ProviderName ?? "Unknown";
+            var canConnect = _context.Database.CanConnect();
+            var dbName = _context.Database.GetDbConnection().Database;
+        
+            return Content($"Provider: {provider}\nDatabase: {dbName}\nCanConnect: {canConnect}");
+        }
 
         public IActionResult Index()
         {
