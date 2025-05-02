@@ -1,11 +1,12 @@
-using System.Threading.Tasks;
 using Moq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authentication;
 using SG01G02_MVC.Web.Controllers;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Web.Models;
 using SG01G02_MVC.Web.Services;
-using Xunit;
+using System.Security.Claims;
 
 namespace SG01G02_MVC.Tests.Controllers
 {
