@@ -21,6 +21,7 @@ namespace SG01G02_MVC.Tests.Controllers
 
             var mockSession = new Mock<IUserSessionService>();
             var controller = new LoginController(mockAuthService.Object, mockSession.Object);
+            SetupHttpContextForAuth(controller);
             var model = new LoginViewModel { Username = "user", Password = "correctpass" };
 
             // Act
@@ -51,6 +52,32 @@ namespace SG01G02_MVC.Tests.Controllers
             var viewResult = Assert.IsType<ViewResult>(result);
             Assert.Equal(model, viewResult.Model);
             Assert.True(controller.ModelState.IsValid); // Not required, but doesn't hurt
+        }
+
+        private void SetupHttpContextForAuth(LoginController controller)
+        {
+            var httpContext = new DefaultHttpContext();
+            var authServiceMock = new Mock<IAuthenticationService>();
+            var serviceProviderMock = new Mock<IServiceProvider>();
+
+            serviceProviderMock
+                .Setup(x => x.GetService(typeof(IAuthenticationService)))
+                .Returns(authServiceMock.Object);
+
+            httpContext.RequestServices = serviceProviderMock.Object;
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = httpContext
+            };
+
+            authServiceMock
+                .Setup(x => x.SignInAsync(
+                    It.IsAny<HttpContext>(),
+                    It.IsAny<string>(),
+                    It.IsAny<ClaimsPrincipal>(),
+                    It.IsAny<AuthenticationProperties>()))
+                .Returns(Task.CompletedTask);
         }
     }
 }
