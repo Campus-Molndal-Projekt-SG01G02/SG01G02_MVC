@@ -7,11 +7,29 @@ namespace SG01G02_MVC.Web.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        
+        // TEMPORARILY COMMENTED OUT FOR CI/CD BUILD FIX
+        // private readonly AppDbContext _context;
 
+        // public HomeController(ILogger<HomeController> logger, AppDbContext context)
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
+            // _context = context;
         }
+
+        // TEMPORARY PATCH: DISABLED DB TEST ENDPOINT
+        // [HttpGet("dbinfo")]
+        // public IActionResult DbInfo()
+        // {
+        //     var provider = _context.Database.ProviderName ?? "Unknown";
+        //     var canConnect = _context.Database.CanConnect();
+        //     var dbName = _context.Database.GetDbConnection().Database;
+        //
+        //     return Content($"Provider: {provider}\nDatabase: {dbName}\nCanConnect: {canConnect}");
+        // }
+
+        // TODO: Temporary line just to trigger workflow and a second branch
 
         public IActionResult Index()
         {
