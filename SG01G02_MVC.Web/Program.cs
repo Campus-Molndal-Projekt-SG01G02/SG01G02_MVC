@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using System.Text.Json;
 using Azure.Identity;
 using SG01G02_MVC.Web.HealthChecks;
+using System.Collections;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -102,6 +103,21 @@ else
         // Use only the environment variable for the connection string
         var postgresConnString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
 
+        if (string.IsNullOrEmpty(postgresConnString))
+        {
+            Console.WriteLine("WARNING: POSTGRES_CONNECTION_STRING environment variable is not set or is empty.");
+
+            // TODO: Debug, remove this.
+            Console.WriteLine("This is the ENV variable for POSTGRES_CONNECTION_STRING: " + postgresConnString);
+
+            // Print all environment variables for debugging purposes
+            Console.WriteLine("Available environment variables:");
+            foreach (var envVar in Environment.GetEnvironmentVariables().Cast<DictionaryEntry>())
+            {
+                Console.WriteLine($"{envVar.Key}: {envVar.Value}");
+            }
+        }
+
         // If the connection string is not set, check if Key Vault is available
         if (string.IsNullOrEmpty(postgresConnString) && keyVaultAvailable)
         {
@@ -128,22 +144,7 @@ else
         }
         else
         {
-            try
-            {
-                // TODO: Debug, remove this !
-                Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
-                Console.WriteLine($"KEY_VAULT_NAME is set: {!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KEY_VAULT_NAME"))}");
-                Console.WriteLine($"KEY_VAULT_URL is set: {!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KEY_VAULT_URL"))}");
-                Console.WriteLine($"Key Vault available: {keyVaultAvailable}");
-                Console.WriteLine($"POSTGRES_CONNECTION_STRING is set: {!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING"))}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error while checking environment variables: {ex.Message}");
-                // In production, if no connection string is available, throw an exception
-                throw new InvalidOperationException("PostgreSQL connection string is missing in environment variable.");
-            }
-
+            throw new InvalidOperationException("No database connection string available. Application cannot start without a valid database connection.");
         }
     });
 }
