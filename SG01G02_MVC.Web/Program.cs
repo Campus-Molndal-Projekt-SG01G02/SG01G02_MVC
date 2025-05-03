@@ -14,11 +14,11 @@ using Azure.Security.KeyVault.Secrets;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Setup Azure Key Vault in non-development environments
-bool keyVaultAvailable = false;
-
 if (!builder.Environment.IsDevelopment())
 {
+    // Setup Azure Key Vault in non-development environments
+    bool keyVaultAvailable = false;
+
     var keyVaultUrl = Environment.GetEnvironmentVariable("KEY_VAULT_URL");
     var keyVaultName = Environment.GetEnvironmentVariable("KEY_VAULT_NAME");
 
