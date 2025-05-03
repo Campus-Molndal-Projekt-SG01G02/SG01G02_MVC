@@ -51,8 +51,18 @@ if (!builder.Environment.IsDevelopment())
                     new Uri(keyVaultUrl),
                     credential);
 
-                Console.WriteLine($"Successfully connected to Azure Key Vault: {keyVaultUrl}");
                 keyVaultAvailable = true;
+
+                if (keyVaultAvailable)
+                {
+                    Console.WriteLine("Key Vault configuration is ready for use");
+                }
+                else
+                {
+                    Console.WriteLine("Key Vault is not available, using fallback configuration");
+                }
+
+                Console.WriteLine($"Successfully connected to Azure Key Vault: {keyVaultUrl}");
             }
             else
             {
