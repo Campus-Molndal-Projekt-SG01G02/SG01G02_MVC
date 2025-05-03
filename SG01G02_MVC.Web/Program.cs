@@ -14,7 +14,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Setup Azure Key Vault in non-development environments
 bool keyVaultAvailable = false;
-if (!builder.Environment.IsDevelopment() && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")))
+if (!builder.Environment.IsDevelopment())
+if (!builder.Environment.IsDevelopment())
 {
     var keyVaultUrl = Environment.GetEnvironmentVariable("KEY_VAULT_URL");
     var keyVaultName = Environment.GetEnvironmentVariable("KEY_VAULT_NAME");
@@ -30,16 +31,42 @@ if (!builder.Environment.IsDevelopment() && string.IsNullOrEmpty(Environment.Get
         try
         {
             // Use DefaultAzureCredential for MSI/Service Principal authentication
-            builder.Configuration.AddAzureKeyVault(
-                new Uri(keyVaultUrl),
-                new DefaultAzureCredential());
+            var credential = new DefaultAzureCredential();
 
-            Console.WriteLine($"Successfully connected to Azure Key Vault: {keyVaultUrl}");
+            // Explicit test of Azure authentication
+            Console.WriteLine("Testing Azure authentication...");
+            var tokenRequestContext = new Azure.Core.TokenRequestContext(new[] { "https://vault.azure.net/.default" });
+            var token = credential.GetToken(tokenRequestContext);
+
+            if (!string.IsNullOrEmpty(token.Token))
+            {
+                Console.WriteLine("Azure authentication successful!");
+
+                // Proceed with adding KeyVault to the configuration
+                builder.Configuration.AddAzureKeyVault(
+                    new Uri(keyVaultUrl),
+                    credential);
+
+                Console.WriteLine($"Successfully connected to Azure Key Vault: {keyVaultUrl}");
+                keyVaultAvailable = true;
+            }
+            else
+            {
+                Console.WriteLine("Azure authentication failed: Could not obtain token");
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error connecting to Key Vault: {ex.Message}");
+            Console.WriteLine($"Error with Azure authentication or Key Vault connection: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
         }
+    }
+    else
+    {
+        Console.WriteLine("No Key Vault URL or name provided in environment variables");
     }
 }
 
@@ -69,32 +96,50 @@ if (builder.Environment.IsEnvironment("Testing") || Environment.GetEnvironmentVa
 }
 else
 {
-    // Configure postgres-database context
+    // Configure database context
     builder.Services.AddDbContext<AppDbContext>(options =>
     {
+        // Prioritera KeyVault om det är tillgängligt
         string postgresConnString = null;
 
+        // Försök hämta från KeyVault först om tillgängligt
         if (keyVaultAvailable)
         {
-            postgresConnString = builder.Configuration["PostgresConnectionString"];
-            Console.WriteLine("Retrieved connection string from Azure Key Vault");
-
-            if (!string.IsNullOrEmpty(postgresConnString))
+            try
             {
-                // Mask the connection string for logging (remove the password)
-                var sanitizedConnString = System.Text.RegularExpressions.Regex.Replace(
-                    postgresConnString,
-                    "Password=([^;]*)",
-                    "Password=***");
-
-                Console.WriteLine($"Using PostgreSQL connection: {sanitizedConnString}");
-                options.UseNpgsql(postgresConnString);
+                postgresConnString = builder.Configuration["PostgresConnectionString"];
+                Console.WriteLine("Retrieved connection string from Azure Key Vault");
             }
-            else
+            catch (Exception ex)
             {
-                // If KeyVault is available but the connection string is missing, throw an exception
-                throw new InvalidOperationException("PostgreSQL connection string is missing in Azure Key Vault.");
+                Console.WriteLine($"Failed to get connection string from KeyVault: {ex.Message}");
             }
+        }
+
+        // If KeyVault is not available or the connection string is missing, use the environment variable
+        if (string.IsNullOrEmpty(postgresConnString))
+        {
+            postgresConnString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
+            Console.WriteLine("Using connection string from environment variable");
+
+            // If the environment variable contains "postgres-db", replace it with the IP address
+            if (!string.IsNullOrEmpty(postgresConnString) && postgresConnString.Contains("Host=postgres-db"))
+            {
+                postgresConnString = postgresConnString.Replace("Host=postgres-db", "Host=10.0.4.4");
+                Console.WriteLine("Modified connection string to use IP address instead of hostname");
+            }
+        }
+
+        if (!string.IsNullOrEmpty(postgresConnString))
+        {
+            // Mask the connection string for logging (remove the password)
+            var sanitizedConnString = System.Text.RegularExpressions.Regex.Replace(
+                postgresConnString,
+                "Password=([^;]*)",
+                "Password=***");
+
+            Console.WriteLine($"Using PostgreSQL connection: {sanitizedConnString}");
+            options.UseNpgsql(postgresConnString);
         }
         else if (builder.Environment.IsDevelopment())
         {
@@ -105,8 +150,8 @@ else
         }
         else
         {
-            // In production, if KeyVault is not available, throw an exception
-            throw new InvalidOperationException("Azure Key Vault is not available in production environment.");
+            // In production, if no connection string is available, throw an exception
+            throw new InvalidOperationException("No PostgreSQL connection string available in production environment.");
         }
     });
 }
