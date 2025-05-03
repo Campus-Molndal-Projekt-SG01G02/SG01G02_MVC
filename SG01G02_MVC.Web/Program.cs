@@ -128,22 +128,8 @@ else
         }
         else
         {
-            try
-            {
-                // TODO: Debug, remove this !
-                Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
-                Console.WriteLine($"KEY_VAULT_NAME is set: {!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KEY_VAULT_NAME"))}");
-                Console.WriteLine($"KEY_VAULT_URL is set: {!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KEY_VAULT_URL"))}");
-                Console.WriteLine($"Key Vault available: {keyVaultAvailable}");
-                Console.WriteLine($"POSTGRES_CONNECTION_STRING is set: {!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING"))}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error while checking environment variables: {ex.Message}");
-                // In production, if no connection string is available, throw an exception
-                throw new InvalidOperationException("PostgreSQL connection string is missing in environment variable.");
-            }
-
+            // Fallback for production when no connection string is available
+            throw new InvalidOperationException("No database connection string available. Application cannot start without a valid database connection.");
         }
     });
 }
