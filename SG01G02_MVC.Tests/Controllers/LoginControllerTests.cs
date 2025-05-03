@@ -7,11 +7,7 @@ using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Web.Models;
 using SG01G02_MVC.Web.Services;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.AspNetCore.Routing;
-using System.Threading.Tasks;
 
 namespace SG01G02_MVC.Tests.Controllers
 {
