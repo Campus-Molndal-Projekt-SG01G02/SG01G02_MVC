@@ -99,36 +99,8 @@ else
     // Configure database context
     builder.Services.AddDbContext<AppDbContext>(options =>
     {
-        // Prioritera KeyVault om det är tillgängligt
-        string postgresConnString = null;
-
-        // Försök hämta från KeyVault först om tillgängligt
-        if (keyVaultAvailable)
-        {
-            try
-            {
-                postgresConnString = builder.Configuration["PostgresConnectionString"];
-                Console.WriteLine("Retrieved connection string from Azure Key Vault");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to get connection string from KeyVault: {ex.Message}");
-            }
-        }
-
-        // If KeyVault is not available or the connection string is missing, use the environment variable
-        if (string.IsNullOrEmpty(postgresConnString))
-        {
-            postgresConnString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
-            Console.WriteLine("Using connection string from environment variable");
-
-            // If the environment variable contains "postgres-db", replace it with the IP address
-            if (!string.IsNullOrEmpty(postgresConnString) && postgresConnString.Contains("Host=postgres-db"))
-            {
-                postgresConnString = postgresConnString.Replace("Host=postgres-db", "Host=10.0.4.4");
-                Console.WriteLine("Modified connection string to use IP address instead of hostname");
-            }
-        }
+        // Use only the environment variable for the connection string
+        var postgresConnString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
 
         if (!string.IsNullOrEmpty(postgresConnString))
         {
@@ -151,7 +123,7 @@ else
         else
         {
             // In production, if no connection string is available, throw an exception
-            throw new InvalidOperationException("No PostgreSQL connection string available in production environment.");
+            throw new InvalidOperationException("PostgreSQL connection string is missing in environment variable.");
         }
     });
 }

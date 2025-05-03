@@ -97,6 +97,11 @@ jobs:
           az keyvault show --name ${{ secrets.AZURE_KEY_VAULT_NAME }} --query "name" -o tsv || \
             (echo "Error: Could not access Key Vault" && exit 1)
 
+      - name: Debug connection string
+        run: |
+          MASKED_CONN=$(echo "$POSTGRES_CONNECTION_STRING" | sed 's/Password=[^;]*;/Password=***;/g')
+          echo "POSTGRES_CONNECTION_STRING (masked): $MASKED_CONN"
+
       # Get secrets from Azure Key Vault
       - name: Get secrets from Key Vault
         run: |
