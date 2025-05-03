@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using System.Text.Json;
 using Azure.Identity;
 using SG01G02_MVC.Web.HealthChecks;
+using System.Collections;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -102,6 +103,21 @@ else
         // Use only the environment variable for the connection string
         var postgresConnString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
 
+        if (string.IsNullOrEmpty(postgresConnString))
+        {
+            Console.WriteLine("WARNING: POSTGRES_CONNECTION_STRING environment variable is not set or is empty.");
+
+            // TODO: Debug, remove this.
+            Console.WriteLine("This is the ENV variable for POSTGRES_CONNECTION_STRING: " + postgresConnString);
+
+            // Print all environment variables for debugging purposes
+            Console.WriteLine("Available environment variables:");
+            foreach (var envVar in Environment.GetEnvironmentVariables().Cast<DictionaryEntry>())
+            {
+                Console.WriteLine($"{envVar.Key}: {envVar.Value}");
+            }
+        }
+
         // If the connection string is not set, check if Key Vault is available
         if (string.IsNullOrEmpty(postgresConnString) && keyVaultAvailable)
         {
@@ -128,7 +144,6 @@ else
         }
         else
         {
-            // Fallback for production when no connection string is available
             throw new InvalidOperationException("No database connection string available. Application cannot start without a valid database connection.");
         }
     });
