@@ -69,28 +69,32 @@ if (builder.Environment.IsEnvironment("Testing") || Environment.GetEnvironmentVa
 }
 else
 {
-    // Configure database context
+    // Configure postgres-database context
     builder.Services.AddDbContext<AppDbContext>(options =>
     {
-        // Try to get PostgreSQL connection string first from environment variable
-        var postgresConnString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
+        string postgresConnString = null;
 
-        // If not found in environment variables AND Key Vault is available, check configuration
-        if (string.IsNullOrEmpty(postgresConnString) && keyVaultAvailable)
+        if (keyVaultAvailable)
         {
             postgresConnString = builder.Configuration["PostgresConnectionString"];
-        }
+            Console.WriteLine("Retrieved connection string from Azure Key Vault");
 
-        if (!string.IsNullOrEmpty(postgresConnString))
-        {
-            // Mask the connection string for logging (remove the password)
-            var sanitizedConnString = System.Text.RegularExpressions.Regex.Replace(
-                postgresConnString,
-                "Password=([^;]*)",
-                "Password=***");
+            if (!string.IsNullOrEmpty(postgresConnString))
+            {
+                // Mask the connection string for logging (remove the password)
+                var sanitizedConnString = System.Text.RegularExpressions.Regex.Replace(
+                    postgresConnString,
+                    "Password=([^;]*)",
+                    "Password=***");
 
-            Console.WriteLine($"Using PostgreSQL connection: {sanitizedConnString}");
-            options.UseNpgsql(postgresConnString);
+                Console.WriteLine($"Using PostgreSQL connection: {sanitizedConnString}");
+                options.UseNpgsql(postgresConnString);
+            }
+            else
+            {
+                // If KeyVault is available but the connection string is missing, throw an exception
+                throw new InvalidOperationException("PostgreSQL connection string is missing in Azure Key Vault.");
+            }
         }
         else if (builder.Environment.IsDevelopment())
         {
@@ -101,8 +105,8 @@ else
         }
         else
         {
-            // In production, if PostgreSQL connection is not available, throw an exception
-            throw new InvalidOperationException("PostgreSQL connection string is missing in production environment.");
+            // In production, if KeyVault is not available, throw an exception
+            throw new InvalidOperationException("Azure Key Vault is not available in production environment.");
         }
     });
 }
