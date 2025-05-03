@@ -44,7 +44,7 @@ jobs:
       # Continue workflow even if tests fail
       - name: Run tests
         id: tests
-        continue-on-error: true
+        # continue-on-error: true
         run: dotnet test SG01G02_MVC.sln --no-build --verbosity normal
 
       # Generate a summary report when tests fail
