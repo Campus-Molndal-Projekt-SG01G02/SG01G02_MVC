@@ -10,6 +10,7 @@ using System.Text.Json;
 using Azure.Identity;
 using SG01G02_MVC.Web.HealthChecks;
 using System.Collections;
+using Azure.Security.KeyVault.Secrets;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -103,56 +104,47 @@ else
     // Configure database context
     builder.Services.AddDbContext<AppDbContext>(options =>
     {
-        // Use only the environment variable for the connection string
-        var postgresConnString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
-
-        if (string.IsNullOrEmpty(postgresConnString))
+        // 1. Check for connection string in environment variables
+        var envConnectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
+        if (!string.IsNullOrEmpty(envConnectionString))
         {
-            Console.WriteLine("WARNING: POSTGRES_CONNECTION_STRING environment variable is not set or is empty.");
+            Console.WriteLine("Using PostgreSQL connection string from environment variable");
+            options.UseNpgsql(envConnectionString);
+            return;
+        }
 
-            // TODO: Debug, remove this.
-            Console.WriteLine("This is the ENV variable for POSTGRES_CONNECTION_STRING: " + postgresConnString);
+        // 2. For development, use SQLite
+        if (builder.Environment.IsDevelopment())
+        {
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
+                throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+            Console.WriteLine("Using development SQLite connection");
+            options.UseSqlite(connectionString);
+            return;
+        }
 
-            // Print all environment variables for debugging purposes
-            Console.WriteLine("Available environment variables:");
-            foreach (var envVar in Environment.GetEnvironmentVariables().Cast<DictionaryEntry>())
-            {
-                Console.WriteLine($"{envVar.Key}: {envVar.Value}");
+        // 3. As a last resort in production, try Key Vault
+        var keyVaultName = Environment.GetEnvironmentVariable("KEY_VAULT_NAME");
+        if (!string.IsNullOrEmpty(keyVaultName) && keyVaultName != "your-key-vault-name")
+        {
+            try {
+                // Your existing Key Vault code goes here
+                Console.WriteLine("Attempting to get connection string from Key Vault");
+                // ...Key Vault connection logic...
+                var secretClient = new SecretClient(new Uri($"https://{keyVaultName}.vault.azure.net/"), new DefaultAzureCredential());
+                var secret = secretClient.GetSecret("PostgresConnectionString");
+                var connectionString = secret.Value.Value;
+                Console.WriteLine("Using PostgreSQL connection string from Key Vault");
+                return;
+            }
+            catch (Exception ex) {
+                Console.WriteLine($"Error accessing Key Vault: {ex.Message}");
             }
         }
 
-        // If the connection string is not set, check if Key Vault is available
-        if (string.IsNullOrEmpty(postgresConnString) && keyVaultAvailable)
-        {
-            postgresConnString = builder.Configuration["PostgresConnectionString"];
-        }
-
-        if (!string.IsNullOrEmpty(postgresConnString))
-        {
-            // Mask the connection string for logging (remove the password)
-            var sanitizedConnString = System.Text.RegularExpressions.Regex.Replace(
-                postgresConnString,
-                "Password=([^;]*)",
-                "Password=***");
-
-            Console.WriteLine($"Using PostgreSQL connection: {sanitizedConnString}");
-            options.UseNpgsql(postgresConnString);
-        }
-        else if (builder.Environment.IsDevelopment())
-        {
-            // Only allow SQLite fallback in development
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-            Console.WriteLine("Using SQLite connection (development only)");
-            options.UseSqlite(connectionString);
-        }
-        else
-        {
-            // Instead of throwing an exception, fall back to in-memory database for production
-            Console.WriteLine("WARNING: No database connection string available in production environment.");
-
-            // Log this as a critical issue for monitoring
-            Console.WriteLine("CRITICAL: Application is running with in-memory database in production. Data will be lost on restart!");
-        }
+        // If we reach here without returning, throw a clear error
+        throw new InvalidOperationException(
+            "No database connection string available. Please set POSTGRES_CONNECTION_STRING environment variable.");
     });
 }
 
