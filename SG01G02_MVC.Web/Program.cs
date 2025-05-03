@@ -6,15 +6,14 @@ using SG01G02_MVC.Infrastructure.Repositories;
 using SG01G02_MVC.Infrastructure.Data;
 using SG01G02_MVC.Web.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Text.Json;
 using Azure.Identity;
+using SG01G02_MVC.Web.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Setup Azure Key Vault in non-development environments
 bool keyVaultAvailable = false;
-if (!builder.Environment.IsDevelopment())
 if (!builder.Environment.IsDevelopment())
 {
     var keyVaultUrl = Environment.GetEnvironmentVariable("KEY_VAULT_URL");
@@ -70,6 +69,7 @@ if (!builder.Environment.IsDevelopment())
     }
 }
 
+
 /// <summary>
 /// This adds functionallity for CI/CD to be able to run smoketest.
 /// If environment is test, then it uses an in memory db for testing (smoketest).
@@ -102,6 +102,12 @@ else
         // Use only the environment variable for the connection string
         var postgresConnString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
 
+        // If the connection string is not set, check if Key Vault is available
+        if (string.IsNullOrEmpty(postgresConnString) && keyVaultAvailable)
+        {
+            postgresConnString = builder.Configuration["PostgresConnectionString"];
+        }
+
         if (!string.IsNullOrEmpty(postgresConnString))
         {
             // Mask the connection string for logging (remove the password)
@@ -122,8 +128,22 @@ else
         }
         else
         {
-            // In production, if no connection string is available, throw an exception
-            throw new InvalidOperationException("PostgreSQL connection string is missing in environment variable.");
+            try
+            {
+                // TODO: Debug, remove this !
+                Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
+                Console.WriteLine($"KEY_VAULT_NAME is set: {!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KEY_VAULT_NAME"))}");
+                Console.WriteLine($"KEY_VAULT_URL is set: {!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KEY_VAULT_URL"))}");
+                Console.WriteLine($"Key Vault available: {keyVaultAvailable}");
+                Console.WriteLine($"POSTGRES_CONNECTION_STRING is set: {!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING"))}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error while checking environment variables: {ex.Message}");
+                // In production, if no connection string is available, throw an exception
+                throw new InvalidOperationException("PostgreSQL connection string is missing in environment variable.");
+            }
+
         }
     });
 }
@@ -154,26 +174,8 @@ builder.Services.AddAuthentication("CookieAuth")
 });
 
 // Health checks used by CI/CD
-builder.Services.AddHealthChecks().AddCheck("Database", () =>
-{
-    try
-    {
-        using var scope = builder.Services.BuildServiceProvider().CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var canConnect = db.Database.CanConnect();
-
-        Console.WriteLine($"Health check - Database connection: {(canConnect ? "Success" : "Failed")}");
-
-        return canConnect
-            ? HealthCheckResult.Healthy("Database connection is working.")
-            : HealthCheckResult.Unhealthy("Cannot connect to database.");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Health check - Database error: {ex.Message}");
-        return HealthCheckResult.Unhealthy($"Database error: {ex.Message}");
-    }
-});
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>("Database");
 
 var app = builder.Build();
 
