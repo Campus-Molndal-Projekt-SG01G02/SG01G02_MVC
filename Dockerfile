@@ -25,13 +25,6 @@ ENV KEY_VAULT_NAME=${KEY_VAULT_NAME}
 ARG POSTGRES_CONNECTION_STRING
 ENV POSTGRES_CONNECTION_STRING=${POSTGRES_CONNECTION_STRING}
 
-# Installera verktyg för felsökning
-RUN apt-get update && apt-get install -y curl iputils-ping netcat-openbsd
-
-# Debugging information
-RUN echo "KEY_VAULT_NAME: $KEY_VAULT_NAME" >> /app/debug_info.txt && \
-	echo "Connection string set to: ${POSTGRES_CONNECTION_STRING}" >> /app/debug_info.txt
-
 # Expose port
 EXPOSE 80
 EXPOSE 8080
