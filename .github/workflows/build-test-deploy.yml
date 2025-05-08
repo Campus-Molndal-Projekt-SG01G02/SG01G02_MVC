@@ -171,11 +171,24 @@ jobs:
           # Export connection string to variable for EF commands
           export ConnectionStrings__DefaultConnection="${{ env.POSTGRES_CONNECTION_STRING }}"
 
-          # Check if there are any pending migrations
-          PENDING_MIGRATIONS=$(dotnet ef migrations list --project SG01G02_MVC.Data --context ApplicationDbContext --json | jq -r '.[] | select(.applied == false) | .name' | wc -l)
+          # List all migrations
+          echo "Listing all migrations..."
+          dotnet ef migrations list --project SG01G02_MVC.Data --context ApplicationDbContext
 
-          if [ $PENDING_MIGRATIONS -gt 0 ]; then
-            echo "Found $PENDING_MIGRATIONS pending migrations. Applying them..."
+          # Check if there are any pending migrations using a more robust approach
+          HAS_PENDING_MIGRATIONS=false
+          MIGRATION_OUTPUT=$(dotnet ef migrations list --project SG01G02_MVC.Data --context ApplicationDbContext)
+
+            # Check if the output contains "(Pending)" which indicates pending migrations
+          if echo "$MIGRATION_OUTPUT" | grep -q "(Pending)"; then
+            HAS_PENDING_MIGRATIONS=true
+            echo "Found pending migrations that need to be applied."
+          else
+            echo "No pending migrations detected."
+          fi
+
+          if [ "$HAS_PENDING_MIGRATIONS" = "true" ]; then
+            echo "Applying migrations..."
 
             # Apply migrations
             dotnet ef database update --project SG01G02_MVC.Data --context ApplicationDbContext
@@ -187,15 +200,10 @@ jobs:
             fi
 
             echo "Migrations applied successfully."
-          else
-            echo "No pending migrations found. Database is up to date."
-          fi
-
-          # Add migration status to workflow summary
-          if [ $PENDING_MIGRATIONS -gt 0 ]; then
             echo "## Database Migrations" >> $GITHUB_STEP_SUMMARY
-            echo "Applied $PENDING_MIGRATIONS pending migrations successfully." >> $GITHUB_STEP_SUMMARY
+            echo "Pending migrations were detected and applied successfully." >> $GITHUB_STEP_SUMMARY
           else
+            echo "No pending migrations to apply. Database is up to date."
             echo "## Database Migrations" >> $GITHUB_STEP_SUMMARY
             echo "No pending migrations found. Database is up to date." >> $GITHUB_STEP_SUMMARY
           fi
