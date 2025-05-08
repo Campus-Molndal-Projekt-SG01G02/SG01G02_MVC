@@ -165,12 +165,24 @@ jobs:
         run: |
           echo "Checking for pending Entity Framework migrations..."
 
-          # Install dotnet-ef CLI tool
-          dotnet tool install --global dotnet-ef
+          # Set up correct .NET SDK version first (match your Dockerfile .NET version)
+          dotnet --list-sdks
+          echo "Current SDK version is not compatible. Setting up .NET 9.0..."
 
-          # Install required packages
-          dotnet add SG01G02_MVC.Web/SG01G02_MVC.Web.csproj package Microsoft.EntityFrameworkCore.Design
-          dotnet restore
+          # Use the same .NET version som i din setup .NET steg
+          # Setup .NET (match this with your earlier .NET setup step)
+          echo "Installing .NET 9.0 SDK..."
+          wget https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh
+          chmod +x dotnet-install.sh
+          ./dotnet-install.sh --channel 9.0 --install-dir $HOME/.dotnet
+          export PATH=$HOME/.dotnet:$PATH
+          export DOTNET_ROOT=$HOME/.dotnet
+
+          # Verify installed version
+          dotnet --version
+
+          # Install dotnet-ef CLI tool with specific version
+          dotnet tool install --global dotnet-ef --version 9.0.4
 
           # Set project paths
           PROJECT_PATH="SG01G02_MVC.Data/SG01G02_MVC.Data.csproj"
@@ -194,11 +206,7 @@ jobs:
           # Export connection string to variable for EF commands
           export ConnectionStrings__DefaultConnection="${{ env.POSTGRES_CONNECTION_STRING }}"
 
-          # First try to verify that PostgreSQL is accessible
-          echo "Testing database connection..."
-          if ! dotnet run --project "$STARTUP_PROJECT" -- --check-db-connection; then
-            echo "::warning::Database connection check failed. Migration commands may not succeed."
-          fi
+          # Skip database connection check as it might require building the application
 
           # List migrations with detailed error output
           echo "Listing migrations with full verbose output:"
@@ -236,7 +244,7 @@ jobs:
             if [ $? -eq 0 ]; then
               echo "Migrations applied successfully."
               echo "## Database Migrations" >> $GITHUB_STEP_SUMMARY
-              echo "Pending migrations were successfully applied." >> $GITHUB_STEP_SUMMARY
+              echo "✅ Pending migrations were successfully applied." >> $GITHUB_STEP_SUMMARY
             else
               echo "::error::Database migration failed! Deployment stopped."
               exit 1
@@ -244,7 +252,7 @@ jobs:
           else
             echo "No pending migrations found. Database is up to date."
             echo "## Database Migrations" >> $GITHUB_STEP_SUMMARY
-            echo "Database is up to date. No migrations needed." >> $GITHUB_STEP_SUMMARY
+            echo "✅ Database is up to date. No migrations needed." >> $GITHUB_STEP_SUMMARY
           fi
 
       # Tagging and pushing Docker image if smoke test is successful
