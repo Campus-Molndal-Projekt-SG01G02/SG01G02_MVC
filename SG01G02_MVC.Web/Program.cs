@@ -140,17 +140,20 @@ else
             try {
                 // Your existing Key Vault code goes here
                 Console.WriteLine("Attempting to get connection string from Key Vault");
-                // ...Key Vault connection logic...
                 var secretClient = new SecretClient(new Uri($"https://{keyVaultName}.vault.azure.net/"), new DefaultAzureCredential());
                 var secret = secretClient.GetSecret("PostgresConnectionString");
                 var connectionString = secret.Value.Value;
+
                 Console.WriteLine("Using PostgreSQL connection string from Key Vault");
+                options.UseNpgsql(connectionString); // Actually use the connection string!
                 return;
             }
             catch (Exception ex) {
                 Console.WriteLine($"Error accessing Key Vault: {ex.Message}");
             }
         }
+
+        Console.WriteLine("WARNING: No database connection string available in production environment.");
 
         // If we reach here without returning, throw a clear error
         throw new InvalidOperationException(
