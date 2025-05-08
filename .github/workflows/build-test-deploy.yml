@@ -184,8 +184,8 @@ jobs:
           # Install dotnet-ef CLI tool with specific version
           dotnet tool install --global dotnet-ef --version 9.0.4
 
-          # Set project paths
-          PROJECT_PATH="SG01G02_MVC.Data/SG01G02_MVC.Data.csproj"
+          # Set project paths - FIXED FROM Data TO Infrastructure
+          PROJECT_PATH="SG01G02_MVC.Infrastructure/SG01G02_MVC.Infrastructure.csproj"
           STARTUP_PROJECT="SG01G02_MVC.Web/SG01G02_MVC.Web.csproj"
           DBCONTEXT_NAME="AppDbContext"
 
@@ -193,7 +193,7 @@ jobs:
           echo "Verifying project files..."
           if [ ! -f "$PROJECT_PATH" ]; then
             echo "ERROR: Project file not found: $PROJECT_PATH"
-            find . -name "*.csproj" | grep -i data
+            find . -name "*.csproj"
             exit 1
           fi
 
@@ -206,28 +206,9 @@ jobs:
           # Export connection string to variable for EF commands
           export ConnectionStrings__DefaultConnection="${{ env.POSTGRES_CONNECTION_STRING }}"
 
-          # Skip database connection check as it might require building the application
-
           # List migrations with detailed error output
           echo "Listing migrations with full verbose output:"
           dotnet ef migrations list --project "$PROJECT_PATH" --startup-project "$STARTUP_PROJECT" --context "$DBCONTEXT_NAME" --verbose
-
-          # If that fails, try with the Web project as both startup and project
-          if [ $? -ne 0 ]; then
-            echo "::warning::Failed to list migrations with Data project. Trying with Web project..."
-            dotnet ef migrations list --project "$STARTUP_PROJECT" --context "$DBCONTEXT_NAME" --verbose
-
-            if [ $? -eq 0 ]; then
-              # If this works, update the paths for future commands
-              PROJECT_PATH="$STARTUP_PROJECT"
-              echo "Updated project path to $PROJECT_PATH"
-            else
-              echo "::error::Failed to list migrations with either project"
-              echo "Attempting to find the DbContext class..."
-              find . -name "*.cs" -exec grep -l "DbContext" {} \;
-              exit 1
-            fi
-          fi
 
           # Continue with migration logic
           echo "Checking for pending migrations..."
