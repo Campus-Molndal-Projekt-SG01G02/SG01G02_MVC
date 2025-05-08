@@ -79,6 +79,24 @@
                         </li>
                     }
 
+                    @if (!string.IsNullOrEmpty(role))
+                    {
+                        <li class="nav-item">
+                            @if (role == "admin")
+                            {
+                                <a class="nav-link text-dark btn btn-outline-secondary ms-2" asp-controller="Admin" asp-action="Index">Admin Page</a>
+                            }
+                            else if (role == "staff")
+                            {
+                                <a class="nav-link text-dark btn btn-outline-secondary ms-2" asp-controller="Staff" asp-action="Index">Staff Page</a>
+                            }
+                            else
+                            {
+                                <a class="nav-link text-dark btn btn-outline-secondary ms-2" asp-controller="Home" asp-action="Index">User Page</a>
+                            }
+                        </li>
+                    }
+
                     @if (role != "Admin")
                     {
                         <li class="nav-item">
