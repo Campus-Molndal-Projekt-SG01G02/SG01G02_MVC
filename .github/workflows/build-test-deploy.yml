@@ -160,7 +160,7 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
 
-      # Check and Run EF Database Migrations
+      # Check and Apply Database Migrations
       - name: Check and Apply Database Migrations
         run: |
           echo "Checking for pending Entity Framework migrations..."
@@ -168,44 +168,37 @@ jobs:
           # Install dotnet-ef CLI tool
           dotnet tool install --global dotnet-ef
 
+          # Set project paths
+          PROJECT_PATH="SG01G02_MVC.Data/SG01G02_MVC.Data.csproj"
+          STARTUP_PROJECT="SG01G02_MVC.Web/SG01G02_MVC.Web.csproj"
+          DBCONTEXT_NAME="AppDbContext"
+
           # Export connection string to variable for EF commands
           export ConnectionStrings__DefaultConnection="${{ env.POSTGRES_CONNECTION_STRING }}"
 
-          # List all migrations
-          echo "Listing all migrations..."
-          dotnet ef migrations list --project SG01G02_MVC.Data --context ApplicationDbContext
+          # List migrations with startup project (most reliable approach)
+          MIGRATION_OUTPUT=$(dotnet ef migrations list --project "$PROJECT_PATH" --startup-project "$STARTUP_PROJECT" --context "$DBCONTEXT_NAME" 2>&1)
+          echo "$MIGRATION_OUTPUT"
 
-          # Check if there are any pending migrations using a more robust approach
-          HAS_PENDING_MIGRATIONS=false
-          MIGRATION_OUTPUT=$(dotnet ef migrations list --project SG01G02_MVC.Data --context ApplicationDbContext)
-
-            # Check if the output contains "(Pending)" which indicates pending migrations
+          # Check if there are pending migrations
           if echo "$MIGRATION_OUTPUT" | grep -q "(Pending)"; then
-            HAS_PENDING_MIGRATIONS=true
-            echo "Found pending migrations that need to be applied."
-          else
-            echo "No pending migrations detected."
-          fi
-
-          if [ "$HAS_PENDING_MIGRATIONS" = "true" ]; then
-            echo "Applying migrations..."
+            echo "Found pending migrations. Applying now..."
 
             # Apply migrations
-            dotnet ef database update --project SG01G02_MVC.Data --context ApplicationDbContext
+            dotnet ef database update --project "$PROJECT_PATH" --startup-project "$STARTUP_PROJECT" --context "$DBCONTEXT_NAME"
 
-            # Verify success
-            if [ $? -ne 0 ]; then
+            if [ $? -eq 0 ]; then
+              echo "Migrations applied successfully."
+              echo "## Database Migrations" >> $GITHUB_STEP_SUMMARY
+              echo "Pending migrations were successfully applied." >> $GITHUB_STEP_SUMMARY
+            else
               echo "::error::Database migration failed! Deployment stopped."
               exit 1
             fi
-
-            echo "Migrations applied successfully."
-            echo "## Database Migrations" >> $GITHUB_STEP_SUMMARY
-            echo "Pending migrations were detected and applied successfully." >> $GITHUB_STEP_SUMMARY
           else
-            echo "No pending migrations to apply. Database is up to date."
+            echo "No pending migrations found. Database is up to date."
             echo "## Database Migrations" >> $GITHUB_STEP_SUMMARY
-            echo "No pending migrations found. Database is up to date." >> $GITHUB_STEP_SUMMARY
+            echo "Database is up to date. No migrations needed." >> $GITHUB_STEP_SUMMARY
           fi
 
       # Tagging and pushing Docker image if smoke test is successful
