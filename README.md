@@ -174,6 +174,38 @@ dotnet ef database update --project SG01G02_MVC.Infrastructure --startup-project
 - The database contains seeded login credentials and is for dev use only.
 - Check that .gitignore includes: *.db
 
+# Production Database (PostgreSQL)
+The application uses PostgreSQL in production environments, with a fallback to SQLite only in development. The database configuration follows this priority:
+
+1. Environment Variable: `POSTGRES_CONNECTION_STRING` (injected by CI/CD)
+2. Azure Key Vault: `PostgresConnectionString` secret
+3. Development Fallback: SQLite (only in Development environment)
+
+### Database Provisioning Flow
+1. **Production Deployment**:
+   - Connection string is injected via CI/CD pipeline
+   - Azure Key Vault integration for secure credential storage
+   - Automatic migrations on application startup
+
+2. **Database Migrations**:
+   ```bash
+   # List available migrations
+   dotnet ef migrations list
+   
+   # Apply migrations to PostgreSQL
+   dotnet ef database update
+   ```
+
+3. **Health Checks**:
+   - Visit `/dbinfo` endpoint to verify database connectivity
+   - Health check endpoint at `/health` monitors database status
+
+### Security Notes
+- Production credentials are managed through Azure Key Vault
+- Connection strings are injected by CI/CD pipeline
+- Database access is restricted to the application's network
+- Regular security audits and updates are performed
+
 ---
 
 ## Log-in rules:

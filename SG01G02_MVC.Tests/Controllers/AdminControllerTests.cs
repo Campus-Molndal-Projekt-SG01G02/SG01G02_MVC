@@ -25,7 +25,6 @@ namespace SG01G02_MVC.Tests.Controllers
 
             var controller = new AdminController(
                 mockProductService.Object,
-                context,
                 mockSession.Object
             );
 
@@ -42,7 +41,7 @@ namespace SG01G02_MVC.Tests.Controllers
             context.Database.EnsureCreated(); // ✅ Simulate DB being connectable
 
             var mockProductService = new Mock<IProductService>();
-            var controller = new AdminController(mockProductService.Object, context, mockSession.Object);
+            var controller = new AdminController(mockProductService.Object, mockSession.Object);
 
             // Simulate authenticated user
             var identity = new ClaimsIdentity(new[]
@@ -92,7 +91,7 @@ namespace SG01G02_MVC.Tests.Controllers
             var (controller, mockService) = CreateController();
             var product = new ProductViewModel { Name = "Test", Price = 10 };
 
-            var result = await controller.AddProduct(product);
+            var result = await controller.Create(product);
 
             var redirect = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirect.ActionName);
@@ -105,7 +104,7 @@ namespace SG01G02_MVC.Tests.Controllers
             var (controller, mockService) = CreateController();
             var product = new ProductViewModel { Id = 1, Name = "Updated", Price = 15 };
 
-            var result = await controller.EditProduct(1, product);
+            var result = await controller.Edit(product);
 
             var redirect = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirect.ActionName);

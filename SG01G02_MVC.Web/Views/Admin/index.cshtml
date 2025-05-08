@@ -1,13 +1,42 @@
+@model IEnumerable<SG01G02_MVC.Web.Models.ProductViewModel>
 @{
-    ViewData["Title"] = "Admin Dashboard";
+    ViewData["Title"] = "Admin - Product Management";
 }
 
 <div class="container mt-4">
     <h2>@ViewData["Title"]</h2>
-
-    <p>Welcome, Admin!</p>
-
-    <div class="alert alert-info">
-        Order listing coming soon...
-    </div>
+    <a asp-action="Create" class="btn btn-success mb-3">Add New Product</a>
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No products found.</div>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var product in Model)
+                {
+                    <tr>
+                        <td>@product.Name</td>
+                        <td>@product.Description</td>
+                        <td>@(product.Price.HasValue ? product.Price.Value.ToString("C") : "N/A")</td>
+                        <td>@product.StockQuantity</td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-sm btn-warning me-2">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-sm btn-danger">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 </div>

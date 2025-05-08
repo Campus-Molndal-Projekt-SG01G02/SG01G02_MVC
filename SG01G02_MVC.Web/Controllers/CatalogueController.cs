@@ -22,8 +22,9 @@ namespace SG01G02_MVC.Web.Controllers
             {
                 Id = dto.Id,
                 Name = dto.Name,
-                Price = dto.Price,
-                Description = dto.Description
+                Price = dto.Price ?? 0m,
+                Description = dto.Description ?? string.Empty,
+                ImageUrl = dto.ImageUrl ?? string.Empty
             }).ToList();
 
             return View(viewModels);
@@ -39,10 +40,10 @@ namespace SG01G02_MVC.Web.Controllers
             {
                 Id = product.Id,
                 Name = product.Name,
-                Description = product.Description,
-                Price = product.Price,
+                Description = product.Description ?? string.Empty,
+                Price = product.Price ?? 0m,
                 StockQuantity = product.StockQuantity,
-                ImageUrl = product.ImageUrl
+                ImageUrl = product.ImageUrl ?? string.Empty
             };
 
             return View("Details", model);

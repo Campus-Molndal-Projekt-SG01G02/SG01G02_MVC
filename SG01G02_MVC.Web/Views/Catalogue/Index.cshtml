@@ -16,42 +16,34 @@
     }
     else
     {
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Price</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var product in Model)
-                {
-                    <tr>
-                        <td>@product.Name</td>
-                        <td>@product.Description</td>
-                        <td>@($"{product.Price:C}")</td>
-                        <td>
-                            <a asp-controller="Catalogue" asp-action="Details" asp-route-id="@product.Id" class="btn btn-sm btn-primary">
-                                Details
-                            </a>
-                            @if (_session?.Role == "Admin")
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            @foreach (var product in Model)
+            {
+                <div class="col">
+                    <div class="card h-100">
+                        <!-- Placeholder for image -->
+                        <div class="card-body">
+                            <h5 class="card-title">@product.Name</h5>
+                            <p class="card-text">@product.Description</p>
+                            <p class="card-text fw-bold">@(product.Price.HasValue ? product.Price.Value.ToString("C") : "N/A")</p>
+                            @if (product.StockQuantity > 0)
                             {
-                                <a asp-controller="Admin" asp-action="EditProduct" asp-route-id="@product.Id" class="btn btn-sm btn-outline-warning ms-2">
-                                    Edit Product
-                                </a>
-                                <a asp-controller="Admin" asp-action="AddProduct" asp-route-id="@product.Id" class="btn btn-sm btn-outline-warning ms-2">
-                                    Add Product
-                                </a>
-                                <a asp-controller="Admin" asp-action="DeleteProduct" asp-route-id="@product.Id" class="btn btn-sm btn-outline-warning ms-2">
-                                    Delete Product
-                                </a>
+                                <span class="badge bg-success mb-2">In Stock</span>
                             }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                            else
+                            {
+                                <span class="badge bg-danger mb-2">Out of Stock</span>
+                            }
+                        </div>
+                        <div class="card-footer bg-white border-0 d-flex justify-content-between">
+                            <a asp-controller="Catalogue" asp-action="Details" asp-route-id="@product.Id" class="btn btn-primary">
+                                View Details
+                            </a>
+                            <button class="btn btn-success" disabled>Add to Cart</button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     }
 </div>

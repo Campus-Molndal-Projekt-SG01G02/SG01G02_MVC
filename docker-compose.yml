@@ -8,8 +8,6 @@ services:
       - "8080:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      # Placeholder for future connection string from CI/CD
-      # - ConnectionStrings__DefaultConnection=...
     networks:
       - appnet
 
