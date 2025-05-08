@@ -160,6 +160,46 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
 
+      # Check and Run EF Database Migrations
+      - name: Check and Apply Database Migrations
+        run: |
+          echo "Checking for pending Entity Framework migrations..."
+
+          # Install dotnet-ef CLI tool
+          dotnet tool install --global dotnet-ef
+
+          # Export connection string to variable for EF commands
+          export ConnectionStrings__DefaultConnection="${{ env.POSTGRES_CONNECTION_STRING }}"
+
+          # Check if there are any pending migrations
+          PENDING_MIGRATIONS=$(dotnet ef migrations list --project SG01G02_MVC.Data --context ApplicationDbContext --json | jq -r '.[] | select(.applied == false) | .name' | wc -l)
+
+          if [ $PENDING_MIGRATIONS -gt 0 ]; then
+            echo "Found $PENDING_MIGRATIONS pending migrations. Applying them..."
+
+            # Apply migrations
+            dotnet ef database update --project SG01G02_MVC.Data --context ApplicationDbContext
+
+            # Verify success
+            if [ $? -ne 0 ]; then
+              echo "::error::Database migration failed! Deployment stopped."
+              exit 1
+            fi
+
+            echo "Migrations applied successfully."
+          else
+            echo "No pending migrations found. Database is up to date."
+          fi
+
+          # Add migration status to workflow summary
+          if [ $PENDING_MIGRATIONS -gt 0 ]; then
+            echo "## Database Migrations" >> $GITHUB_STEP_SUMMARY
+            echo "Applied $PENDING_MIGRATIONS pending migrations successfully." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## Database Migrations" >> $GITHUB_STEP_SUMMARY
+            echo "No pending migrations found. Database is up to date." >> $GITHUB_STEP_SUMMARY
+          fi
+
       # Tagging and pushing Docker image if smoke test is successful
       - name: Tag and push Docker image
         uses: docker/build-push-action@v4
