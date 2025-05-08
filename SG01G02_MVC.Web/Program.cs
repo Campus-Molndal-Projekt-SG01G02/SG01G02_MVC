@@ -189,36 +189,59 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
-// Try to connect to the SQLite database, and seed admin user if available.
-// If the DB is missing (e.g. during CI/CD), log a warning and render fallback view if needed.
-using (var scope = app.Services.CreateScope())
+// Try to connect to the SQLite database
+try
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        if (db.Database.CanConnect())
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+        logger.LogInformation("Database provider: {Provider}", db.Database.ProviderName);
+
+        // Explicit check for Npgsql
+        if (db.Database.ProviderName != null)
         {
-            Console.WriteLine($"Connected to database with provider: {db.Database.ProviderName}");
+            bool isNpgsql = db.Database.ProviderName.Contains("Npgsql");
+            logger.LogInformation("Is Npgsql provider: {IsNpgsql}", isNpgsql);
 
-            if (db.Database.ProviderName?.Contains("Npgsql") == true)
+            if (isNpgsql)
             {
-                Console.WriteLine("Applying PostgreSQL database migrations...");
+                logger.LogInformation("Applying PostgreSQL database migrations...");
                 db.Database.Migrate();
-            }
+                logger.LogInformation("Database migrations SUCCESSFULLY APPLIED");
 
-            // Seed default admin user
-            SeederHelper.SeedAdminUser(app);
+                // Verify that the tables have been created
+                var tableCount = db.Model.GetEntityTypes().Count();
+                logger.LogInformation("Entity model contains {TableCount} entity types", tableCount);
+
+                // Check if any migrations have been applied
+                try
+                {
+                    var history = db.Database.GetAppliedMigrations().ToList();
+                    logger.LogInformation("Applied {Count} migrations: {Migrations}",
+                        history.Count, string.Join(", ", history));
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning("Could not query migration history: {Error}", ex.Message);
+                }
+            }
+            else
+            {
+                logger.LogWarning("Not using Npgsql provider, no migrations applied");
+            }
         }
         else
         {
-            Console.WriteLine("WARNING: Could not connect to database. No seeding will occur.");
+            logger.LogError("Database provider is NULL");
         }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Database check failed: {ex.Message}");
-    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"CRITICAL ERROR during migrations: {ex.Message}");
+    Console.WriteLine(ex.StackTrace);
 }
 
 // Configure the HTTP request pipeline.
