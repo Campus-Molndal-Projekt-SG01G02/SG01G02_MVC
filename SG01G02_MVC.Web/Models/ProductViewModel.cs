@@ -13,6 +13,8 @@ namespace SG01G02_MVC.Web.Models
 
         [Required]
         public int StockQuantity { get; set; }
+        
+        public bool HasImage => !string.IsNullOrEmpty(ImageUrl);
 
         public string? Description { get; set; }
 

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.InMemory;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Application.Services;
 using SG01G02_MVC.Infrastructure.Repositories;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using System.Text.Json;
 using Azure.Identity;
 using SG01G02_MVC.Web.HealthChecks;
+using System.Collections;
 using Azure.Security.KeyVault.Secrets;
 
 var builder = WebApplication.CreateBuilder(args);

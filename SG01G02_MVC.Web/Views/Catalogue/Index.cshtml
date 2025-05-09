@@ -21,8 +21,21 @@
             {
                 <div class="col">
                     <div class="card h-100">
-                        <!-- Placeholder for image -->
+                        
                         <div class="card-body">
+                            
+                            @if (product.HasImage)
+                            {
+                                <img src="@product.ImageUrl" class="card-img-top product-image" alt="@product.Name" style="height: 400px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="card-img-top bg-light text-center p-5" style="height: 400px; display: flex; align-items: center; justify-content: center;">
+
+                                    <span class="text-muted">No image available</span>
+                                </div>
+                            }
+
                             <h5 class="card-title">@product.Name</h5>
                             <p class="card-text">@product.Description</p>
                             <p class="card-text fw-bold">@(product.Price.HasValue ? product.Price.Value.ToString("C") : "N/A")</p>
