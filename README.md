@@ -13,108 +13,112 @@ The structure below reflects this layered architecture:
 SG01G02_MVC/
 ├── SG01G02_MVC.Application/
 │   ├── DTOs/
-│   │   └── ProductDto.cs                           - Data Transfer Object used in Application and Web layers
-│   │   └── ReviewDto.cs                            - TODO
+│   │   ├── ProductDto.cs                           - Data Transfer Object for product data
+│   │   └── ReviewDto.cs                            - DTO for product reviews and ratings
 │   ├── Interfaces/
-│   │   ├── IAuthService.cs                         - Auth abstraction for login validation and session-aware auth
-│   │   ├── IProductRepository.cs                   - Repository pattern abstraction for fetching products (Infrastructure will implement)
-│   │   ├── IProductService.cs                      - Application service contract defining product-related use cases (used by Web layer)
-│   │   ├── IReviewService.cs                       - TODO:
-│   │   └── IUserRepository.cs                      - Interface to access and validate user credentials from a data source
+│   │   ├── IAuthService.cs                         - Authentication service contract
+│   │   ├── IProductRepository.cs                   - Product data access contract
+│   │   ├── IProductService.cs                      - Product business logic contract
+│   │   ├── IReviewApiClient.cs                     - TODO:  
+│   │   ├── IReviewService.cs                       - Review management contract
+│   │   └── IUserRepository.cs                      - User data access contract
 │   ├── Services/
-│   │   ├── AuthService.cs                          - Role-based login logic, delegates to IUserRepository
-│   │   └── ProductService.cs                       - Implements IProductService, delegates to repository
+│   │   ├── AuthService.cs                          - Authentication implementation
+│   │   ├── ProductService.cs                       - Product business logic implementation
+│   │   └── ReviewService.cs                        - TODO:  
 │   └── SG01G02_MVC.Application.csproj
 │
 ├── SG01G02_MVC.Domain/
 │   ├── Entities/
-│   │   ├── AppUser.cs                              - Represents user identity and role (Admin, Staff, etc.)
-│   │   ├── CartItem.cs                             - Domain model for cart line item
-│   │   ├── Order.cs                                - Domain model for customer order
-│   │   └── Product.cs                              - Core DDD entity, no EF or DTO logic
+│   │   ├── AppUser.cs                              - User entity with role-based access
+│   │   ├── CartItem.cs                             - Shopping cart line item entity
+│   │   ├── Order.cs                                - Customer order entity
+│   │   └── Product.cs                              - Product entity with business rules
 │   └── SG01G02_MVC.Domain.csproj
 │
 ├── SG01G02_MVC.Infrastructure/
 │   ├── Data/
-│   │   └── AppDbContext.cs                         - EF Core DbContext for managing database access
+│   │   └── AppDbContext.cs                         - Entity Framework Core context
 │   ├── External/
-│   ├── Migrations/                                 - EF Migrations
+│   │   └── ReviewApiClient.cs                      - TODO:  
+│   ├── Migrations/                                 - Entity Framework - Database migrations
 │   ├── Repositories/
-│   │   ├── CartRepository.cs                       - TODO:
-│   │   ├── EfProductRepository.cs                  - TODO:
-│   │   ├── OrderRepository.cs                      - TODO:
-│   │   ├── ProductRepository.cs                    - Implements IProductRepository using EF Core
-│   │   ├── ReviewRepository.cs                     - TODO:
-│   │   └── UserRepository.cs                       - Implements IUserRepository for validating users from the database
+│   │   ├── CartRepository.cs                       - Shopping cart data access
+│   │   ├── EfProductRepository.cs                  - EF Core product repository
+│   │   ├── OrderRepository.cs                      - Order data access
+│   │   ├── ReviewRepository.cs                     - Review data access
+│   │   └── UserRepository.cs                       - User data access implementation
 │   ├── Services/
-│   │   └── BlobStorageService.cs                   - Handles image uploads via Azure Blob Storage (stubbed for MVP)
+│   │   ├── BlobStorageService.cs                   - Azure Blob Storage integration
+│   │   └── DatabaseHealthCheck.cs                  - Database connectivity monitoring
 │   └── SG01G02_MVC.Infrastructure.csproj
 │
 ├── SG01G02_MVC.Tests/
 │   ├── Controllers/
-│   │   ├── AdminControllerTests.cs                 - Unit tests for Admin access and redirection logic
-│   │   └── LoginControllerTests.cs                 - Unit tests for login flow using mock services
+│   │   ├── AdminControllerTests.cs                 - Admin functionality tests
+│   │   └── LoginControllerTests.cs                 - Authentication flow tests
 │   ├── Helpers/
-│   │   ├── TestBase.cs                             - TODO: 
-│   │   └── TestDbContextFactory.cs                 - TODO: 
+│   │   ├── TestBase.cs                             - Common test setup and utilities
+│   │   └── TestDbContextFactory.cs                 - Test database context factory
 │   ├── Services/
-│   │   ├── AuthServiceTests.cs                     - TDD tests for role-based login logic
-│   │   ├── FakeProductRepository.cs                - In-memory test double for repository logic
-│   │   └── ProductServiceTests.cs                  - TDD-driven tests for ProductService
+│   │   ├── AuthServiceTests.cs                     - Authentication logic tests
+│   │   ├── FakeProductRepository.cs                - In-memory product repository
+│   │   └── ProductServiceTests.cs                  - Product business logic tests
 │   └── SG01G02_MVC.Infrastructure.Tests/
 │
 ├── SG01G02_MVC.Web/
 │   ├── Controllers/
-│   │   ├── AdminController.cs                      - Admin panel for CRUD operations (Index, Create, Edit, Delete)
-│   │   ├── CartController.cs                       - Placeholder controller for future shopping cart logic
-│   │   ├── CatalogueController.cs                  - Handles product listing and detail views
-│   │   ├── HomeController.cs                       - Default MVC controller for routing landing page and basic views
-│   │   ├── ImageController.cs                      - Handles image upload/delete (API)
-│   │   ├── LoginController.cs                      - Shared login/logout for all roles
-│   │   └── StaffController.cs                      - Read-only dashboard for staff to view orders (future)
+│   │   ├── AdminController.cs                      - Product management
+│   │   ├── CartController.cs                       - Shopping cart operations
+│   │   ├── CatalogueController.cs                  - Product browsing
+│   │   ├── HomeController.cs                       - Landing page and navigation
+│   │   ├── ImageController.cs                      - Image upload management
+│   │   ├── LoginController.cs                      - Authentication handling
+│   │   └── StaffController.cs                      - Order management
 │   ├── Models/
-│   │   ├── ErrorViewModel.cs                       - ViewModel for error page rendering // TODO: not used yet
-│   │   ├── LoginViewModel.cs                       - ViewModel for login form input validation
-│   │   └── ProductViewModel.cs                     - Presentation model used in views for products
+│   │   ├── ErrorViewModel.cs                       - Error page data
+│   │   ├── LoginViewModel.cs                       - Login form data
+│   │   └── ProductViewModel.cs                     - Product display data
 │   ├── Services/
-│   │   ├── IUserSessionService.cs                  - Interface for abstracting session access (username, role)
-│   │   ├── SeederHelper.cs                         - Seeds default admin user on startup (used in Program.cs)
-│   │   └── UserSessionService.cs                   - Wraps access to session data (role, username)
+│   │   ├── IUserSessionService.cs                  - Session management contract
+│   │   ├── SeederHelper.cs                         - Initial data seeding
+│   │   └── UserSessionService.cs                   - Session implementation
 │   ├── Views/
 │   │   ├── Admin/
-│   │   │   ├── Create.cshtml                       - Form to create a new product
-│   │   │   ├── Delete.cshtml                       - Confirmation page for product deletion
-│   │   │   ├── Edit.cshtml                         - Form to edit existing product
-│   │   │   └── Index.cshtml                        - Admin dashboard showing list of products
+│   │   │   ├── Create.cshtml                       - Product creation form
+│   │   │   ├── Delete.cshtml                       - Product deletion confirmation
+│   │   │   ├── Edit.cshtml                         - Product editing form
+│   │   │   └── Index.cshtml                        - Product management dashboard
 │   │   ├── Cart/
-│   │   │   └── Index.cshtml                        - Placeholder view for shopping cart
+│   │   │   └── Index.cshtml                        - Shopping cart view
 │   │   ├── Catalogue/
-│   │   │   ├── Details.cshtml                      - Razor view showing a single product
-│   │   │   └── Index.cshtml                        - Razor view listing all products
+│   │   │   ├── Details.cshtml                      - Product details view
+│   │   │   └── Index.cshtml                        - Product listing view
 │   │   ├── Home/
-│   │   │   └── Index.cshtml                        - Razor view for landing page (MVP placeholder)
+│   │   │   └── Index.cshtml                        - Landing page view
 │   │   ├── Login/
-│   │   │   └── Index.cshtml                        - Login form view for credential input
-│   │   ├── Staff/
-│   │   │   ├── Index.cshtml                        - Staff dashboard placeholder
+│   │   │   └── Index.cshtml                        - Login form view
 │   │   ├── Shared/
-│   │   │   ├── _Layout.cshtml                      - Shared HTML layout with Bootstrap navigation and structure
-│   │   │   ├── _ValidationSScriptPartial.cshtml    - Script partial for client-side validation (TODO: review use)
-│   │   │   ├── DatabaseUnavailable.cshtml          - Fallback view if database connection fails (CI/CD safe)
-│   │   │   └── Error.cshtml                        - Default error handling page
-│   │   ├── _ViewImports.cshtml                     - Razor namespace imports for views
-│   │   └── _ViewStart.cshtml                       - Razor startup configuration for view rendering
-│   ├── wwwroot/                                    - Static content root (CSS, JS, images)
-│   ├── appsettings.Development.json                - Environmentals for local development
-│   ├── appsettings.json                            - Base configuration shared across environments
-│   ├── Program.cs                                  - .NET application entry point (configures Web host and services)
+│   │   │   ├── _Layout.cshtml                      - Master page template
+│   │   │   ├── _ValidationScriptsPartial.cshtml    - Client-side validation
+│   │   │   ├── DatabaseUnavailable.cshtml          - Database error page
+│   │   │   └── Error.cshtml                        - Error page template
+│   │   ├── Staff/
+│   │   │   ├── Edit.cshtml                         - Order management view
+│   │   │   └── Index.cshtml                        - Staff dashboard
+│   │   ├── _ViewImports.cshtml                     - View imports
+│   │   └── _ViewStart.cshtml                       - View configuration
+│   ├── wwwroot/                                    - Static files (CSS, JS, images)
+│   ├── appsettings.Development.json                - Development configuration
+│   ├── appsettings.json                            - Base configuration
+│   ├── Program.cs                                  - Application startup
 │   └── SG01G02_MVC.Web.csproj
 │
 ├── SG01G02_MVC.sln
-├── Dockerfile
-├── docker-compose.yml
-├── .gitignore
-└── README.md
+├── Dockerfile                                      - Container definition
+├── docker-compose.yml                              - Multi-container setup
+├── .gitignore                                      - Git ignore rules
+└── README.md                                       - Project documentation
 ```
 
 ---
