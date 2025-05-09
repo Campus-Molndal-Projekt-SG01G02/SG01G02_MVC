@@ -6,8 +6,20 @@
 }
 
 <div class="container mt-4">
+    
+    @if (Model.HasImage)
+    {
+        <img src="@Model.ImageUrl" class="card-img-top product-image img-fluid" style="max-height: 400px; object-fit: contain;" alt="@Model.Name">
+    }
+    else
+    {
+        <div class="card-img-top bg-light text-center p-5">
+            <span class="text-muted">No image available</span>
+        </div>
+    }
+
     <h2>@Model.Name</h2>
-    <hr />
+    <hr/>
 
     <dl class="row">
         <dt class="col-sm-2">Description</dt>
