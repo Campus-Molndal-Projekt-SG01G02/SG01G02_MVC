@@ -6,6 +6,7 @@ namespace SG01G02_MVC.Application.Interfaces
 {
     public interface IReviewApiClient
     {
-        Task<IEnumerable<ReviewDto>> GetReviewsForProductAsync(string productId);
+        Task<IEnumerable<ReviewDto>> GetReviewsAsync(string productId);
+        // Eventuella andra metoder...
     }
 }

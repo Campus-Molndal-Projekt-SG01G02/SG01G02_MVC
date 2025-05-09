@@ -13,9 +13,9 @@ namespace SG01G02_MVC.Application.Services
             _apiClient = apiClient;
         }
 
-        public async Task<IEnumerable<ReviewDto>> GetReviewsForProduct(string productId)
+        public Task<IEnumerable<ReviewDto>> GetReviewsForProduct(string productId)
         {
-            return await _apiClient.GetReviewsForProductAsync(productId);
+            throw new NotImplementedException();
         }
     }
 }

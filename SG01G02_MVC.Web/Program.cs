@@ -108,21 +108,21 @@ if (builder.Environment.IsEnvironment("Testing") || Environment.GetEnvironmentVa
 
         // TODO Debug: Remove this..
 
-        // 1. Check for connection string in environment variables
-        var envConnectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
-
-        // Log environment variables for debugging
-        foreach (var env in Environment.GetEnvironmentVariables().Keys) {
-            if (env.ToString().Contains("POSTGRES") || env.ToString().Contains("DB")) {
-                Console.WriteLine($"Found environment variable: {env}={Environment.GetEnvironmentVariable(env.ToString())}");
-            }
-        }
-
-        // Force the connection string if needed for debugging
-        if (string.IsNullOrEmpty(envConnectionString) && !builder.Environment.IsDevelopment()) {
-            Console.WriteLine("WARNING: POSTGRES_CONNECTION_STRING is empty or null - using hard-coded fallback");
-            envConnectionString = "Host=postgres-db;Database=appdb;Username=appuser;Password=sno2dvm16fPyqR3k";
-        }
+        // // 1. Check for connection string in environment variables
+        // var envConnectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
+        //
+        // // Log environment variables for debugging
+        // foreach (var env in Environment.GetEnvironmentVariables().Keys) {
+        //     if (env.ToString().Contains("POSTGRES") || env.ToString().Contains("DB")) {
+        //         Console.WriteLine($"Found environment variable: {env}={Environment.GetEnvironmentVariable(env.ToString())}");
+        //     }
+        // }
+        //
+        // // Force the connection string if needed for debugging
+        // if (string.IsNullOrEmpty(envConnectionString) && !builder.Environment.IsDevelopment()) {
+        //     Console.WriteLine("WARNING: POSTGRES_CONNECTION_STRING is empty or null - using hard-coded fallback");
+        //     envConnectionString = "Host=postgres-db;Database=appdb;Username=appuser;Password=sno2dvm16fPyqR3k";
+        // }
         // TODO Until here..
 
 
@@ -141,24 +141,24 @@ else
         {
             // TODO Debug: Remove this..
 
-            // Parse the connection string manually to ensure correct format
-            var connectionStringBuilder = new Npgsql.NpgsqlConnectionStringBuilder(envConnectionString);
-
-            // Log the actual connection parameters being used (masking password)
-            Console.WriteLine($"Connection details: Host={connectionStringBuilder.Host}, " +
-                            $"Database={connectionStringBuilder.Database}, " +
-                            $"Username={connectionStringBuilder.Username}, " +
-                            $"Password=***");
-
-            // Use the parsed connection string to avoid format issues
-            options.UseNpgsql(connectionStringBuilder.ConnectionString);
-            return;
+            // // Parse the connection string manually to ensure correct format
+            // var connectionStringBuilder = new Npgsql.NpgsqlConnectionStringBuilder(envConnectionString);
+            //
+            // // Log the actual connection parameters being used (masking password)
+            // Console.WriteLine($"Connection details: Host={connectionStringBuilder.Host}, " +
+            //                 $"Database={connectionStringBuilder.Database}, " +
+            //                 $"Username={connectionStringBuilder.Username}, " +
+            //                 $"Password=***");
+            //
+            // // Use the parsed connection string to avoid format issues
+            // options.UseNpgsql(connectionStringBuilder.ConnectionString);
+            // return;
 
             // TODO Until here, and activate below..
 
-            // Console.WriteLine("Using PostgreSQL connection string from environment variable");
-            // options.UseNpgsql(envConnectionString);
-            // return;
+            Console.WriteLine("Using PostgreSQL connection string from environment variable");
+            options.UseNpgsql(envConnectionString);
+            return;
         }
 
         // 2. For development, use SQLite

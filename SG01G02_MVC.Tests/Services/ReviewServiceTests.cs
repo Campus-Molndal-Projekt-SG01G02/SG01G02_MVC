@@ -11,22 +11,23 @@ namespace SG01G02_MVC.Tests.Services
         public async Task GetReviewsForProduct_ReturnsReviewsFromApiClient()
         {
             // Arrange
-            var mockApiClient = new Mock<IReviewApiClient>();
-            var expectedReviews = new List<ReviewDto>
-            {
-                new ReviewDto { Id = "1", ProductId = "p1", Author = "Alice", Content = "Great!", Rating = 5 },
-                new ReviewDto { Id = "2", ProductId = "p1", Author = "Bob", Content = "Okay", Rating = 3 }
-            };
-            mockApiClient.Setup(c => c.GetReviewsForProductAsync("p1"))
-                         .ReturnsAsync(expectedReviews);
+            var mockReviewApiClient = new Mock<IReviewApiClient>();
+            mockReviewApiClient.Setup(client => client.GetReviewsAsync(It.IsAny<string>()))
+                .ReturnsAsync(new List<ReviewDto>
+                {
+                    new ReviewDto { Id = "1", Content = "Great product!" },
+                    new ReviewDto { Id = "2", Content = "Not bad." }
+                });
 
-            var service = new ReviewService(mockApiClient.Object);
+            var reviewService = new ReviewService(mockReviewApiClient.Object);
 
             // Act
-            var result = await service.GetReviewsForProduct("p1");
+            var reviews = await reviewService.GetReviewsForProduct("productId");
 
             // Assert
-            Assert.Equal(expectedReviews, result);
+            Assert.NotNull(reviews);
+            Assert.Equal(2, reviews.Count());
+            Assert.Contains(reviews, r => r.Content == "Great product!");
         }
     }
 }
