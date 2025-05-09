@@ -103,6 +103,27 @@ if (builder.Environment.IsEnvironment("Testing") || Environment.GetEnvironmentVa
     // Register in-memory database for testing
     builder.Services.AddDbContext<AppDbContext>(options =>
     {
+
+        // TODO Debug: Remove this..
+
+        // 1. Check for connection string in environment variables
+        var envConnectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
+
+        // Log environment variables for debugging
+        foreach (var env in Environment.GetEnvironmentVariables().Keys) {
+            if (env.ToString().Contains("POSTGRES") || env.ToString().Contains("DB")) {
+                Console.WriteLine($"Found environment variable: {env}={Environment.GetEnvironmentVariable(env.ToString())}");
+            }
+        }
+
+        // Force the connection string if needed for debugging
+        if (string.IsNullOrEmpty(envConnectionString) && !builder.Environment.IsDevelopment()) {
+            Console.WriteLine("WARNING: POSTGRES_CONNECTION_STRING is empty or null - using hard-coded fallback");
+            envConnectionString = "Host=postgres-db;Database=appdb;Username=appuser;Password=sno2dvm16fPyqR3k";
+        }
+        // TODO Until here..
+
+
         options.UseInMemoryDatabase("TestingDb");
         Console.WriteLine("Configured in-memory database for testing");
     });
@@ -116,9 +137,26 @@ else
         var envConnectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
         if (!string.IsNullOrEmpty(envConnectionString))
         {
-            Console.WriteLine("Using PostgreSQL connection string from environment variable");
-            options.UseNpgsql(envConnectionString);
+            // TODO Debug: Remove this..
+
+            // Parse the connection string manually to ensure correct format
+            var connectionStringBuilder = new Npgsql.NpgsqlConnectionStringBuilder(envConnectionString);
+
+            // Log the actual connection parameters being used (masking password)
+            Console.WriteLine($"Connection details: Host={connectionStringBuilder.Host}, " +
+                            $"Database={connectionStringBuilder.Database}, " +
+                            $"Username={connectionStringBuilder.Username}, " +
+                            $"Password=***");
+
+            // Use the parsed connection string to avoid format issues
+            options.UseNpgsql(connectionStringBuilder.ConnectionString);
             return;
+
+            // TODO Until here, and activate below..
+
+            // Console.WriteLine("Using PostgreSQL connection string from environment variable");
+            // options.UseNpgsql(envConnectionString);
+            // return;
         }
 
         // 2. For development, use SQLite
@@ -138,17 +176,20 @@ else
             try {
                 // Your existing Key Vault code goes here
                 Console.WriteLine("Attempting to get connection string from Key Vault");
-                // ...Key Vault connection logic...
                 var secretClient = new SecretClient(new Uri($"https://{keyVaultName}.vault.azure.net/"), new DefaultAzureCredential());
                 var secret = secretClient.GetSecret("PostgresConnectionString");
                 var connectionString = secret.Value.Value;
+
                 Console.WriteLine("Using PostgreSQL connection string from Key Vault");
+                options.UseNpgsql(connectionString); // Actually use the connection string!
                 return;
             }
             catch (Exception ex) {
                 Console.WriteLine($"Error accessing Key Vault: {ex.Message}");
             }
         }
+
+        Console.WriteLine("WARNING: No database connection string available in production environment.");
 
         // If we reach here without returning, throw a clear error
         throw new InvalidOperationException(
@@ -187,36 +228,84 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
-// Try to connect to the SQLite database, and seed admin user if available.
-// If the DB is missing (e.g. during CI/CD), log a warning and render fallback view if needed.
-using (var scope = app.Services.CreateScope())
+// Try to connect to the SQLite database
+try
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        if (db.Database.CanConnect())
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+        logger.LogInformation("Database provider: {Provider}", db.Database.ProviderName);
+
+        // Explicit check for Npgsql
+        if (db.Database.ProviderName != null)
         {
-            Console.WriteLine($"Connected to database with provider: {db.Database.ProviderName}");
+            bool isNpgsql = db.Database.ProviderName.Contains("Npgsql");
+            logger.LogInformation("Is Npgsql provider: {IsNpgsql}", isNpgsql);
 
-            if (db.Database.ProviderName?.Contains("Npgsql") == true)
+            if (isNpgsql)
             {
-                Console.WriteLine("Applying PostgreSQL database migrations...");
-                db.Database.Migrate();
-            }
+                logger.LogInformation("Applying PostgreSQL database migrations...");
+                try
+                {
+                    // Check if we can connect first
+                    bool canConnect = await db.Database.CanConnectAsync();
+                    logger.LogInformation("Database connection test: {Result}", canConnect ? "Success" : "Failed");
 
-            // Seed default admin user
-            SeederHelper.SeedAdminUser(app);
+                    if (canConnect)
+                    {
+                        // Create the migrations history table if it doesn't exist
+                        logger.LogInformation("Ensuring migrations history table exists...");
+                        await db.Database.EnsureCreatedAsync();
+
+                        // Apply migrations
+                        logger.LogInformation("Applying migrations...");
+                        await db.Database.MigrateAsync();
+                        logger.LogInformation("Database migrations SUCCESSFULLY APPLIED");
+                    }
+                    else
+                    {
+                        logger.LogError("Cannot connect to database - skipping migrations");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error during migration: {Message}", ex.Message);
+
+                    // Special handling for common PostgreSQL errors
+                    if (ex.InnerException is Npgsql.PostgresException pgEx)
+                    {
+                        logger.LogError("PostgreSQL error code: {Code}, message: {Message}",
+                            pgEx.SqlState, pgEx.MessageText);
+
+                        if (pgEx.SqlState == "42P01") // Relation does not exist
+                        {
+                            logger.LogInformation("Tables don't exist. Trying to create schema from scratch...");
+                            try
+                            {
+                                await db.Database.EnsureCreatedAsync();
+                                logger.LogInformation("Database schema created");
+                            }
+                            catch (Exception createEx)
+                            {
+                                logger.LogError(createEx, "Failed to create database schema");
+                            }
+                        }
+                    }
+                }
+            }
         }
         else
         {
-            Console.WriteLine("WARNING: Could not connect to database. No seeding will occur.");
+            logger.LogError("Database provider is NULL");
         }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Database check failed: {ex.Message}");
-    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"CRITICAL ERROR during migrations: {ex.Message}");
+    Console.WriteLine(ex.StackTrace);
 }
 
 // Configure the HTTP request pipeline.
