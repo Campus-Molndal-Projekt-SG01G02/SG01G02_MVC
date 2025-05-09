@@ -8,10 +8,11 @@ namespace SG01G02_MVC.Infrastructure.External;
 public class ReviewApiClient : IReviewApiClient
 {
     // TODO: Implement Review API client
-
-    public virtual Task<IEnumerable<ReviewDto>> GetReviewsForProductAsync(string productId)
+    
+    public async Task<IEnumerable<ReviewDto>> GetReviewsAsync(string productId)
     {
-        // Implementation will be added later
+        // Implementation
+        // return new List<ReviewDto>(); // Placeholder return value
         throw new NotImplementedException();
     }
 }

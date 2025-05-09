@@ -2,10 +2,9 @@ using SG01G02_MVC.Application.DTOs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace SG01G02_MVC.Application.Interfaces
+namespace SG01G02_MVC.Application.Interfaces;
+
+public interface IReviewApiClient
 {
-    public interface IReviewApiClient
-    {
-        Task<IEnumerable<ReviewDto>> GetReviewsForProductAsync(string productId);
-    }
+    Task<IEnumerable<ReviewDto>> GetReviewsAsync(string productId);
 }

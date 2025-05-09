@@ -6,8 +6,9 @@ on:
     # paths-ignore:
     #   - '.github/workflows/**'
 
-  # pull_request:
-  #   branches: [ main ]
+  pull_request:
+     branches: [ main ]
+     
   #   paths-ignore:
   #     - '.github/workflows/**'
 
@@ -23,6 +24,7 @@ on:
 
 jobs:
   build_and_test:
+    name: Build and Test
     runs-on: ubuntu-latest
     # runs-on: self-hosted
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -74,6 +76,7 @@ jobs:
 
   deploy:
     needs: build_and_test
+    name: Deploy to Production
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     # runs-on: self-hosted

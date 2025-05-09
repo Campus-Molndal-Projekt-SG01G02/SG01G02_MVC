@@ -1,4 +1,6 @@
 # SG01G02_MVC
+[![Build and Test](https://github.com/Campus-Molndal-Projekt-SG01G02/SG01G02_MVC/actions/workflows/build-test-deploy.yml/badge.svg)](https://github.com/Campus-Molndal-Projekt-SG01G02/SG01G02_MVC/actions/workflows/build-test-deploy.yml)
+
 
 ## Project Structure
 This solution is structured according to the principles of Clean Architecture and Domain-Driven Design (DDD) to ensure separation of concerns, modularity, and scalability. Each layer has a clearly defined responsibility:  
