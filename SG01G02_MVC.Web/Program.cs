@@ -156,9 +156,9 @@ else
 
             // TODO Until here, and activate below..
 
-            // Console.WriteLine("Using PostgreSQL connection string from environment variable");
-            // options.UseNpgsql(envConnectionString);
-            // return;
+            Console.WriteLine("Using PostgreSQL connection string from environment variable");
+            options.UseNpgsql(envConnectionString);
+            return;
         }
 
         // 2. For development, use SQLite

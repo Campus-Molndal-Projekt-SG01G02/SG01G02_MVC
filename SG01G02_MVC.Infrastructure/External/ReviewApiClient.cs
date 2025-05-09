@@ -15,4 +15,9 @@ public class ReviewApiClient : IReviewApiClient
         // return new List<ReviewDto>(); // Placeholder return value
         throw new NotImplementedException();
     }
+
+    public Task<IEnumerable<ReviewDto>> GetReviewsForProductAsync(string productId)
+    {
+        throw new NotImplementedException();
+    }
 }
