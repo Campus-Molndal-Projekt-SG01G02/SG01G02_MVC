@@ -21,7 +21,7 @@ on:
 # Concurrency control to prevent multiple runs of the same workflow
 concurrency:
   group: smoke-${{ github.ref }}
-  cancel-in-progress: true
+#  cancel-in-progress: true
 
 jobs:
   smoketest:
