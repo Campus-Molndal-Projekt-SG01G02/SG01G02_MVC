@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 
 namespace SG01G02_MVC.Application.Interfaces
 {
-    public interface IReviewService
+    public interface IReviewApiClient
     {
-        Task<IEnumerable<ReviewDto>> GetReviewsForProduct(string productId);
+        Task<IEnumerable<ReviewDto>> GetReviewsForProductAsync(string productId);
     }
 }

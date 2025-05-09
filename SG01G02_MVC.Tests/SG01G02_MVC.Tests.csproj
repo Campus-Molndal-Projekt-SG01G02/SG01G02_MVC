@@ -32,6 +32,7 @@
   <ItemGroup>
     <ProjectReference Include="..\SG01G02_MVC.Application\SG01G02_MVC.Application.csproj" />
     <ProjectReference Include="..\SG01G02_MVC.Web\SG01G02_MVC.Web.csproj" />
+    <ProjectReference Include="..\SG01G02_MVC.Infrastructure\SG01G02_MVC.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
