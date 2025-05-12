@@ -27,7 +27,7 @@ jobs:
     name: Build and Test
     runs-on: ubuntu-latest
     # runs-on: self-hosted
-    if: github.ref == 'refs/heads/main' && github.event_name == 'pull_request' # Only run on PR events
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
 
