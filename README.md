@@ -58,14 +58,16 @@ SG01G02_MVC/
 ├── SG01G02_MVC.Tests/
 │   ├── Controllers/
 │   │   ├── AdminControllerTests.cs                 - Admin functionality tests
-│   │   └── LoginControllerTests.cs                 - Authentication flow tests
+│   │   ├── LoginControllerTests.cs                 - Authentication flow tests
+│   │   └── ReviewControllerTests.cs                - TODO:  
 │   ├── Helpers/
 │   │   ├── TestBase.cs                             - Common test setup and utilities
 │   │   └── TestDbContextFactory.cs                 - Test database context factory
 │   ├── Services/
 │   │   ├── AuthServiceTests.cs                     - Authentication logic tests
 │   │   ├── FakeProductRepository.cs                - In-memory product repository
-│   │   └── ProductServiceTests.cs                  - Product business logic tests
+│   │   ├── ProductServiceTests.cs                  - Product business logic tests
+│   │   └── ReviewServiceTests.cs                   - TODO:  
 │   └── SG01G02_MVC.Infrastructure.Tests/
 │
 ├── SG01G02_MVC.Web/
@@ -76,11 +78,13 @@ SG01G02_MVC/
 │   │   ├── HomeController.cs                       - Landing page and navigation
 │   │   ├── ImageController.cs                      - Image upload management
 │   │   ├── LoginController.cs                      - Authentication handling
+│   │   ├── ReviewController.cs                     - TODO:  
 │   │   └── StaffController.cs                      - Order management
 │   ├── Models/
 │   │   ├── ErrorViewModel.cs                       - Error page data
 │   │   ├── LoginViewModel.cs                       - Login form data
-│   │   └── ProductViewModel.cs                     - Product display data
+│   │   ├── ProductViewModel.cs                     - Product display data
+│   │   └── ReviewSubmissionViewModel.cs            - TODO:  
 │   ├── Services/
 │   │   ├── IUserSessionService.cs                  - Session management contract
 │   │   ├── SeederHelper.cs                         - Initial data seeding

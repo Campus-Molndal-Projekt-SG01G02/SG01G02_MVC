@@ -2,31 +2,44 @@ using Microsoft.AspNetCore.Mvc;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Web.Models;
 using SG01G02_MVC.Domain.Entities;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SG01G02_MVC.Web.Controllers
 {
     public class CatalogueController : Controller
     {
         private readonly IProductService _productService;
+        private readonly IReviewService _reviewService;
 
-        public CatalogueController(IProductService productService)
+        public CatalogueController(IProductService productService, IReviewService reviewService)
         {
             _productService = productService;
+            _reviewService = reviewService;
         }
 
         public async Task<IActionResult> Index()
         {
             var dtos = await _productService.GetAllProductsAsync();
-
-            var viewModels = dtos.Select(dto => new ProductViewModel
+            var viewModels = new List<ProductViewModel>();
+            foreach (var dto in dtos)
             {
-                Id = dto.Id,
-                Name = dto.Name,
-                Price = dto.Price ?? 0m,
-                Description = dto.Description ?? string.Empty,
-                ImageUrl = dto.ImageUrl ?? string.Empty
-            }).ToList();
-
+                var reviews = (await _reviewService.GetReviewsForProduct(dto.Id.ToString())).ToList();
+                double avgRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;
+                int reviewCount = reviews.Count;
+                viewModels.Add(new ProductViewModel
+                {
+                    Id = dto.Id,
+                    Name = dto.Name,
+                    Price = dto.Price ?? 0m,
+                    Description = dto.Description ?? string.Empty,
+                    ImageUrl = dto.ImageUrl ?? string.Empty,
+                    StockQuantity = dto.StockQuantity,
+                    Reviews = reviews,
+                    AverageRating = avgRating,
+                    ReviewCount = reviewCount
+                });
+            }
             return View(viewModels);
         }
 
@@ -36,14 +49,21 @@ namespace SG01G02_MVC.Web.Controllers
             if (product == null)
                 return NotFound();
 
-            var model = new Product
+            var reviews = (await _reviewService.GetReviewsForProduct(product.Id.ToString())).ToList();
+            double avgRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;
+            int reviewCount = reviews.Count;
+
+            var model = new ProductViewModel
             {
                 Id = product.Id,
                 Name = product.Name,
                 Description = product.Description ?? string.Empty,
                 Price = product.Price ?? 0m,
                 StockQuantity = product.StockQuantity,
-                ImageUrl = product.ImageUrl ?? string.Empty
+                ImageUrl = product.ImageUrl ?? string.Empty,
+                Reviews = reviews,
+                AverageRating = avgRating,
+                ReviewCount = reviewCount
             };
 
             return View("Details", model);
