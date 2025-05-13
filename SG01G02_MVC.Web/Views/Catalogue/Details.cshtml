@@ -1,4 +1,4 @@
-@model SG01G02_MVC.Domain.Entities.Product
+@model SG01G02_MVC.Web.Models.ProductViewModel
 @inject SG01G02_MVC.Web.Services.IUserSessionService _session
 
 @{
@@ -19,6 +19,33 @@
     }
 
     <h2>@Model.Name</h2>
+    <div class="mb-2">
+        @if (Model.ReviewCount > 0)
+        {
+            <span title="@Model.AverageRating.ToString("0.0") out of 5">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    if (i <= Math.Floor(Model.AverageRating))
+                    {
+                        <span class="text-warning">&#9733;</span>
+                    }
+                    else if (i - Model.AverageRating < 1)
+                    {
+                        <span class="text-warning">&#9734;</span>
+                    }
+                    else
+                    {
+                        <span class="text-secondary">&#9734;</span>
+                    }
+                }
+                <span class="ms-1 text-muted">(@Model.ReviewCount review@(Model.ReviewCount > 1 ? "s" : ""))</span>
+            </span>
+        }
+        else
+        {
+            <span class="text-muted">No reviews yet</span>
+        }
+    </div>
     <hr/>
 
     <dl class="row">
@@ -40,6 +67,100 @@
             }
         </dd>
     </dl>
+
+    <ul class="nav nav-tabs" id="productTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="desc-tab" data-bs-toggle="tab" data-bs-target="#desc" type="button" role="tab" aria-controls="desc" aria-selected="true">Description</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab" aria-controls="reviews" aria-selected="false">
+                Reviews (@Model.ReviewCount)
+            </button>
+        </li>
+    </ul>
+    <div class="tab-content" id="productTabsContent">
+        <div class="tab-pane fade show active p-3" id="desc" role="tabpanel" aria-labelledby="desc-tab">
+            <p>@Model.Description</p>
+        </div>
+        <div class="tab-pane fade p-3" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
+            <h4>Customer Reviews</h4>
+            @if (Model.ReviewCount == 0)
+            {
+                <div class="alert alert-info">No reviews yet for this product.</div>
+            }
+            else
+            {
+                @foreach (var review in Model.Reviews.OrderByDescending(r => r.CreatedAt))
+                {
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">@review.Content</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">
+                                By @review.CustomerName on @review.CreatedAt.ToString("MMMM dd, yyyy")
+                                <span class="ms-2">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= review.Rating)
+                                        {
+                                            <span class="text-warning">&#9733;</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary">&#9734;</span>
+                                        }
+                                    }
+                                </span>
+                            </h6>
+                            <p class="card-text">@review.Content</p>
+                        </div>
+                    </div>
+                }
+            }
+
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Write a Review</h5>
+                </div>
+                <div class="card-body">
+                    @if (TempData["ReviewSuccess"] != null)
+                    {
+                        <div class="alert alert-success">@TempData["ReviewSuccess"]</div>
+                    }
+                    @if (TempData["ReviewError"] != null)
+                    {
+                        <div class="alert alert-danger">@TempData["ReviewError"]</div>
+                    }
+                    <form asp-controller="Review" asp-action="SubmitReview" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ProductId" value="@Model.Id" />
+                        <div class="mb-3">
+                            <label for="CustomerName" class="form-label">Your Name</label>
+                            <input type="text" class="form-control" id="CustomerName" name="CustomerName" maxlength="50" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="Rating" class="form-label">Rating</label>
+                            <select class="form-select" id="Rating" name="Rating" required>
+                                <option value="">Select Rating</option>
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <option value="@i">@i</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="Title" class="form-label">Review Title</label>
+                            <input type="text" class="form-control" id="Title" name="Title" maxlength="100" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="Content" class="form-label">Review</label>
+                            <textarea class="form-control" id="Content" name="Content" rows="3" maxlength="1000" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     @if (_session?.Role == "Admin")
     {

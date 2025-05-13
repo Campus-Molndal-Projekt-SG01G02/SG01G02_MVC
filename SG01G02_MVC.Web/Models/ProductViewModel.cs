@@ -19,5 +19,10 @@ namespace SG01G02_MVC.Web.Models
         public string? Description { get; set; }
 
         public string? ImageUrl { get; set; }
+
+        // --- Review properties ---
+        public double AverageRating { get; set; }
+        public int ReviewCount { get; set; }
+        public List<SG01G02_MVC.Application.DTOs.ReviewDto> Reviews { get; set; } = new();
     }
 }

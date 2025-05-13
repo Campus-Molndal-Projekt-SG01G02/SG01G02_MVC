@@ -4,6 +4,7 @@ using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Application.Services;
 using SG01G02_MVC.Infrastructure.Repositories;
 using SG01G02_MVC.Infrastructure.Data;
+using SG01G02_MVC.Infrastructure.External;
 using SG01G02_MVC.Web.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using System.Text.Json;
@@ -207,6 +208,10 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserSessionService, UserSessionService>();
+
+// Add Review services
+builder.Services.AddHttpClient<IReviewApiClient, ReviewApiClient>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 
 // Add session support
 builder.Services.AddDistributedMemoryCache();

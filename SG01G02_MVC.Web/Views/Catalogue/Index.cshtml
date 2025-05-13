@@ -37,6 +37,33 @@
                             }
 
                             <h5 class="card-title">@product.Name</h5>
+                            <div class="mb-2">
+                                @if (product.ReviewCount > 0)
+                                {
+                                    <span title="@product.AverageRating.ToString("0.0") out of 5">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= Math.Floor(product.AverageRating))
+                                            {
+                                                <span class="text-warning">&#9733;</span> <!-- filled star -->
+                                            }
+                                            else if (i - product.AverageRating < 1)
+                                            {
+                                                <span class="text-warning">&#9734;</span> <!-- half/empty star -->
+                                            }
+                                            else
+                                            {
+                                                <span class="text-secondary">&#9734;</span> <!-- empty star -->
+                                            }
+                                        }
+                                        <span class="ms-1 text-muted">(@product.ReviewCount review@(product.ReviewCount > 1 ? "s" : ""))</span>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No reviews yet</span>
+                                }
+                            </div>
                             <p class="card-text">@product.Description</p>
                             <p class="card-text fw-bold">@(product.Price.HasValue ? product.Price.Value.ToString("C") : "N/A")</p>
                             @if (product.StockQuantity > 0)
