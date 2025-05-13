@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SG01G02_MVC.Web", "SG01G02_
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SG01G02_MVC.Tests", "SG01G02_MVC.Tests\SG01G02_MVC.Tests.csproj", "{16A0EA52-BEAC-4898-A28B-368EFF762F1A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SG01G02_MockReviewsApi", "..\SG01G02_MockReviewsApi\SG01G02_MockReviewsApi.csproj", "{D31E41DB-420A-46D4-B471-520A6862E12B}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,9 +46,5 @@ Global
 		{16A0EA52-BEAC-4898-A28B-368EFF762F1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16A0EA52-BEAC-4898-A28B-368EFF762F1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16A0EA52-BEAC-4898-A28B-368EFF762F1A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D31E41DB-420A-46D4-B471-520A6862E12B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D31E41DB-420A-46D4-B471-520A6862E12B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D31E41DB-420A-46D4-B471-520A6862E12B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D31E41DB-420A-46D4-B471-520A6862E12B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
