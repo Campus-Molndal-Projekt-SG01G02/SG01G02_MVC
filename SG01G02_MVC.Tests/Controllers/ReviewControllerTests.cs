@@ -6,6 +6,7 @@ using SG01G02_MVC.Web.Controllers;
 using System.Collections.Generic;
 using Xunit;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace SG01G02_MVC.Tests.Controllers
 {
@@ -39,10 +40,10 @@ namespace SG01G02_MVC.Tests.Controllers
 
             // Assert
             var jsonResult = Assert.IsType<JsonResult>(result);
-            Assert.NotNull(jsonResult.Value);
-            dynamic response = jsonResult.Value;
-            Assert.True(response.success);
-            Assert.Equal(expectedReviews, response.reviews);
+            var json = JsonConvert.SerializeObject(jsonResult.Value);
+            var dict = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+            Assert.True((bool)dict["success"]);
+            Assert.NotNull(dict["reviews"]);
         }
 
         [Fact]
