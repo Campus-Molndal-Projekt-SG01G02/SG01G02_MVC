@@ -59,9 +59,10 @@ namespace SG01G02_MVC.Tests.Controllers
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
             Assert.NotNull(badRequestResult.Value);
-            dynamic response = badRequestResult.Value;
-            Assert.False(response.success);
-            Assert.Equal("Invalid product ID", response.message);
+            var json = JsonConvert.SerializeObject(badRequestResult.Value);
+            var dict = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+            Assert.False((bool)dict["success"]);
+            Assert.Equal("Invalid product ID", dict["message"]);
         }
 
         [Fact]
@@ -78,9 +79,10 @@ namespace SG01G02_MVC.Tests.Controllers
             var statusCodeResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(500, statusCodeResult.StatusCode);
             Assert.NotNull(statusCodeResult.Value);
-            dynamic response = statusCodeResult.Value;
-            Assert.False(response.success);
-            Assert.Equal("An error occurred while fetching reviews.", response.message);
+            var json = JsonConvert.SerializeObject(statusCodeResult.Value);
+            var dict = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+            Assert.False((bool)dict["success"]);
+            Assert.Equal("An error occurred while fetching reviews.", dict["message"]);
         }
     }
 } 
