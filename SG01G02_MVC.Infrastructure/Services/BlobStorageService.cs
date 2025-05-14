@@ -29,6 +29,18 @@ namespace SG01G02_MVC.Infrastructure.Services
             // Log test mode status
             LogInfo($"BlobStorageService initializing, test mode: {_isTestMode}");
 
+            // Get connection string from configuration
+            var connectionString = configuration["BlobStorageSettings:ConnectionString"] ??
+                                configuration["BlobConnectionString"];
+
+            // Handle special case for in-memory emulation
+            if (connectionString == "InMemoryEmulation=true")
+            {
+                LogInfo("Using in-memory blob storage emulation (no actual storage)");
+                _isTestMode = true;
+                return;
+            }
+
             // In test mode, don't initialize the real blob client
             if (_isTestMode)
             {
@@ -36,15 +48,15 @@ namespace SG01G02_MVC.Infrastructure.Services
                 return;
             }
 
-            // Get connection string from configuration
-            var connectionString = configuration["BlobStorageSettings:ConnectionString"] ??
-                                  configuration["BlobConnectionString"];
-
             if (string.IsNullOrEmpty(connectionString))
             {
                 var errorMsg = "BlobConnectionString or BlobStorageSettings:ConnectionString is missing in the configuration.";
                 LogError(errorMsg);
-                throw new ArgumentNullException(nameof(connectionString), errorMsg);
+
+                // Fall back to test mode instead of crashing
+                LogWarning("Falling back to test mode due to missing connection string");
+                _isTestMode = true;
+                return;
             }
 
             try

@@ -286,16 +286,50 @@ void ConfigureDatabase(WebApplicationBuilder builder)
 
 void ConfigureBlobStorage(WebApplicationBuilder builder)
 {
-    // Ensure BlobConnectionString is available in both locations
+    // Debug: Print available blob configuration
+    Console.WriteLine("=== Blob Storage Configuration ===");
+    Console.WriteLine($"BlobStorageSettings:ConnectionString: {(string.IsNullOrEmpty(builder.Configuration["BlobStorageSettings:ConnectionString"]) ? "missing" : "exists")}");
+    Console.WriteLine($"BlobConnectionString: {(string.IsNullOrEmpty(builder.Configuration["BlobConnectionString"]) ? "missing" : "exists")}");
+
+    // Get connection string from configuration
     var blobConnectionString = builder.Configuration["BlobStorageSettings:ConnectionString"];
 
-    if (!string.IsNullOrEmpty(blobConnectionString))
+    // Check alternative configuration key if primary is missing
+    if (string.IsNullOrEmpty(blobConnectionString))
     {
-        builder.Configuration["BlobConnectionString"] = blobConnectionString;
+        blobConnectionString = builder.Configuration["BlobConnectionString"];
     }
-    else if (!string.IsNullOrEmpty(builder.Configuration["BlobConnectionString"]))
+
+    // Check environment variables if still missing
+    if (string.IsNullOrEmpty(blobConnectionString))
     {
-        builder.Configuration["BlobStorageSettings:ConnectionString"] = builder.Configuration["BlobConnectionString"];
+        blobConnectionString = Environment.GetEnvironmentVariable("BLOB_CONNECTION_STRING");
+        if (!string.IsNullOrEmpty(blobConnectionString))
+        {
+            Console.WriteLine("Found BLOB_CONNECTION_STRING in environment variables");
+            builder.Configuration["BlobStorageSettings:ConnectionString"] = blobConnectionString;
+            builder.Configuration["BlobConnectionString"] = blobConnectionString;
+        }
+    }
+
+    // Use development/fallback storage if still missing
+    if (string.IsNullOrEmpty(blobConnectionString))
+    {
+        if (builder.Environment.IsDevelopment())
+        {
+            Console.WriteLine("No Blob connection string found - using local development storage");
+            blobConnectionString = "UseDevelopmentStorage=true";
+        }
+        else
+        {
+            Console.WriteLine("WARNING: No Blob connection string found in production - using fallback");
+            // Use a special value that BlobStorageService will recognize as "test mode"
+            blobConnectionString = "InMemoryEmulation=true";
+        }
+
+        // Store in both configuration locations
+        builder.Configuration["BlobStorageSettings:ConnectionString"] = blobConnectionString;
+        builder.Configuration["BlobConnectionString"] = blobConnectionString;
     }
 
     // Set default container name if missing
@@ -303,6 +337,9 @@ void ConfigureBlobStorage(WebApplicationBuilder builder)
     {
         builder.Configuration["BlobStorageSettings:ContainerName"] = "product-images";
     }
+
+    Console.WriteLine($"Using Blob connection string: {(blobConnectionString.Contains("AccountKey") ? "Real Azure Blob" : blobConnectionString)}");
+    Console.WriteLine($"Container name: {builder.Configuration["BlobStorageSettings:ContainerName"]}");
 
     // Register BlobStorageService
     builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
