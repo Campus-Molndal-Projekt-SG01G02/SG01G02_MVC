@@ -1,16 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using SG01G02_MVC.Infrastructure.Services;
+using SG01G02_MVC.Application.Interfaces;
 
 namespace SG01G02_MVC.Web.Controllers
 {
     [Route("api/[controller]")]
     public class ImagesController : Controller
     {
-        private readonly BlobStorageService _blobService;
+        private readonly IBlobStorageService _blobService;
 
-        public ImagesController(BlobStorageService blobService)
+        public ImagesController(IBlobStorageService blobService)
         {
             _blobService = blobService;
         }
