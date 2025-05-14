@@ -241,7 +241,8 @@ void ConfigureDatabase(WebApplicationBuilder builder)
     {
         Console.WriteLine("Using PostgreSQL connection string directly from environment variable");
         builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(directEnvConnectionString));
+            options.UseNpgsql(directEnvConnectionString,
+                npgsqlOptions => npgsqlOptions.MigrationsAssembly("SG01G02_MVC.Infrastructure")));
         return;
     }
 
@@ -251,7 +252,8 @@ void ConfigureDatabase(WebApplicationBuilder builder)
     {
         Console.WriteLine("Using PostgreSQL connection string from configuration");
         builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(configConnectionString));
+            options.UseNpgsql(configConnectionString,
+                npgsqlOptions => npgsqlOptions.MigrationsAssembly("SG01G02_MVC.Infrastructure")));
         return;
     }
 
@@ -264,7 +266,8 @@ void ConfigureDatabase(WebApplicationBuilder builder)
         {
             Console.WriteLine("Using SQLite for development");
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlite(sqliteConnectionString));
+                options.UseSqlite(sqliteConnectionString,
+                    sqliteOptions => sqliteOptions.MigrationsAssembly("SG01G02_MVC.Infrastructure")));
             return;
         }
 
@@ -305,6 +308,7 @@ void ConfigureBlobStorage(WebApplicationBuilder builder)
     builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 }
 
+// I ConfigureApp-metoden
 void ConfigureApp(WebApplication app)
 {
     // Configure the HTTP pipeline
@@ -317,11 +321,10 @@ void ConfigureApp(WebApplication app)
     app.UseSession();
     app.UseAuthentication();
     app.UseAuthorization();
-    app.MapStaticAssets();
+    app.UseStaticFiles();
     app.MapControllerRoute(
         name: "default",
-        pattern: "{controller=Home}/{action=Index}/{id?}")
-        .WithStaticAssets();
+        pattern: "{controller=Home}/{action=Index}/{id?}");
 
     app.MapHealthChecks("/health", new HealthCheckOptions
     {
@@ -340,7 +343,12 @@ void ConfigureApp(WebApplication app)
         }
     });
 
-    // Apply database migrations (with simpler implementation)
+    // Initialize database - Apply migrations or ensure schema is created
+    InitializeDatabase(app);
+}
+
+void InitializeDatabase(WebApplication app)
+{
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -361,19 +369,96 @@ void ConfigureApp(WebApplication app)
             }
             else if (db.Database.ProviderName?.Contains("Npgsql") ?? false)
             {
-                // Fix for PostgreSQL connectivity issues - test connection without trying to close
                 logger.LogInformation("Testing PostgreSQL connection...");
 
                 try
                 {
-                    // Just test if we can connect - don't try to manually close
                     var canConnect = db.Database.CanConnect();
 
                     if (canConnect)
                     {
-                        logger.LogInformation("Successfully connected to PostgreSQL, applying migrations");
-                        db.Database.EnsureCreated();
-                        db.Database.Migrate();
+                        logger.LogInformation("Successfully connected to PostgreSQL");
+
+                        try
+                        {
+                            // Ensure migrations history table exists
+                            db.Database.ExecuteSqlRaw(
+                                "CREATE TABLE IF NOT EXISTS \"__EFMigrationsHistory\" (" +
+                                "\"MigrationId\" character varying(150) NOT NULL, " +
+                                "\"ProductVersion\" character varying(32) NOT NULL, " +
+                                "CONSTRAINT \"PK___EFMigrationsHistory\" PRIMARY KEY (\"MigrationId\"));"
+                            );
+                            logger.LogInformation("Ensured migrations history table exists");
+
+                            // Check for pending migrations
+                            var pendingMigrations = db.Database.GetPendingMigrations().ToList();
+                            logger.LogInformation("Found {Count} pending migrations", pendingMigrations.Count);
+
+                            if (pendingMigrations.Any())
+                            {
+                                logger.LogInformation("Applying migrations: {Migrations}",
+                                    string.Join(", ", pendingMigrations));
+
+                                db.Database.Migrate();
+                                logger.LogInformation("Successfully applied migrations");
+                            }
+                            else
+                            {
+                                // If no migrations are pending but tables are missing, use EnsureCreated
+                                try
+                                {
+                                    // Check if Users table exists as an indicator
+                                    var userTableExists = false;
+                                    var command = db.Database.GetDbConnection().CreateCommand();
+                                    command.CommandText = @"
+                                        SELECT EXISTS (
+                                            SELECT FROM information_schema.tables
+                                            WHERE table_schema = 'public' AND table_name = 'Users'
+                                        );";
+
+                                    db.Database.OpenConnection();
+                                    var result = command.ExecuteScalar();
+                                    userTableExists = result != null && (result.ToString() == "1" || result.ToString().ToLower() == "true");
+                                    db.Database.CloseConnection();
+
+                                    if (!userTableExists)
+                                    {
+                                        logger.LogInformation("No migrations found and tables are missing. Creating database schema...");
+                                        db.Database.EnsureCreated();
+                                        logger.LogInformation("Database schema created successfully");
+                                    }
+                                    else
+                                    {
+                                        logger.LogInformation("Database schema already exists, no migrations to apply");
+                                    }
+                                }
+                                catch (Exception tableEx)
+                                {
+                                    logger.LogError(tableEx, "Error checking database tables");
+
+                                    // Fallback: Try EnsureCreated anyway
+                                    logger.LogWarning("Attempting to ensure database is created as fallback");
+                                    db.Database.EnsureCreated();
+                                }
+                            }
+                        }
+                        catch (InvalidOperationException migEx) when (migEx.Message.Contains("pending model changes"))
+                        {
+                            logger.LogWarning("Model has pending changes not reflected in migrations");
+                            logger.LogWarning("Using EnsureCreated as fallback, which may cause data loss!");
+
+                            // This might cause data loss if tables already exist, but better than a crash
+                            db.Database.EnsureCreated();
+                            logger.LogInformation("Database schema updated with EnsureCreated");
+                        }
+                        catch (Exception migEx)
+                        {
+                            logger.LogError(migEx, "Error applying migrations");
+
+                            // Try EnsureCreated as a last resort
+                            logger.LogWarning("Attempting to ensure database is created as fallback");
+                            db.Database.EnsureCreated();
+                        }
                     }
                     else
                     {
