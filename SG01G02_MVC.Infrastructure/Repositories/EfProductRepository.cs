@@ -40,6 +40,7 @@ namespace SG01G02_MVC.Infrastructure.Repositories
                 existing.StockQuantity = product.StockQuantity;
                 existing.ImageUrl = product.ImageUrl;
                 existing.Description = product.Description;
+                existing.ImageName = product.ImageName;
                 await _context.SaveChangesAsync();
             }
         }

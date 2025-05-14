@@ -9,6 +9,7 @@ namespace SG01G02_MVC.Domain.Entities
         public int StockQuantity { get; set; }
         public string? ImageName { get; set; }
         public string? ImageUrl { get; set; }
-        public bool HasImage => !string.IsNullOrEmpty(ImageName);
+        // public bool HasImage => !string.IsNullOrEmpty(ImageName);
+        public bool HasImage => !string.IsNullOrEmpty(ImageName) || !string.IsNullOrEmpty(ImageUrl);
     }
 }
