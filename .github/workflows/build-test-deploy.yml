@@ -154,6 +154,15 @@ jobs:
 
           echo "All required secrets were successfully retrieved from Key Vault!"
 
+      #Run EF Core migrations against the PostgreSQL database
+      - name: Run EF Core migrations
+        run: |
+          dotnet tool install --global dotnet-ef
+          export PATH="$PATH:/home/runner/.dotnet/tools"
+          dotnet ef database update --project SG01G02_MVC.Infrastructure --startup-project SG01G02_MVC.Web
+        env:
+          POSTGRES_CONNECTION_STRING: ${{ env.POSTGRES_CONNECTION_STRING }}
+
       # Build Docker image
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
