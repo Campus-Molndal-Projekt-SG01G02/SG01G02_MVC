@@ -14,7 +14,7 @@ namespace SG01G02_MVC.Web.Controllers
         private readonly IBlobStorageService _blobStorageService;
 
         public AdminController(
-            IProductService productService, 
+            IProductService productService,
             IUserSessionService session,
             IBlobStorageService blobStorageService)
         {
@@ -54,7 +54,7 @@ namespace SG01G02_MVC.Web.Controllers
         public async Task<IActionResult> Create(ProductViewModel model)
         {
             if (!IsAdmin) return RedirectToAction("Index", "Login");
-            
+
             // Validera modellen och filtyperna manuellt
             if (model.ImageFile != null && model.ImageFile.Length > 0)
             {
@@ -64,14 +64,14 @@ namespace SG01G02_MVC.Web.Controllers
                 {
                     ModelState.AddModelError("ImageFile", "Only image files (JPEG, PNG, GIF, WebP) are allowed.");
                 }
-                
+
                 // Kontrollera filstorlek (max 5MB)
                 if (model.ImageFile.Length > 5 * 1024 * 1024)
                 {
                     ModelState.AddModelError("ImageFile", "Image size cannot exceed 5MB.");
                 }
             }
-            
+
             if (!ModelState.IsValid) return View(model);
 
             // Hantera bilduppladdning om en bild tillhandahålls
@@ -100,7 +100,7 @@ namespace SG01G02_MVC.Web.Controllers
                 ImageUrl = model.ImageUrl,
                 ImageName = model.ImageName
             };
-            
+
             await _productService.CreateProductAsync(productDto);
             return RedirectToAction("Index");
         }
@@ -111,7 +111,7 @@ namespace SG01G02_MVC.Web.Controllers
             if (!IsAdmin) return RedirectToAction("Index", "Login");
             var product = await _productService.GetProductByIdAsync(id);
             if (product == null) return NotFound();
-            
+
             var model = new ProductViewModel
             {
                 Id = product.Id,
@@ -120,11 +120,11 @@ namespace SG01G02_MVC.Web.Controllers
                 Price = product.Price,
                 StockQuantity = product.StockQuantity,
                 ImageName = product.ImageName,
-                ImageUrl = !string.IsNullOrEmpty(product.ImageName) 
-                    ? _blobStorageService.GetBlobUrl(product.ImageName) 
+                ImageUrl = !string.IsNullOrEmpty(product.ImageName)
+                    ? _blobStorageService.GetBlobUrl(product.ImageName)
                     : product.ImageUrl
             };
-            
+
             return View(model);
         }
 
@@ -133,7 +133,7 @@ namespace SG01G02_MVC.Web.Controllers
         public async Task<IActionResult> Edit(ProductViewModel model)
         {
             if (!IsAdmin) return RedirectToAction("Index", "Login");
-            
+
             // Validera modellen och filtyperna manuellt
             if (model.ImageFile != null && model.ImageFile.Length > 0)
             {
@@ -143,19 +143,19 @@ namespace SG01G02_MVC.Web.Controllers
                 {
                     ModelState.AddModelError("ImageFile", "Only image files (JPEG, PNG, GIF, WebP) are allowed.");
                 }
-                
+
                 // Kontrollera filstorlek (max 5MB)
                 if (model.ImageFile.Length > 5 * 1024 * 1024)
                 {
                     ModelState.AddModelError("ImageFile", "Image size cannot exceed 5MB.");
                 }
             }
-            
+
             if (!ModelState.IsValid) return View(model);
 
             // Hämta befintlig produkt för att kontrollera om vi behöver ta bort en gammal bild
             var existingProduct = await _productService.GetProductByIdAsync(model.Id);
-            
+
             // Hantera bilduppladdning om en ny bild tillhandahålls
             if (model.ImageFile != null && model.ImageFile.Length > 0)
             {
@@ -182,7 +182,7 @@ namespace SG01G02_MVC.Web.Controllers
             {
                 // Behåll befintlig bild om ingen ny laddas upp
                 model.ImageName = existingProduct.ImageName;
-                
+
                 // Om det inte finns en ImageName (Blob Storage) men det finns en ImageUrl
                 // (från tidigare implementation), behåll ImageUrl
                 if (string.IsNullOrEmpty(model.ImageName) && !string.IsNullOrEmpty(existingProduct.ImageUrl))
@@ -201,7 +201,7 @@ namespace SG01G02_MVC.Web.Controllers
                 ImageUrl = model.ImageUrl,
                 ImageName = model.ImageName
             };
-            
+
             await _productService.UpdateProductAsync(productDto);
             return RedirectToAction("Index");
         }
@@ -212,7 +212,7 @@ namespace SG01G02_MVC.Web.Controllers
             if (!IsAdmin) return RedirectToAction("Index", "Login");
             var product = await _productService.GetProductByIdAsync(id);
             if (product == null) return NotFound();
-            
+
             var model = new ProductViewModel
             {
                 Id = product.Id,
@@ -221,11 +221,11 @@ namespace SG01G02_MVC.Web.Controllers
                 Price = product.Price,
                 StockQuantity = product.StockQuantity,
                 ImageName = product.ImageName,
-                ImageUrl = !string.IsNullOrEmpty(product.ImageName) 
-                    ? _blobStorageService.GetBlobUrl(product.ImageName) 
+                ImageUrl = !string.IsNullOrEmpty(product.ImageName)
+                    ? _blobStorageService.GetBlobUrl(product.ImageName)
                     : product.ImageUrl
             };
-            
+
             return View(model);
         }
 
@@ -234,7 +234,7 @@ namespace SG01G02_MVC.Web.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             if (!IsAdmin) return RedirectToAction("Index", "Login");
-            
+
             // Hämta produkten innan den tas bort så vi kan ta bort bilden
             var product = await _productService.GetProductByIdAsync(id);
             if (product != null && !string.IsNullOrEmpty(product.ImageName))
@@ -249,7 +249,7 @@ namespace SG01G02_MVC.Web.Controllers
                     Console.WriteLine($"Error deleting blob: {ex.Message}");
                 }
             }
-            
+
             await _productService.DeleteProductAsync(id);
             return RedirectToAction("Index");
         }

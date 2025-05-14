@@ -53,7 +53,8 @@ namespace SG01G02_MVC.Application.Services
                 Price = product.Price,
                 Description = product.Description,
                 StockQuantity = product.StockQuantity,
-                ImageUrl = product.ImageUrl
+                ImageUrl = product.ImageUrl,
+                ImageName = product.ImageName
             };
         }
 
@@ -66,7 +67,8 @@ namespace SG01G02_MVC.Application.Services
                 Price = dto.Price ?? 0m,
                 Description = dto.Description ?? string.Empty,
                 StockQuantity = dto.StockQuantity,
-                ImageUrl = dto.ImageUrl ?? string.Empty
+                ImageUrl = dto.ImageUrl ?? string.Empty,
+                ImageName = dto.ImageName ?? string.Empty
             };
         }
     }
