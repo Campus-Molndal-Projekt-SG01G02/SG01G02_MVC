@@ -4,6 +4,7 @@ using SG01G02_MVC.Web.Models;
 using SG01G02_MVC.Domain.Entities;
 using System.Linq;
 using System.Threading.Tasks;
+using SG01G02_MVC.Infrastructure.Services;
 
 namespace SG01G02_MVC.Web.Controllers
 {
@@ -11,6 +12,7 @@ namespace SG01G02_MVC.Web.Controllers
     {
         private readonly IProductService _productService;
         private readonly IReviewService _reviewService;
+        private readonly IBlobStorageService _blobStorageService;
 
         public CatalogueController(IProductService productService, IReviewService reviewService)
         {
@@ -33,7 +35,8 @@ namespace SG01G02_MVC.Web.Controllers
                     Name = dto.Name,
                     Price = dto.Price ?? 0m,
                     Description = dto.Description ?? string.Empty,
-                    ImageUrl = dto.ImageUrl ?? string.Empty,
+                    ImageName = dto.ImageName,
+                    ImageUrl = dto.HasImage ? _blobStorageService.GetBlobUrl(dto.ImageName) : dto.ImageUrl,
                     StockQuantity = dto.StockQuantity,
                     Reviews = reviews,
                     AverageRating = avgRating,
