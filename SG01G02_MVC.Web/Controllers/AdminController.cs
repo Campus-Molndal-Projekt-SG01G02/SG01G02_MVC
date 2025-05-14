@@ -38,6 +38,7 @@ namespace SG01G02_MVC.Web.Controllers
                 StockQuantity = p.StockQuantity,
                 ImageName = p.ImageName,
                 ImageUrl = p.HasImage ? _blobStorageService.GetBlobUrl(p.ImageName) : p.ImageUrl
+
             }).ToList();
             return View(viewModels);
         }
