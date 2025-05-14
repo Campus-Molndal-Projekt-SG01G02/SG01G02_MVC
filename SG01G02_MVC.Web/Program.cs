@@ -425,6 +425,13 @@ void InitializeDatabase(WebApplication app)
                                 "\"ProductVersion\" character varying(32) NOT NULL, " +
                                 "CONSTRAINT \"PK___EFMigrationsHistory\" PRIMARY KEY (\"MigrationId\"));"
                             );
+
+                            db.Database.ExecuteSqlRaw(
+                                "INSERT INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") " +
+                                "SELECT '20250514205802_AddProductImageNameColumn', '9.0.4' " +
+                                "WHERE NOT EXISTS (SELECT 1 FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\" = '20250514205802_AddProductImageNameColumn');"
+                            );
+
                             logger.LogInformation("Ensured migrations history table exists");
 
                             // Check for pending migrations
