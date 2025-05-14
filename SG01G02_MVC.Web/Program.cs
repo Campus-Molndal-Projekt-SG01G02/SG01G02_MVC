@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using System.Text.Json;
 using SG01G02_MVC.Infrastructure.Services;
 using System.Collections;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Mvc.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +37,23 @@ void ConfigureServices(WebApplicationBuilder builder)
     // 3. Register common services
     builder.Services.AddControllersWithViews();
     builder.Services.AddHttpContextAccessor();
+
+    // Configure file upload size limits
+    builder.Services.Configure<IISServerOptions>(options =>
+    {
+        options.MaxRequestBodySize = 30 * 1024 * 1024; // 30 MB
+    });
+
+    builder.WebHost.ConfigureKestrel(options =>
+    {
+        options.Limits.MaxRequestBodySize = 30 * 1024 * 1024; // 30 MB
+    });
+
+    builder.Services.Configure<FormOptions>(options =>
+    {
+        options.MultipartBodyLengthLimit = 30 * 1024 * 1024; // 30 MB
+        options.ValueLengthLimit = 30 * 1024 * 1024; // 30 MB
+    });
 
     // 4. Register application services
     builder.Services.AddScoped<IProductRepository, EfProductRepository>();
@@ -378,6 +397,43 @@ void ConfigureApp(WebApplication app)
                 })
             }));
         }
+    });
+
+    // Middleware to handle larger file uploads on specific endpoints
+    app.Use(async (context, next) =>
+    {
+        var endpoint = context.GetEndpoint();
+        if (endpoint != null)
+        {
+            var controllerAction = endpoint.Metadata.GetMetadata<ControllerActionDescriptor>();
+            if (controllerAction != null)
+            {
+                // Kontrollera om denna sökvägär relaterad till filuppladdning baserat på namn
+                var actionName = controllerAction.ActionName.ToLower();
+                var controllerName = controllerAction.ControllerName.ToLower();
+
+                bool isUploadRelated =
+                    actionName.Contains("upload") ||
+                    actionName.Contains("add") ||
+                    actionName.Contains("edit") ||
+                    actionName.Contains("create") ||
+                    controllerName.Contains("admin");
+
+                if (isUploadRelated)
+                {
+                    // Öka gränsen för uppladdningssökvägar
+                    var bodySizeFeature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
+                    if (bodySizeFeature != null && bodySizeFeature.IsReadOnly == false)
+                    {
+                        // Sätt en hög gräns för dessa sökvägar
+                        bodySizeFeature.MaxRequestBodySize = 50 * 1024 * 1024; // 50 MB
+                        Console.WriteLine($"Increased request size limit for path: {context.Request.Path}");
+                    }
+                }
+            }
+        }
+
+        await next();
     });
 
     // Initialize database - Apply migrations or ensure schema is created

@@ -110,6 +110,9 @@ jobs:
         run: |
           VAULT_NAME="${{ secrets.AZURE_KEY_VAULT_NAME }}"
 
+          KEY_VAULT_URL=$(az keyvault show --name "$VAULT_NAME" --query "properties.vaultUri" -o tsv)
+          echo "KEY_VAULT_URL=$KEY_VAULT_URL" >> $GITHUB_ENV
+
           echo "DOCKERHUB_USERNAME=$(az keyvault secret show --name 'dockerhub-username' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
 
           echo "DOCKERHUB_TOKEN=$(az keyvault secret show --name 'dockerhub-token' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
@@ -127,6 +130,14 @@ jobs:
       # Verify secrets were retrieved
       - name: Verify secrets were retrieved
         run: |
+
+          echo "Verifying that secrets were retrieved from Key Vault..."
+
+          if [ -z "$KEY_VAULT_URL" ]; then
+            echo "Error: KEY_VAULT_URL is not set"
+            exit 1
+          fi
+
           if [ -z "$DOCKERHUB_USERNAME" ]; then
             echo "Error: DOCKERHUB_USERNAME is not set"
             exit 1
@@ -195,6 +206,7 @@ jobs:
             POSTGRES_CONNECTION_STRING=${{ env.POSTGRES_CONNECTION_STRING }}
             BLOB_CONNECTION_STRING=${{ env.BLOB_CONNECTION_STRING }}
             KEY_VAULT_NAME=${{ env.AZURE_KEY_VAULT_NAME }}
+            ASPNETCORE_Kestrel__Limits__MaxRequestBodySize=31457280
 
       # Wait for Docker image to be available
       - name: Wait for Docker image to be available
