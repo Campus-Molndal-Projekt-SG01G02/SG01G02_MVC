@@ -3,6 +3,7 @@ using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Application.Services;
 using SG01G02_MVC.Infrastructure.Repositories;
 using SG01G02_MVC.Infrastructure.Data;
+using SG01G02_MVC.Infrastructure.External;
 using SG01G02_MVC.Web.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using System.Text.Json;
@@ -233,7 +234,13 @@ void RegisterServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IUserRepository, UserRepository>();
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<IUserSessionService, UserSessionService>();
+    
+    // Register BlobStorageService
     builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
+    
+    // Add Review services (from main branch)
+    builder.Services.AddHttpClient<IReviewApiClient, ReviewApiClient>();
+    builder.Services.AddScoped<IReviewService, ReviewService>();
 
     // Session and authentication
     builder.Services.AddDistributedMemoryCache();
