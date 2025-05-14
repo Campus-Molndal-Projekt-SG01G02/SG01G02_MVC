@@ -1,10 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Web.Models;
-using SG01G02_MVC.Domain.Entities;
-using System.Linq;
-using System.Threading.Tasks;
-using SG01G02_MVC.Infrastructure.Services;
 
 namespace SG01G02_MVC.Web.Controllers
 {
@@ -14,10 +10,15 @@ namespace SG01G02_MVC.Web.Controllers
         private readonly IReviewService _reviewService;
         private readonly IBlobStorageService _blobStorageService;
 
-        public CatalogueController(IProductService productService, IReviewService reviewService)
+        public CatalogueController(
+            IProductService productService,
+            IReviewService reviewService,
+            IBlobStorageService blobStorageService)
         {
             _productService = productService;
             _reviewService = reviewService;
+            _blobStorageService = blobStorageService;
+
         }
 
         public async Task<IActionResult> Index()
