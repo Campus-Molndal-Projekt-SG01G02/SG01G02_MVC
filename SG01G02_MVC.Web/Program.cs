@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.InMemory;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Application.Services;
 using SG01G02_MVC.Infrastructure.Repositories;
@@ -8,350 +7,346 @@ using SG01G02_MVC.Infrastructure.External;
 using SG01G02_MVC.Web.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using System.Text.Json;
-using Azure.Identity;
-using SG01G02_MVC.Web.HealthChecks;
-using System.Collections;
-using Azure.Security.KeyVault.Secrets;
+using SG01G02_MVC.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-if (!builder.Environment.IsDevelopment())
+// Configure services
+ConfigureServices(builder);
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline
+ConfigureApp(app);
+
+app.Run();
+
+// ===== Helper Methods =====
+
+void ConfigureServices(WebApplicationBuilder builder)
 {
-    // Setup Azure Key Vault in non-development environments
-    bool keyVaultAvailable = false;
+    // 1. Configure Key Vault (if needed)
+    ConfigureKeyVault(builder);
 
-    var keyVaultUrl = Environment.GetEnvironmentVariable("KEY_VAULT_URL");
-    var keyVaultName = Environment.GetEnvironmentVariable("KEY_VAULT_NAME");
+    // 2. Configure database
+    ConfigureDatabase(builder);
 
-    // If KEY_VAULT_URL is not set, build it from KEY_VAULT_NAME
-    if (string.IsNullOrEmpty(keyVaultUrl) && !string.IsNullOrEmpty(keyVaultName))
+    // 3. Register common services
+    builder.Services.AddControllersWithViews();
+    builder.Services.AddHttpContextAccessor();
+
+    // 4. Register application services
+    builder.Services.AddScoped<IProductRepository, EfProductRepository>();
+    builder.Services.AddScoped<IProductService, ProductService>();
+    builder.Services.AddScoped<IAuthService, AuthService>();
+    builder.Services.AddScoped<IUserRepository, UserRepository>();
+    builder.Services.AddScoped<IUserSessionService, UserSessionService>();
+
+    // 5. Configure and register BlobStorage
+    ConfigureBlobStorage(builder);
+
+    // 6. Register other services
+    builder.Services.AddHttpClient<IReviewApiClient, ReviewApiClient>();
+    builder.Services.AddScoped<IReviewService, ReviewService>();
+
+    // 7. Session and authentication
+    builder.Services.AddDistributedMemoryCache();
+    builder.Services.AddSession(options =>
     {
-        keyVaultUrl = $"https://{keyVaultName}.vault.azure.net/";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.IsEssential = true;
+        options.IdleTimeout = TimeSpan.FromMinutes(30);
+    });
+
+    builder.Services.AddAuthentication("CookieAuth")
+        .AddCookie("CookieAuth", config =>
+        {
+            config.LoginPath = "/Login/Index";
+        });
+
+    // 8. Health checks
+    builder.Services.AddHealthChecks()
+        .AddCheck<DatabaseHealthCheck>("Database");
+}
+
+void ConfigureKeyVault(WebApplicationBuilder builder)
+{
+    // Skip Key Vault in testing environment
+    if (builder.Environment.IsEnvironment("Testing"))
+    {
+        Console.WriteLine("Testing environment - using default configuration values");
+        builder.Configuration["BlobStorageSettings:ConnectionString"] = "UseDevelopmentStorage=true";
+        builder.Configuration["BlobConnectionString"] = "UseDevelopmentStorage=true";
+        return;
     }
 
-    if (!string.IsNullOrEmpty(keyVaultUrl))
+    string keyVaultUrl = builder.Configuration["KeyVault:Uri"]
+        ?? Environment.GetEnvironmentVariable("KEY_VAULT_URL")
+        ?? GetKeyVaultUrlFromName();
+
+    if (string.IsNullOrEmpty(keyVaultUrl))
+    {
+        if (!builder.Environment.IsDevelopment())
+            throw new InvalidOperationException("Key Vault URL is not configured");
+
+        Console.WriteLine("No Key Vault URL available - using local settings");
+        return;
+    }
+
+    try
+    {
+        var keyVaultService = new KeyVaultService(keyVaultUrl);
+        builder.Services.AddSingleton<IKeyVaultService>(keyVaultService);
+        Console.WriteLine($"Connected to Azure Key Vault: {keyVaultUrl}");
+
+        // Store retrieved secrets in configuration
+        StoreSecret(keyVaultService, "BlobConnectionString",
+            new[] { "BlobStorageSettings:ConnectionString", "BlobConnectionString" });
+
+        StoreSecret(keyVaultService, "PostgresConnectionString",
+            new[] { "ConnectionStrings:PostgreSQL" });
+    }
+    catch (Exception ex)
+    {
+        HandleKeyVaultError(ex, builder.Environment.IsDevelopment());
+    }
+
+    // Helper methods
+    string GetKeyVaultUrlFromName()
+    {
+        var keyVaultName = Environment.GetEnvironmentVariable("KEY_VAULT_NAME");
+        return !string.IsNullOrEmpty(keyVaultName)
+            ? $"https://{keyVaultName}.vault.azure.net/"
+            : null;
+    }
+
+    void StoreSecret(KeyVaultService service, string secretName, string[] configKeys)
     {
         try
         {
-            // Use DefaultAzureCredential for MSI/Service Principal authentication
-            var credential = new DefaultAzureCredential();
-
-            // Explicit test of Azure authentication
-            Console.WriteLine("Testing Azure authentication...");
-
-            var tokenRequestContext = new Azure.Core.TokenRequestContext(new[] { "https://vault.azure.net/.default" });
-
-            var token = credential.GetToken(tokenRequestContext);
-
-            if (!string.IsNullOrEmpty(token.Token))
+            var value = service.GetSecret(secretName);
+            if (!string.IsNullOrEmpty(value))
             {
-                Console.WriteLine("Azure authentication successful!");
+                foreach (var key in configKeys)
+                    builder.Configuration[key] = value;
 
-                // Proceed with adding KeyVault to the configuration
-                builder.Configuration.AddAzureKeyVault(
-                    new Uri(keyVaultUrl),
-                    credential);
-
-                keyVaultAvailable = true;
-
-                if (keyVaultAvailable)
-                {
-                    Console.WriteLine("Key Vault configuration is ready for use");
-                }
-                else
-                {
-                    Console.WriteLine("Key Vault is not available, using fallback configuration");
-                }
-
-                Console.WriteLine($"Successfully connected to Azure Key Vault: {keyVaultUrl}");
-            }
-            else
-            {
-                Console.WriteLine("Azure authentication failed: Could not obtain token");
+                Console.WriteLine($"{secretName} retrieved from Key Vault");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error with Azure authentication or Key Vault connection: {ex.Message}");
-            if (ex.InnerException != null)
+            Console.WriteLine($"Error retrieving {secretName}: {ex.Message}");
+        }
+    }
+
+    void HandleKeyVaultError(Exception ex, bool isDevelopment)
+    {
+        if (!isDevelopment)
+            throw new InvalidOperationException($"Could not connect to Key Vault: {ex.Message}", ex);
+
+        Console.WriteLine($"Warning: Could not connect to Key Vault: {ex.Message}");
+    }
+}
+
+void ConfigureDatabase(WebApplicationBuilder builder)
+{
+    // First try what you specified in settings
+    if (builder.Environment.IsEnvironment("Testing") ||
+        Environment.GetEnvironmentVariable("USE_IN_MEMORY_DB") == "true")
+    {
+        Console.WriteLine("Using in-memory database");
+        builder.Services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase("TestingDb"));
+        return;
+    }
+
+    // Check for PostgreSQL configuration first
+    bool usePostgresInDev = Environment.GetEnvironmentVariable("USE_POSTGRES_IN_DEV") == "true" ||
+                          builder.Configuration.GetValue<bool>("UsePostgresInDev");
+
+    if (usePostgresInDev || !builder.Environment.IsDevelopment())
+    {
+        var postgresConnectionString = builder.Configuration.GetConnectionString("PostgreSQL");
+
+        if (!string.IsNullOrEmpty(postgresConnectionString))
+        {
+            // For development, test connection before committing to Postgres
+            if (builder.Environment.IsDevelopment())
             {
-                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                try
+                {
+                    Console.WriteLine("Testing PostgreSQL connection...");
+                    using var conn = new Npgsql.NpgsqlConnection(postgresConnectionString);
+                    var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                    try
+                    {
+                        // Test if we can establish a connection within 5 seconds
+                        conn.OpenAsync(cancellationTokenSource.Token).GetAwaiter().GetResult();
+                        conn.Close();
+                        Console.WriteLine("PostgreSQL connection successful - using PostgreSQL");
+
+                        builder.Services.AddDbContext<AppDbContext>(options =>
+                            options.UseNpgsql(postgresConnectionString));
+                        return;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        Console.WriteLine("PostgreSQL connection timed out - falling back to SQLite");
+                        // Fall through to SQLite configuration
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"PostgreSQL connection failed: {ex.Message} - falling back to SQLite");
+                    // Fall through to SQLite configuration
+                }
             }
-        }
-    }
-    else
-    {
-        Console.WriteLine("No Key Vault URL or name provided in environment variables");
-    }
-}
-
-
-/// <summary>
-/// This adds functionallity for CI/CD to be able to run smoketest.
-/// If environment is test, then it uses an in memory db for testing (smoketest).
-/// What it does:
-/// - Calls /health to check that the server responds and
-///   is healthy and that the database is reachable.
-/// - Test the login page (/Login/Index) to ensure it responds.
-/// - Test the homepage to ensure it responds.
-///
-/// Otherwise, it uses the PostgreSQL database connection string from the environment variable.
-/// If not found, it falls back to SQLite in development.
-/// </summary>
-
-if (builder.Environment.IsEnvironment("Testing") || Environment.GetEnvironmentVariable("USE_IN_MEMORY_DB") == "true")
-{
-    Console.WriteLine("Using in-memory database for testing");
-
-    // Register in-memory database for testing
-    builder.Services.AddDbContext<AppDbContext>(options =>
-    {
-
-        // TODO Debug: Remove this..
-
-        // // 1. Check for connection string in environment variables
-        // var envConnectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
-        //
-        // // Log environment variables for debugging
-        // foreach (var env in Environment.GetEnvironmentVariables().Keys) {
-        //     if (env.ToString().Contains("POSTGRES") || env.ToString().Contains("DB")) {
-        //         Console.WriteLine($"Found environment variable: {env}={Environment.GetEnvironmentVariable(env.ToString())}");
-        //     }
-        // }
-        //
-        // // Force the connection string if needed for debugging
-        // if (string.IsNullOrEmpty(envConnectionString) && !builder.Environment.IsDevelopment()) {
-        //     Console.WriteLine("WARNING: POSTGRES_CONNECTION_STRING is empty or null - using hard-coded fallback");
-        //     envConnectionString = "Host=postgres-db;Database=appdb;Username=appuser;Password=sno2dvm16fPyqR3k";
-        // }
-        // TODO Until here..
-
-
-        options.UseInMemoryDatabase("TestingDb");
-        Console.WriteLine("Configured in-memory database for testing");
-    });
-}
-else
-{
-    // Configure database context
-    builder.Services.AddDbContext<AppDbContext>(options =>
-    {
-        // 1. Check for connection string in environment variables
-        var envConnectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
-        if (!string.IsNullOrEmpty(envConnectionString))
-        {
-            // TODO Debug: Remove this..
-
-            // // Parse the connection string manually to ensure correct format
-            // var connectionStringBuilder = new Npgsql.NpgsqlConnectionStringBuilder(envConnectionString);
-            //
-            // // Log the actual connection parameters being used (masking password)
-            // Console.WriteLine($"Connection details: Host={connectionStringBuilder.Host}, " +
-            //                 $"Database={connectionStringBuilder.Database}, " +
-            //                 $"Username={connectionStringBuilder.Username}, " +
-            //                 $"Password=***");
-            //
-            // // Use the parsed connection string to avoid format issues
-            // options.UseNpgsql(connectionStringBuilder.ConnectionString);
-            // return;
-
-            // TODO Until here, and activate below..
-
-            Console.WriteLine("Using PostgreSQL connection string from environment variable");
-            options.UseNpgsql(envConnectionString);
-            return;
-        }
-
-        // 2. For development, use SQLite
-        if (builder.Environment.IsDevelopment())
-        {
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-                throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-            Console.WriteLine("Using development SQLite connection");
-            options.UseSqlite(connectionString);
-            return;
-        }
-
-        // 3. As a last resort in production, try Key Vault
-        var keyVaultName = Environment.GetEnvironmentVariable("KEY_VAULT_NAME");
-        if (!string.IsNullOrEmpty(keyVaultName) && keyVaultName != "your-key-vault-name")
-        {
-            try {
-                // Your existing Key Vault code goes here
-                Console.WriteLine("Attempting to get connection string from Key Vault");
-                var secretClient = new SecretClient(new Uri($"https://{keyVaultName}.vault.azure.net/"), new DefaultAzureCredential());
-                var secret = secretClient.GetSecret("PostgresConnectionString");
-                var connectionString = secret.Value.Value;
-
-                Console.WriteLine("Using PostgreSQL connection string from Key Vault");
-                options.UseNpgsql(connectionString); // Actually use the connection string!
+            else
+            {
+                // In production, always try to use PostgreSQL
+                Console.WriteLine("Using PostgreSQL database");
+                builder.Services.AddDbContext<AppDbContext>(options =>
+                    options.UseNpgsql(postgresConnectionString));
                 return;
             }
-            catch (Exception ex) {
-                Console.WriteLine($"Error accessing Key Vault: {ex.Message}");
-            }
         }
+    }
 
-        Console.WriteLine("WARNING: No database connection string available in production environment.");
+    // Fall back to SQLite for development
+    if (builder.Environment.IsDevelopment())
+    {
+        var sqliteConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-        // If we reach here without returning, throw a clear error
-        throw new InvalidOperationException(
-            "No database connection string available. Please set POSTGRES_CONNECTION_STRING environment variable.");
-    });
+        if (string.IsNullOrEmpty(sqliteConnectionString))
+        {
+            Console.WriteLine("No SQLite connection string found - using in-memory database");
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseInMemoryDatabase("DevelopmentDb"));
+        }
+        else
+        {
+            Console.WriteLine("Using SQLite database for development");
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlite(sqliteConnectionString));
+        }
+        return;
+    }
+
+    // If we got here, we have no database configuration
+    throw new InvalidOperationException(
+        "No database connection string available. Please configure DefaultConnection for development " +
+        "or PostgreSQL connection string for production.");
 }
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
-builder.Services.AddScoped<IProductRepository, EfProductRepository>();
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IUserSessionService, UserSessionService>();
-
-// Add Review services
-builder.Services.AddHttpClient<IReviewApiClient, ReviewApiClient>();
-builder.Services.AddScoped<IReviewService, ReviewService>();
-
-// Add session support
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
+void ConfigureBlobStorage(WebApplicationBuilder builder)
 {
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-    options.IdleTimeout = TimeSpan.FromMinutes(30); // Set session timeout
-});
+    // Ensure BlobConnectionString is available in both locations
+    var blobConnectionString = builder.Configuration["BlobStorageSettings:ConnectionString"];
 
-// Add authentication
-builder.Services.AddAuthentication("CookieAuth")
-.AddCookie("CookieAuth", config =>
+    if (!string.IsNullOrEmpty(blobConnectionString))
+    {
+        builder.Configuration["BlobConnectionString"] = blobConnectionString;
+    }
+    else if (!string.IsNullOrEmpty(builder.Configuration["BlobConnectionString"]))
+    {
+        builder.Configuration["BlobStorageSettings:ConnectionString"] = builder.Configuration["BlobConnectionString"];
+    }
+
+    // Set default container name if missing
+    if (string.IsNullOrEmpty(builder.Configuration["BlobStorageSettings:ContainerName"]))
+    {
+        builder.Configuration["BlobStorageSettings:ContainerName"] = "product-images";
+    }
+
+    // Register BlobStorageService
+    builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
+}
+
+void ConfigureApp(WebApplication app)
 {
-    config.LoginPath = "/Login/Index"; // fallback if unauthenticated
-});
+    // Configure the HTTP pipeline
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseExceptionHandler("/Home/Error");
+    }
 
-// Health checks used by CI/CD
-builder.Services.AddHealthChecks()
-    .AddCheck<DatabaseHealthCheck>("Database");
+    app.UseRouting();
+    app.UseSession();
+    app.UseAuthentication();
+    app.UseAuthorization();
+    app.MapStaticAssets();
+    app.MapControllerRoute(
+        name: "default",
+        pattern: "{controller=Home}/{action=Index}/{id?}")
+        .WithStaticAssets();
 
-var app = builder.Build();
+    app.MapHealthChecks("/health", new HealthCheckOptions
+    {
+        ResponseWriter = async (context, report) =>
+        {
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(JsonSerializer.Serialize(new
+            {
+                Status = report.Status.ToString(),
+                Checks = report.Entries.Select(e => new
+                {
+                    Name = e.Key,
+                    Status = e.Value.Status.ToString(),
+                })
+            }));
+        }
+    });
 
-// Try to connect to the SQLite database
-try
-{
+    // Apply database migrations (with simpler implementation)
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
-        logger.LogInformation("Database provider: {Provider}", db.Database.ProviderName);
-
-        // Explicit check for Npgsql
-        if (db.Database.ProviderName != null)
+        try
         {
-            bool isNpgsql = db.Database.ProviderName.Contains("Npgsql");
-            logger.LogInformation("Is Npgsql provider: {IsNpgsql}", isNpgsql);
+            logger.LogInformation("Database provider: {Provider}", db.Database.ProviderName);
 
-            if (isNpgsql)
+            if (db.Database.ProviderName?.Contains("InMemory") ?? false)
             {
-                logger.LogInformation("Applying PostgreSQL database migrations...");
+                logger.LogInformation("Using in-memory database - no migrations needed");
+            }
+            else if (db.Database.ProviderName?.Contains("Sqlite") ?? false)
+            {
+                logger.LogInformation("Ensuring SQLite database is created");
+                db.Database.EnsureCreated();
+            }
+            else if (db.Database.ProviderName?.Contains("Npgsql") ?? false)
+            {
+                // Fix for PostgreSQL connectivity issues - test connection without trying to close
+                logger.LogInformation("Testing PostgreSQL connection...");
+
                 try
                 {
-                    // Check if we can connect first
-                    bool canConnect = await db.Database.CanConnectAsync();
-                    logger.LogInformation("Database connection test: {Result}", canConnect ? "Success" : "Failed");
+                    // Just test if we can connect - don't try to manually close
+                    var canConnect = db.Database.CanConnect();
 
                     if (canConnect)
                     {
-                        // Create the migrations history table if it doesn't exist
-                        logger.LogInformation("Ensuring migrations history table exists...");
-                        await db.Database.EnsureCreatedAsync();
-
-                        // Apply migrations
-                        logger.LogInformation("Applying migrations...");
-                        await db.Database.MigrateAsync();
-                        logger.LogInformation("Database migrations SUCCESSFULLY APPLIED");
+                        logger.LogInformation("Successfully connected to PostgreSQL, applying migrations");
+                        db.Database.EnsureCreated();
+                        db.Database.Migrate();
                     }
                     else
                     {
-                        logger.LogError("Cannot connect to database - skipping migrations");
+                        logger.LogError("Cannot connect to PostgreSQL - check firewall rules and credentials");
                     }
                 }
-                catch (Exception ex)
+                catch (Exception dbEx)
                 {
-                    logger.LogError(ex, "Error during migration: {Message}", ex.Message);
-
-                    // Special handling for common PostgreSQL errors
-                    if (ex.InnerException is Npgsql.PostgresException pgEx)
-                    {
-                        logger.LogError("PostgreSQL error code: {Code}, message: {Message}",
-                            pgEx.SqlState, pgEx.MessageText);
-
-                        if (pgEx.SqlState == "42P01") // Relation does not exist
-                        {
-                            logger.LogInformation("Tables don't exist. Trying to create schema from scratch...");
-                            try
-                            {
-                                await db.Database.EnsureCreatedAsync();
-                                logger.LogInformation("Database schema created");
-                            }
-                            catch (Exception createEx)
-                            {
-                                logger.LogError(createEx, "Failed to create database schema");
-                            }
-                        }
-                    }
+                    logger.LogError(dbEx, "Error connecting to PostgreSQL");
+                    logger.LogError("Check firewall rules, credentials, and network connectivity");
                 }
             }
         }
-        else
+        catch (Exception ex)
         {
-            logger.LogError("Database provider is NULL");
+            logger.LogError(ex, "Error during database initialization");
         }
     }
 }
-catch (Exception ex)
-{
-    Console.WriteLine($"CRITICAL ERROR during migrations: {ex.Message}");
-    Console.WriteLine(ex.StackTrace);
-}
-
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-}
-
-// Use routing, authorization, and static assets
-app.UseRouting();
-app.UseSession(); // Enables session before authorization - very important!
-app.UseAuthentication(); // Handles ClaimsPrincipal + CookieAuth
-app.UseAuthorization(); // Enables [Authorize] attribute
-app.MapStaticAssets();
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
-
-
-app.MapHealthChecks("/health", new HealthCheckOptions
-{
-ResponseWriter = async (context, report) =>
-{
-    context.Response.ContentType = "application/json";
-
-    var result = new
-    {
-        Status = report.Status.ToString(),
-        Checks = report.Entries.Select(e => new
-        {
-            Name = e.Key,
-            Status = e.Value.Status.ToString(),
-        })
-    };
-
-    await context.Response.WriteAsync(JsonSerializer.Serialize(result));
-}
-});
-
-// Run the application
-app.Run();

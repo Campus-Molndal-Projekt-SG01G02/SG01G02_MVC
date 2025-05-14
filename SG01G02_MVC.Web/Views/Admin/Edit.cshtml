@@ -1,11 +1,15 @@
 @model SG01G02_MVC.Web.Models.ProductViewModel
+@inject SG01G02_MVC.Application.Interfaces.IBlobStorageService BlobStorageService
 @{
     ViewData["Title"] = "Edit Product";
 }
 <div class="container mt-4">
     <h2>@ViewData["Title"]</h2>
-    <form asp-action="Edit" method="post" class="mt-3">
+
+    <form asp-action="Edit" method="post" enctype="multipart/form-data" class="mt-3">
         <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="ImageName" />
+
         <div class="mb-3">
             <label asp-for="Name" class="form-label"></label>
             <input asp-for="Name" class="form-control" />
@@ -26,11 +30,32 @@
             <input asp-for="StockQuantity" class="form-control" type="number" />
             <span asp-validation-for="StockQuantity" class="text-danger"></span>
         </div>
+
+        @if (Model.HasImage)
+        {
+            <div class="mb-3">
+                <label class="form-label">Current Image</label>
+                <div>
+                    @if (!string.IsNullOrEmpty(Model.ImageName))
+                    {
+                        <img src="@BlobStorageService.GetBlobUrl(Model.ImageName)" class="img-thumbnail" style="max-height: 200px;" alt="@Model.Name" />
+                    }
+                    else if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <img src="@Model.ImageUrl" class="img-thumbnail" style="max-height: 200px;" alt="@Model.Name" />
+                        <input type="hidden" asp-for="ImageUrl" />
+                    }
+                </div>
+            </div>
+        }
+
         <div class="mb-3">
-            <label asp-for="ImageUrl" class="form-label"></label>
-            <input asp-for="ImageUrl" class="form-control" />
-            <span asp-validation-for="ImageUrl" class="text-danger"></span>
+            <label asp-for="ImageFile" class="form-label">Upload New Image</label>
+            <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" />
+            <span asp-validation-for="ImageFile" class="text-danger"></span>
+            <small class="form-text text-muted">Upload a new image file (JPEG, PNG, GIF, WebP) up to 5MB, or leave empty to keep current image</small>
         </div>
+
         <button type="submit" class="btn btn-warning">Save Changes</button>
         <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
     </form>
