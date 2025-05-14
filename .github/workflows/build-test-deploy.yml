@@ -8,7 +8,7 @@ on:
 
   pull_request:
      branches: [ main ]
-     
+
   #   paths-ignore:
   #     - '.github/workflows/**'
 
@@ -120,6 +120,8 @@ jobs:
 
           echo "POSTGRES_CONNECTION_STRING=$(az keyvault secret show --name 'PostgresConnectionString' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
 
+          echo "AZURE_KEY_VAULT_NAME=$VAULT_NAME" >> $GITHUB_ENV
+
       # Verify secrets were retrieved
       - name: Verify secrets were retrieved
         run: |
@@ -172,7 +174,8 @@ jobs:
           tags: ${{ env.DOCKERHUB_USERNAME }}/sg01g02mvc:latest
           build-args: |
             POSTGRES_CONNECTION_STRING=${{ env.POSTGRES_CONNECTION_STRING }}
-            KEY_VAULT_NAME=${{ secrets.AZURE_KEY_VAULT_NAME }}
+            # KEY_VAULT_NAME=${{ secrets.AZURE_KEY_VAULT_NAME }}
+            KEY_VAULT_NAME=${{ env.AZURE_KEY_VAULT_NAME }}
 
       # Wait for Docker image to be available
       - name: Wait for Docker image to be available
