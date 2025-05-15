@@ -6,19 +6,20 @@
 }
 
 <div class="container mt-4">
-    
+
     @if (Model.HasImage)
     {
         <img src="@Model.ImageUrl" class="card-img-top product-image img-fluid" style="max-height: 400px; object-fit: contain;" alt="@Model.Name">
     }
     else
     {
-        <div class="card-img-top bg-light text-center p-5">
+        <div class="card-img-top bg-frost text-center p-5 rounded-corners">
             <span class="text-muted">No image available</span>
         </div>
     }
 
-    <h2>@Model.Name</h2>
+    <h2 class="mt-4">@Model.Name</h2>
+
     <div class="mb-2">
         @if (Model.ReviewCount > 0)
         {
@@ -78,7 +79,7 @@
             </button>
         </li>
     </ul>
-    <div class="tab-content" id="productTabsContent">
+    <div class="tab-content bg-frost mb-4 details" id="productTabsContent">
         <div class="tab-pane fade show active p-3" id="desc" role="tabpanel" aria-labelledby="desc-tab">
             <p>@Model.Description</p>
         </div>

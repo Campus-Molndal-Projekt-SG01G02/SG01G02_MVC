@@ -100,8 +100,6 @@ void ConfigureKeyVault(WebApplicationBuilder builder)
         Environment.GetEnvironmentVariable("USE_IN_MEMORY_DB") == "true")
     {
         Console.WriteLine("Test environment - using default values for configuration");
-        builder.Configuration["BlobStorageSettings:ConnectionString"] = "UseDevelopmentStorage=true";
-        builder.Configuration["BlobConnectionString"] = "UseDevelopmentStorage=true";
         return;
     }
 
@@ -114,6 +112,7 @@ void ConfigureKeyVault(WebApplicationBuilder builder)
         {
             string value = key.Contains("CONNECTION_STRING") || key.Contains("TOKEN") || key.Contains("KEY")
                 ? "***" : env.Value.ToString();
+
             Console.WriteLine($"{key}={value}");
         }
     }
@@ -197,7 +196,8 @@ void ConfigureKeyVault(WebApplicationBuilder builder)
         }
 
         TryStoreSecret(keyVaultService, "BlobConnectionString",
-            new[] { "BlobStorageSettings:ConnectionString", "BlobConnectionString" });
+        new[] { "BlobStorageSettings:ConnectionString", "BlobConnectionString" });
+
     }
     catch (Exception ex)
     {
@@ -258,7 +258,29 @@ void ConfigureDatabase(WebApplicationBuilder builder)
         return;
     }
 
-    // DIRECT FALLBACK: Check if we have a direct environment variable for PostgreSQL first
+    // Use SQLite in development
+    if (builder.Environment.IsDevelopment())
+    {
+        // For development, use SQLite
+        var sqliteConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+        // Always create the SQLite DB if it doesn't exist
+        if (string.IsNullOrEmpty(sqliteConnectionString))
+        {
+            Console.WriteLine("Creating SQLite connection string with default path");
+            sqliteConnectionString = "Data Source=app.db";
+            builder.Configuration["ConnectionStrings:DefaultConnection"] = sqliteConnectionString;
+        }
+
+        Console.WriteLine("Using SQLite for development: " + sqliteConnectionString);
+        builder.Services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlite(sqliteConnectionString,
+                sqliteOptions => sqliteOptions.MigrationsAssembly("SG01G02_MVC.Infrastructure")));
+
+        return;
+    }
+
+    // Check if we have a valid PostgreSQL connection string
     var directEnvConnectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
     if (!string.IsNullOrEmpty(directEnvConnectionString))
     {
@@ -280,26 +302,6 @@ void ConfigureDatabase(WebApplicationBuilder builder)
         return;
     }
 
-    // Fallback for development
-    if (builder.Environment.IsDevelopment())
-    {
-        // For development, use SQLite
-        var sqliteConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-        if (!string.IsNullOrEmpty(sqliteConnectionString))
-        {
-            Console.WriteLine("Using SQLite for development");
-            builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlite(sqliteConnectionString,
-                    sqliteOptions => sqliteOptions.MigrationsAssembly("SG01G02_MVC.Infrastructure")));
-            return;
-        }
-
-        // If no SQLite connection exists, use in-memory also for development
-        Console.WriteLine("No SQLite connection string found - using in-memory database for development");
-        builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseInMemoryDatabase("DevelopmentDb"));
-        return;
-    }
 
     // If we got here, we have no valid database option
     throw new InvalidOperationException(
@@ -314,45 +316,33 @@ void ConfigureBlobStorage(WebApplicationBuilder builder)
     Console.WriteLine($"BlobStorageSettings:ConnectionString: {(string.IsNullOrEmpty(builder.Configuration["BlobStorageSettings:ConnectionString"]) ? "missing" : "exists")}");
     Console.WriteLine($"BlobConnectionString: {(string.IsNullOrEmpty(builder.Configuration["BlobConnectionString"]) ? "missing" : "exists")}");
 
-    // Get connection string from configuration
-    var blobConnectionString = builder.Configuration["BlobStorageSettings:ConnectionString"];
+    // Get connection string from configuration (should be populated by Key Vault)
+    var blobConnectionString = builder.Configuration["BlobStorageSettings:ConnectionString"] ??
+                               builder.Configuration["BlobConnectionString"];
 
-    // Check alternative configuration key if primary is missing
-    if (string.IsNullOrEmpty(blobConnectionString))
+    // Check specifically for "UseDevelopmentStorage=true" and replace it with InMemoryEmulation
+    if (blobConnectionString == "UseDevelopmentStorage=true")
     {
-        blobConnectionString = builder.Configuration["BlobConnectionString"];
-    }
+        Console.WriteLine("WARNING: Connection string is set to UseDevelopmentStorage=true but Azure Storage Emulator is not available");
+        Console.WriteLine("Using in-memory fallback for blob storage instead");
 
-    // Check environment variables if still missing
-    if (string.IsNullOrEmpty(blobConnectionString))
-    {
-        blobConnectionString = Environment.GetEnvironmentVariable("BLOB_CONNECTION_STRING");
-        if (!string.IsNullOrEmpty(blobConnectionString))
-        {
-            Console.WriteLine("Found BLOB_CONNECTION_STRING in environment variables");
-            builder.Configuration["BlobStorageSettings:ConnectionString"] = blobConnectionString;
-            builder.Configuration["BlobConnectionString"] = blobConnectionString;
-        }
-    }
-
-    // Use development/fallback storage if still missing
-    if (string.IsNullOrEmpty(blobConnectionString))
-    {
-        if (builder.Environment.IsDevelopment())
-        {
-            Console.WriteLine("No Blob connection string found - using local development storage");
-            blobConnectionString = "UseDevelopmentStorage=true";
-        }
-        else
-        {
-            Console.WriteLine("WARNING: No Blob connection string found in production - using fallback");
-            // Use a special value that BlobStorageService will recognize as "test mode"
-            blobConnectionString = "InMemoryEmulation=true";
-        }
-
-        // Store in both configuration locations
+        blobConnectionString = "InMemoryEmulation=true";
         builder.Configuration["BlobStorageSettings:ConnectionString"] = blobConnectionString;
         builder.Configuration["BlobConnectionString"] = blobConnectionString;
+    }
+    else if (string.IsNullOrEmpty(blobConnectionString))
+    {
+        Console.WriteLine("WARNING: No Blob connection string found in configuration from Key Vault");
+        Console.WriteLine("Using fallback test mode for blob storage (no actual blob operations will be performed)");
+
+        // Set to special value that will trigger test mode in BlobStorageService
+        blobConnectionString = "InMemoryEmulation=true";
+        builder.Configuration["BlobStorageSettings:ConnectionString"] = blobConnectionString;
+        builder.Configuration["BlobConnectionString"] = blobConnectionString;
+    }
+    else
+    {
+        Console.WriteLine("Found Blob connection string in configuration from Key Vault");
     }
 
     // Set default container name if missing

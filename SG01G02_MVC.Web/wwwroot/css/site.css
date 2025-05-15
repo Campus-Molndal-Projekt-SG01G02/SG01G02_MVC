@@ -2,24 +2,235 @@ html {
   font-size: 14px;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
 html {
   position: relative;
   min-height: 100%;
 }
 
-body {
-  margin-bottom: 60px;
+/* Import fonts from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Color variables */
+  --blueberry: #3B5B92;    /* Primary color */
+  --midnight: #1E2A47;     /* Header/footer, contrast texts */
+  --mint-leaf: #A3D9A5;    /* Accent color */
+  --frost-white: #f9f6f3;  /* Background (light sections) */
+  --wood-brown: #8B6F4E;   /* For backgrounds or wood textures */
+
+  /* Font variables */
+  --font-body: 'Inter', sans-serif;
+  --font-heading: 'Poppins', sans-serif;
+
+  --bs-navbar-toggler-icon-bg-frost: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23F9FAFB' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+
 }
+
+/* Base styles */
+body {
+  font-family: var(--font-body);
+  background-color: var(--midnight);
+  color: var(--frost-white);
+  height: 100%;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+h1 {
+  font-size: 2.5rem;
+}
+
+h2 {
+  font-size: 2rem;
+}
+
+h3 {
+  font-size: 1.75rem;
+}
+
+.footer {
+  margin-top: auto;
+}
+
+.nav {
+  margin-bottom: -2px;
+}
+
+.details {
+  border-top-right-radius: 0.375rem;
+  border-bottom-left-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+}
+
+.rounded-corners {
+  border-radius: 0.375rem;
+}
+
+/* Custom button styles */
+.btn-primary {
+  background-color: var(--blueberry);
+  border-color: var(--blueberry);
+  border: none !important;
+}
+
+.btn-primary:hover, .btn-primary:focus {
+  background-color: #2d4979; /* Darker shade of blueberry */
+  border-color: #2d4979;
+  border: none !important;
+}
+
+.btn-accent {
+  background-color: var(--mint-leaf);
+  border-color: var(--mint-leaf);
+  color: var(--midnight);
+  border: none !important;
+}
+
+.btn-accent:hover, .btn-accent:focus {
+  background-color: #8bc78d; /* Darker shade of mint leaf */
+  border-color: #8bc78d;
+  color: var(--midnight);
+  border: none !important;
+}
+
+/* Header and footer styles */
+.site-header, .site-footer {
+  background-color: var(--midnight);
+  color: white;
+}
+
+/* Badge styles */
+.badge-accent {
+  background-color: var(--mint-leaf);
+  color: var(--midnight);
+}
+
+/* Card styles */
+.card {
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: var(--frost-white);
+}
+
+.img-max-height-50 {
+    max-height: 50vh;
+    width: auto;
+    object-fit: contain;
+    display: block;
+    background: var(--frost-white)
+}
+
+.nav-tabs .nav-link {
+  margin-bottom: calc(1 * var(--bs-nav-tabs-border-width));
+  border: var(--bs-nav-tabs-border-width) solid transparent;
+  border-top-left-radius: var(--bs-nav-tabs-border-radius);
+  border-top-right-radius: var(--bs-nav-tabs-border-radius);
+  background: white;
+  columns: var(--midnight);
+}
+
+.nav-tabs {
+  border-bottom: none !important ;
+}
+
+.nav-item button {
+  background: var(--frost-white) !important;
+  color: var(--mint-leaf) !important;
+}
+
+.nav-item button.active {
+  background: var(--frost-white) !important;
+  color: var(--midnight) !important;
+}
+
+
+.navbar-collapse.show {
+  align-content: center !important;
+  font-size: 2rem !important;
+  line-height: 4rem !important;
+  height: 100vh !important;
+  margin-top: -4rem !important;
+}
+
+.navbar-collapse.show .nav-link {
+  margin-top: 1rem !important;
+}
+
+
+/* Wood texture background class */
+.bg-wood {
+  background-color: var(--wood-brown);
+  color: white;
+}
+
+.bg-frost {
+  background-color: var(--frost-white);
+  color: var(--midnight);
+}
+
+.bg-grey {
+  background-color: #dedcd8;
+  color: var(--midnight);
+}
+
+
+/* Utility classes for the custom colors */
+.bg-blueberry { background-color: var(--blueberry) !important; color: white !important; }
+.bg-midnight { background-color: var(--midnight) !important; color: white !important; }
+.bg-mint { background-color: var(--mint-leaf) !important; color: var(--midnight) !important; }
+.bg-frost { background-color: var(--frost-white) !important; }
+.bg-wood { background-color: var(--wood-brown) !important; color: white !important; }
+
+.text-blueberry { color: var(--blueberry) !important; }
+.text-midnight { color: var(--midnight) !important; }
+.text-mint { color: var(--mint-leaf) !important; }
+.text-wood { color: var(--wood-brown) !important; }
+.text-frost { color: var(--frost-white) !important; }
+
+.bs-navbar-toggler-border-color {
+  background: var(--frost-white);
+}
+
+.navbar-toggler {
+  padding: var(--bs-navbar-toggler-padding-y) var(--bs-navbar-toggler-padding-x);
+  font-size: var(--bs-navbar-toggler-font-size);
+  line-height: 1;
+  color: var(--frost-white);
+  background-color: transparent;
+  border: 2px solid var(--frost-white);
+  border-radius: var(--bs-navbar-toggler-border-radius);
+  transition: var(--bs-navbar-toggler-transition);
+  z-index: 9999;
+}
+
+
+.navbar-toggler-icon {
+  display: inline-block;
+  width: 1.5em;
+  height: 1.5em;
+  vertical-align: middle;
+  background-image: var(--bs-navbar-toggler-icon-bg-frost);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
+}
+
+
+
+@media (min-width: 768px) {
+  html {
+    font-size: 1.14rem;
+  }
+}
+
+/* .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
   color: var(--bs-secondary-color);
@@ -28,4 +239,4 @@ body {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
-}
+} */
