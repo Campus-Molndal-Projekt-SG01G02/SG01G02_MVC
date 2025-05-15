@@ -64,7 +64,8 @@ namespace SG01G02_MVC.Web.Controllers
                 Description = product.Description ?? string.Empty,
                 Price = product.Price ?? 0m,
                 StockQuantity = product.StockQuantity,
-                ImageUrl = product.ImageUrl ?? string.Empty,
+                ImageName = product.ImageName,
+                ImageUrl = product.HasImage ? _blobStorageService.GetBlobUrl(product.ImageName) : product.ImageUrl,
                 Reviews = reviews,
                 AverageRating = avgRating,
                 ReviewCount = reviewCount
