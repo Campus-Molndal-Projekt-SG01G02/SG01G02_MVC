@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Web.Models;
-using SG01G02_MVC.Domain.Entities;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace SG01G02_MVC.Web.Controllers
 {
@@ -11,11 +8,17 @@ namespace SG01G02_MVC.Web.Controllers
     {
         private readonly IProductService _productService;
         private readonly IReviewService _reviewService;
+        private readonly IBlobStorageService _blobStorageService;
 
-        public CatalogueController(IProductService productService, IReviewService reviewService)
+        public CatalogueController(
+            IProductService productService,
+            IReviewService reviewService,
+            IBlobStorageService blobStorageService)
         {
             _productService = productService;
             _reviewService = reviewService;
+            _blobStorageService = blobStorageService;
+
         }
 
         public async Task<IActionResult> Index()
@@ -33,7 +36,8 @@ namespace SG01G02_MVC.Web.Controllers
                     Name = dto.Name,
                     Price = dto.Price ?? 0m,
                     Description = dto.Description ?? string.Empty,
-                    ImageUrl = dto.ImageUrl ?? string.Empty,
+                    ImageName = dto.ImageName,
+                    ImageUrl = dto.HasImage ? _blobStorageService.GetBlobUrl(dto.ImageName) : dto.ImageUrl,
                     StockQuantity = dto.StockQuantity,
                     Reviews = reviews,
                     AverageRating = avgRating,
@@ -60,7 +64,8 @@ namespace SG01G02_MVC.Web.Controllers
                 Description = product.Description ?? string.Empty,
                 Price = product.Price ?? 0m,
                 StockQuantity = product.StockQuantity,
-                ImageUrl = product.ImageUrl ?? string.Empty,
+                ImageName = product.ImageName,
+                ImageUrl = product.HasImage ? _blobStorageService.GetBlobUrl(product.ImageName) : product.ImageUrl,
                 Reviews = reviews,
                 AverageRating = avgRating,
                 ReviewCount = reviewCount

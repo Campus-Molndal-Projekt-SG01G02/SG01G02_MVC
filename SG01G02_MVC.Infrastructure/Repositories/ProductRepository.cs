@@ -24,6 +24,9 @@ namespace SG01G02_MVC.Infrastructure.Repositories
 
         public Task CreateProductAsync(Product product)
         {
+            // Simulate auto-incrementing ID
+            product.Id = _products.Count > 0 ? _products.Max(p => p.Id) + 1 : 1;
+
             _products.Add(product);
             return Task.CompletedTask;
         }
@@ -37,6 +40,8 @@ namespace SG01G02_MVC.Infrastructure.Repositories
                 existing.Price = product.Price;
                 existing.StockQuantity = product.StockQuantity;
                 existing.ImageUrl = product.ImageUrl;
+                existing.ImageName = product.ImageName;
+                existing.Description = product.Description;
             }
             return Task.CompletedTask;
         }
