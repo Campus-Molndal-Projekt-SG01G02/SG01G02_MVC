@@ -39,7 +39,7 @@ public class ReviewApiClient : IReviewApiClient
         var request = new HttpRequestMessage(method, requestUri);
         if (!string.IsNullOrEmpty(_apiKey))
         {
-            request.Headers.Add("x-functions-key", _apiKey);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
         }
         return request;
     }
@@ -83,8 +83,10 @@ public class ReviewApiClient : IReviewApiClient
     {
         try
         {
-            string requestUrl = $"{_baseUrl}/products/{review.ProductId}/reviews"; // Adjusted path
-            using var request = CreateRequest(HttpMethod.Post, requestUrl);
+            var baseUrl = _baseUrl;
+            var jwtToken = _apiKey;
+            var postReviewUrl = $"{baseUrl}/api/product/{review.ProductId}/review";
+            using var request = CreateRequest(HttpMethod.Post, postReviewUrl);
             request.Content = JsonContent.Create(review);
             
             var httpResponse = await _httpClient.SendAsync(request);
