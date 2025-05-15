@@ -49,16 +49,18 @@ public class ReviewApiClient : IReviewApiClient
         try
         {
             _logger.LogInformation("Fetching reviews for product {ProductId} from {BaseUrl}", productId, _baseUrl);
-            string requestUrl = $"{_baseUrl}/products/{productId}/reviews"; // Adjusted path to match typical Azure Function routing
+            string requestUrl = $"{_baseUrl}/api/products/{productId}/reviews?code={_apiKey}";
             
             using var request = CreateRequest(HttpMethod.Get, requestUrl);
             var httpResponse = await _httpClient.SendAsync(request);
 
             if (httpResponse.IsSuccessStatusCode)
             {
-                var reviews = await httpResponse.Content.ReadFromJsonAsync<List<ReviewDto>>();
+                // Use your DTO here:
+                var reviewResponse = await httpResponse.Content.ReadFromJsonAsync<ReviewResponseDto>();
+                var reviews = reviewResponse?.Reviews ?? new List<ReviewDto>();
                 _logger.LogInformation("Successfully retrieved {Count} reviews for product {ProductId}", reviews?.Count ?? 0, productId);
-                return reviews ?? new List<ReviewDto>();
+                return reviews;
             }
             else
             {
