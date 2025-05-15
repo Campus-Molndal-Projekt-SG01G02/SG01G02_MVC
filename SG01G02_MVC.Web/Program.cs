@@ -11,6 +11,7 @@ using SG01G02_MVC.Infrastructure.Services;
 using System.Collections;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,6 +88,9 @@ void ConfigureServices(WebApplicationBuilder builder)
     // 8. Health checks
     builder.Services.AddHealthChecks()
         .AddCheck<DatabaseHealthCheck>("Database");
+
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
 }
 
 void ConfigureKeyVault(WebApplicationBuilder builder)
@@ -438,6 +442,12 @@ void ConfigureApp(WebApplication app)
 
     // Initialize database - Apply migrations or ensure schema is created
     InitializeDatabase(app);
+
+    if (app.Environment.IsDevelopment() || app.Environment.IsStaging() || app.Environment.IsProduction())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
 }
 
 void InitializeDatabase(WebApplication app)
