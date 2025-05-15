@@ -1,123 +1,258 @@
 using Microsoft.AspNetCore.Mvc;
 using SG01G02_MVC.Application.Interfaces;
-using SG01G02_MVC.Application.DTOs;
 using SG01G02_MVC.Web.Models;
-using SG01G02_MVC.Infrastructure.Data;
 using SG01G02_MVC.Web.Services;
-using System.Threading.Tasks;
+using SG01G02_MVC.Application.DTOs;
+
 
 namespace SG01G02_MVC.Web.Controllers
 {
     public class AdminController : Controller
     {
         private readonly IProductService _productService;
-        private readonly AppDbContext _context;
         private readonly IUserSessionService _session;
+        private readonly IBlobStorageService _blobStorageService;
 
         public AdminController(
             IProductService productService,
-            AppDbContext context,
-            IUserSessionService session)
+            IUserSessionService session,
+            IBlobStorageService blobStorageService)
         {
             _productService = productService;
-            _context = context;
             _session = session;
+            _blobStorageService = blobStorageService;
         }
+
+        private bool IsAdmin => _session?.Role == "Admin";
 
         public async Task<IActionResult> Index()
         {
-            // use session.Role for auth-check (easier to mock in tests)
-            if (_session.Role != "Admin")
-                return RedirectToAction("Index", "Login");
-
-            if (!_context.Database.CanConnect())
-                return View("DatabaseUnavailable");
-
+            if (!IsAdmin) return RedirectToAction("Index", "Login");
             var products = await _productService.GetAllProductsAsync();
-            return View(products);
+            var viewModels = products.Select(p => new ProductViewModel
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Price = p.Price,
+                StockQuantity = p.StockQuantity,
+                ImageName = p.ImageName,
+                ImageUrl = p.HasImage ? _blobStorageService.GetBlobUrl(p.ImageName) : p.ImageUrl
+
+            }).ToList();
+            return View(viewModels);
         }
 
         [HttpGet]
-        public IActionResult AddProduct()
+        public IActionResult Create()
         {
-            return View("Create");
+            if (!IsAdmin) return RedirectToAction("Index", "Login");
+            return View(new ProductViewModel());
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddProduct(ProductViewModel model)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(ProductViewModel model)
         {
-            if (!ModelState.IsValid)
-                return View("Create", model);
+            if (!IsAdmin) return RedirectToAction("Index", "Login");
 
-            await _productService.CreateProductAsync(MapToDto(model));
+            // Validera modellen och filtyperna manuellt
+            if (model.ImageFile != null && model.ImageFile.Length > 0)
+            {
+                // Kontrollera filtyp
+                var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+                if (!allowedTypes.Contains(model.ImageFile.ContentType))
+                {
+                    ModelState.AddModelError("ImageFile", "Only image files (JPEG, PNG, GIF, WebP) are allowed.");
+                }
+
+                // Kontrollera filstorlek (max 5MB)
+                if (model.ImageFile.Length > 5 * 1024 * 1024)
+                {
+                    ModelState.AddModelError("ImageFile", "Image size cannot exceed 5MB.");
+                }
+            }
+
+            if (!ModelState.IsValid) return View(model);
+
+            // Hantera bilduppladdning om en bild tillhandahålls
+            if (model.ImageFile != null && model.ImageFile.Length > 0)
+            {
+                try
+                {
+                    // Ladda upp bilden
+                    model.ImageName = await _blobStorageService.UploadImageAsync(model.ImageFile);
+                    // Sätt ImageUrl till null så att vi använder blob URL istället
+                    model.ImageUrl = null;
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"Error uploading image: {ex.Message}");
+                    return View(model);
+                }
+            }
+
+            var productDto = new ProductDto
+            {
+                Name = model.Name,
+                Description = model.Description,
+                Price = model.Price ?? 0,
+                StockQuantity = model.StockQuantity,
+                ImageUrl = model.ImageUrl,
+                ImageName = model.ImageName
+            };
+
+            await _productService.CreateProductAsync(productDto);
             return RedirectToAction("Index");
         }
 
         [HttpGet]
-        public async Task<IActionResult> EditProduct(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var dto = await _productService.GetProductByIdAsync(id);
-            if (dto == null)
-                return NotFound();
+            if (!IsAdmin) return RedirectToAction("Index", "Login");
+            var product = await _productService.GetProductByIdAsync(id);
+            if (product == null) return NotFound();
 
-            var vm = MapToViewModel(dto);
-            return View("Edit", vm);
+            var model = new ProductViewModel
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                StockQuantity = product.StockQuantity,
+                ImageName = product.ImageName,
+                ImageUrl = !string.IsNullOrEmpty(product.ImageName)
+                    ? _blobStorageService.GetBlobUrl(product.ImageName)
+                    : product.ImageUrl
+            };
+
+            return View(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditProduct(int id, ProductViewModel model)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(ProductViewModel model)
         {
-            if (!ModelState.IsValid)
-                return View("Edit", model);
+            if (!IsAdmin) return RedirectToAction("Index", "Login");
 
-            await _productService.UpdateProductAsync(MapToDto(model));
+            // Validera modellen och filtyperna manuellt
+            if (model.ImageFile != null && model.ImageFile.Length > 0)
+            {
+                // Kontrollera filtyp
+                var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+                if (!allowedTypes.Contains(model.ImageFile.ContentType))
+                {
+                    ModelState.AddModelError("ImageFile", "Only image files (JPEG, PNG, GIF, WebP) are allowed.");
+                }
+
+                // Kontrollera filstorlek (max 5MB)
+                if (model.ImageFile.Length > 5 * 1024 * 1024)
+                {
+                    ModelState.AddModelError("ImageFile", "Image size cannot exceed 5MB.");
+                }
+            }
+
+            if (!ModelState.IsValid) return View(model);
+
+            // Hämta befintlig produkt för att kontrollera om vi behöver ta bort en gammal bild
+            var existingProduct = await _productService.GetProductByIdAsync(model.Id);
+
+            // Hantera bilduppladdning om en ny bild tillhandahålls
+            if (model.ImageFile != null && model.ImageFile.Length > 0)
+            {
+                try
+                {
+                    // Om produkten redan har en bild i Blob Storage, ta bort den gamla
+                    if (existingProduct != null && !string.IsNullOrEmpty(existingProduct.ImageName))
+                    {
+                        await _blobStorageService.DeleteImageAsync(existingProduct.ImageName);
+                    }
+
+                    // Ladda upp ny bild
+                    model.ImageName = await _blobStorageService.UploadImageAsync(model.ImageFile);
+                    // Sätt ImageUrl till null så att vi använder blob URL istället
+                    model.ImageUrl = null;
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"Error uploading image: {ex.Message}");
+                    return View(model);
+                }
+            }
+            else if (existingProduct != null)
+            {
+                // Behåll befintlig bild om ingen ny laddas upp
+                model.ImageName = existingProduct.ImageName;
+
+                // Om det inte finns en ImageName (Blob Storage) men det finns en ImageUrl
+                // (från tidigare implementation), behåll ImageUrl
+                if (string.IsNullOrEmpty(model.ImageName) && !string.IsNullOrEmpty(existingProduct.ImageUrl))
+                {
+                    model.ImageUrl = existingProduct.ImageUrl;
+                }
+            }
+
+            var productDto = new ProductDto
+            {
+                Id = model.Id,
+                Name = model.Name,
+                Description = model.Description,
+                Price = model.Price ?? 0,
+                StockQuantity = model.StockQuantity,
+                ImageUrl = model.ImageUrl,
+                ImageName = model.ImageName
+            };
+
+            await _productService.UpdateProductAsync(productDto);
             return RedirectToAction("Index");
         }
 
         [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
-            var dto = await _productService.GetProductByIdAsync(id);
-            if (dto == null)
-                return NotFound();
+            if (!IsAdmin) return RedirectToAction("Index", "Login");
+            var product = await _productService.GetProductByIdAsync(id);
+            if (product == null) return NotFound();
 
-            var vm = MapToViewModel(dto);
-            return View(vm);
+            var model = new ProductViewModel
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                StockQuantity = product.StockQuantity,
+                ImageName = product.ImageName,
+                ImageUrl = !string.IsNullOrEmpty(product.ImageName)
+                    ? _blobStorageService.GetBlobUrl(product.ImageName)
+                    : product.ImageUrl
+            };
+
+            return View(model);
         }
 
-        [HttpPost]
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            if (!IsAdmin) return RedirectToAction("Index", "Login");
+
+            // Hämta produkten innan den tas bort så vi kan ta bort bilden
+            var product = await _productService.GetProductByIdAsync(id);
+            if (product != null && !string.IsNullOrEmpty(product.ImageName))
+            {
+                try
+                {
+                    await _blobStorageService.DeleteImageAsync(product.ImageName);
+                }
+                catch (Exception ex)
+                {
+                    // Logga felet men fortsätt radera produkten
+                    Console.WriteLine($"Error deleting blob: {ex.Message}");
+                }
+            }
+
             await _productService.DeleteProductAsync(id);
             return RedirectToAction("Index");
-        }
-
-        // --- Private Mapping Helpers ---
-
-        private ProductDto MapToDto(ProductViewModel vm)
-        {
-            return new ProductDto
-            {
-                Id = vm.Id,
-                Name = vm.Name,
-                Price = vm.Price,
-                Description = vm.Description,
-                StockQuantity = vm.StockQuantity,
-                ImageUrl = vm.ImageUrl
-            };
-        }
-
-        private ProductViewModel MapToViewModel(ProductDto dto)
-        {
-            return new ProductViewModel
-            {
-                Id = dto.Id,
-                Name = dto.Name,
-                Price = dto.Price,
-                Description = dto.Description,
-                StockQuantity = dto.StockQuantity,
-                ImageUrl = dto.ImageUrl
-            };
         }
     }
 }

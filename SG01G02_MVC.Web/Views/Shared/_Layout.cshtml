@@ -20,7 +20,7 @@
     <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-midnight mb-3 text-frost">
         <div class="container-fluid align-items-center">
             <a class="navbar-brand text-frost" asp-area="" asp-controller="Home" asp-action="Index">Blueberry Pi</a>
-            
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                     aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -80,11 +80,29 @@
                         </li>
                     }
 
+                    @if (!string.IsNullOrEmpty(role))
+                    {
+                        <li class="nav-item">
+                            @if (role == "admin")
+                            {
+                                <a class="nav-link text-dark btn btn-outline-secondary ms-2" asp-controller="Admin" asp-action="Index">Admin Page</a>
+                            }
+                            else if (role == "staff")
+                            {
+                                <a class="nav-link text-dark btn btn-outline-secondary ms-2" asp-controller="Staff" asp-action="Index">Staff Page</a>
+                            }
+                            else
+                            {
+                                <a class="nav-link text-dark btn btn-outline-secondary ms-2" asp-controller="Home" asp-action="Index">User Page</a>
+                            }
+                        </li>
+                    }
+
                     @if (role != "Admin")
                     {
                         <li class="nav-item">
-                            <a class="nav-link text-frost btn btn-outline-primary ms-2 bg-wood p-2 pt-1 pb-1" 
-                               asp-controller="Cart" 
+                            <a class="nav-link text-frost btn btn-outline-primary ms-2 bg-wood p-2 pt-1 pb-1"
+                               asp-controller="Cart"
                                asp-action="Index">Cart</a>
                         </li>
                     }
@@ -101,7 +119,14 @@
 
     <footer class="footer">
         <div class="container center">
-            <p class="text-center text-wood" style="font-size: 12px;">
+            <div class="d-flex justify-content-center mb-2">
+                <img src="https://sg01g02storage.blob.core.windows.net/images/logo.jpg"
+                    alt="Logo"
+                    width="100"
+                    height="100"
+                    style="object-fit:contain; border-radius:8px; image-rendering:auto; image-rendering:optimizeQuality;"/>
+            </div>
+            <p class="text-center text-mint" style="font-size: 12px;">
             &copy; 2025
             </p>
         </div>

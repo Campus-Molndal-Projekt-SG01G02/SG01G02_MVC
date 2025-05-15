@@ -1,10 +1,6 @@
 name: Smoke Test
 
 on:
-  # push:
-  #   branches:
-  #     - '**'
-  #     - '!main'
   pull_request:
     branches: [ main ]
 
@@ -21,18 +17,12 @@ on:
 # Concurrency control to prevent multiple runs of the same workflow
 concurrency:
   group: smoke-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   smoketest:
     name: Docker Smoke Test
     # runs-on: self-hosted
     runs-on: ubuntu-latest
-    # Avoid duplicate runs by using smart conditional logic
-    # This runs the test:
-    # 1. On push ONLY if it is not in connection with a PR (direct push to branch)
-    # 2. On PR events
-    # 3. On manual execution
     if: >-
       (github.event_name == 'push' && github.head_ref == '') ||
       github.event_name == 'pull_request' ||

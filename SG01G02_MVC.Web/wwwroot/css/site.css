@@ -15,7 +15,7 @@ html {
   --blueberry: #3B5B92;    /* Primary color */
   --midnight: #1E2A47;     /* Header/footer, contrast texts */
   --mint-leaf: #A3D9A5;    /* Accent color */
-  --frost-white: #F9FAFB;  /* Background (light sections) */
+  --frost-white: #f9f6f3;  /* Background (light sections) */
   --wood-brown: #8B6F4E;   /* For backgrounds or wood textures */
 
   /* Font variables */
@@ -53,6 +53,20 @@ h3 {
 
 .footer {
   margin-top: auto;
+}
+
+.nav {
+  margin-bottom: -2px;
+}
+
+.details {
+  border-top-right-radius: 0.375rem;
+  border-bottom-left-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+}
+
+.rounded-corners {
+  border-radius: 0.375rem;
 }
 
 /* Custom button styles */
@@ -98,13 +112,70 @@ h3 {
 .card {
   border-radius: 0.5rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: var(--frost-white);
 }
+
+.img-max-height-50 {
+    max-height: 50vh;
+    width: auto;
+    object-fit: contain;
+    display: block;
+    background: var(--frost-white)
+}
+
+.nav-tabs .nav-link {
+  margin-bottom: calc(1 * var(--bs-nav-tabs-border-width));
+  border: var(--bs-nav-tabs-border-width) solid transparent;
+  border-top-left-radius: var(--bs-nav-tabs-border-radius);
+  border-top-right-radius: var(--bs-nav-tabs-border-radius);
+  background: white;
+  columns: var(--midnight);
+}
+
+.nav-tabs {
+  border-bottom: none !important ;
+}
+
+.nav-item button {
+  background: var(--frost-white) !important;
+  color: var(--mint-leaf) !important;
+}
+
+.nav-item button.active {
+  background: var(--frost-white) !important;
+  color: var(--midnight) !important;
+}
+
+
+.navbar-collapse.show {
+  align-content: center !important;
+  font-size: 2rem !important;
+  line-height: 4rem !important;
+  height: 100vh !important;
+  margin-top: -4rem !important;
+}
+
+.navbar-collapse.show .nav-link {
+  margin-top: 1rem !important;
+}
+
 
 /* Wood texture background class */
 .bg-wood {
   background-color: var(--wood-brown);
   color: white;
 }
+
+.bg-frost {
+  background-color: var(--frost-white);
+  color: var(--midnight);
+}
+
+.bg-grey {
+  background-color: #dedcd8;
+  color: var(--midnight);
+}
+
 
 /* Utility classes for the custom colors */
 .bg-blueberry { background-color: var(--blueberry) !important; color: white !important; }
@@ -120,7 +191,7 @@ h3 {
 .text-frost { color: var(--frost-white) !important; }
 
 .bs-navbar-toggler-border-color {
-  var(--frost-white);
+  background: var(--frost-white);
 }
 
 .navbar-toggler {
@@ -132,6 +203,7 @@ h3 {
   border: 2px solid var(--frost-white);
   border-radius: var(--bs-navbar-toggler-border-radius);
   transition: var(--bs-navbar-toggler-transition);
+  z-index: 9999;
 }
 
 

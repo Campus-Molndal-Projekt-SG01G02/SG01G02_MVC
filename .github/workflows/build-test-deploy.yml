@@ -6,8 +6,9 @@ on:
     # paths-ignore:
     #   - '.github/workflows/**'
 
-  # pull_request:
-  #   branches: [ main ]
+  pull_request:
+     branches: [ main ]
+
   #   paths-ignore:
   #     - '.github/workflows/**'
 
@@ -23,9 +24,10 @@ on:
 
 jobs:
   build_and_test:
+    name: Build and Test
     runs-on: ubuntu-latest
     # runs-on: self-hosted
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
 
@@ -44,7 +46,7 @@ jobs:
       # Continue workflow even if tests fail
       - name: Run tests
         id: tests
-        continue-on-error: true
+        # continue-on-error: true
         run: dotnet test SG01G02_MVC.sln --no-build --verbosity normal
 
       # Generate a summary report when tests fail
@@ -73,8 +75,9 @@ jobs:
           echo "All tests passed successfully!" >> $GITHUB_STEP_SUMMARY
 
   deploy:
-    needs: build_and_test
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+#    needs: build_and_test
+    name: Deploy to Production
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' # Only run on push to main
     runs-on: ubuntu-latest
     # runs-on: self-hosted
     steps:
@@ -97,10 +100,18 @@ jobs:
           az keyvault show --name ${{ secrets.AZURE_KEY_VAULT_NAME }} --query "name" -o tsv || \
             (echo "Error: Could not access Key Vault" && exit 1)
 
+      - name: Debug connection string
+        run: |
+          MASKED_CONN=$(echo "$POSTGRES_CONNECTION_STRING" | sed 's/Password=[^;]*;/Password=***;/g')
+          echo "POSTGRES_CONNECTION_STRING (masked): $MASKED_CONN"
+
       # Get secrets from Azure Key Vault
       - name: Get secrets from Key Vault
         run: |
           VAULT_NAME="${{ secrets.AZURE_KEY_VAULT_NAME }}"
+
+          KEY_VAULT_URL=$(az keyvault show --name "$VAULT_NAME" --query "properties.vaultUri" -o tsv)
+          echo "KEY_VAULT_URL=$KEY_VAULT_URL" >> $GITHUB_ENV
 
           echo "DOCKERHUB_USERNAME=$(az keyvault secret show --name 'dockerhub-username' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
 
@@ -112,9 +123,21 @@ jobs:
 
           echo "POSTGRES_CONNECTION_STRING=$(az keyvault secret show --name 'PostgresConnectionString' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
 
+          echo "BLOB_CONNECTION_STRING=$(az keyvault secret show --name 'BlobConnectionString' --vault-name "$VAULT_NAME" --query 'value' -o tsv)" >> $GITHUB_ENV
+
+          echo "AZURE_KEY_VAULT_NAME=$VAULT_NAME" >> $GITHUB_ENV
+
       # Verify secrets were retrieved
       - name: Verify secrets were retrieved
         run: |
+
+          echo "Verifying that secrets were retrieved from Key Vault..."
+
+          if [ -z "$KEY_VAULT_URL" ]; then
+            echo "Error: KEY_VAULT_URL is not set"
+            exit 1
+          fi
+
           if [ -z "$DOCKERHUB_USERNAME" ]; then
             echo "Error: DOCKERHUB_USERNAME is not set"
             exit 1
@@ -135,12 +158,29 @@ jobs:
             exit 1
           fi
 
+          if [ -z "$POSTGRES_CONNECTION_STRING" ]; then
+            echo "Error: POSTGRES_CONNECTION_STRING is not set"
+            exit 1
+          fi
+
+          if [ -z "$BLOB_CONNECTION_STRING" ]; then
+            echo "Error: BLOB_CONNECTION_STRING is not set"
+            exit 1
+          fi
+
+          if [ -z "$AZURE_KEY_VAULT_NAME" ]; then
+            echo "Error: AZURE_KEY_VAULT_NAME is not set"
+            exit 1
+          fi
+
           # Maskera hemligheterna i loggen men visa att de existerar
           echo "- DOCKERHUB_USERNAME exists"
           echo "- DOCKERHUB_TOKEN exists"
           echo "- WATCHTOWER_TOKEN exists"
           echo "- WATCHTOWER_ENDPOINT: $WATCHTOWER_ENDPOINT"
           echo "- POSTGRES_CONNECTION_STRING exists"
+          echo "- BLOB_CONNECTION_STRING exists"
+          echo "- AZURE_KEY_VAULT_NAME: $AZURE_KEY_VAULT_NAME"
 
           echo "All required secrets were successfully retrieved from Key Vault!"
 
@@ -164,7 +204,9 @@ jobs:
           tags: ${{ env.DOCKERHUB_USERNAME }}/sg01g02mvc:latest
           build-args: |
             POSTGRES_CONNECTION_STRING=${{ env.POSTGRES_CONNECTION_STRING }}
-            KEY_VAULT_NAME=${{ secrets.AZURE_KEY_VAULT_NAME }}
+            BLOB_CONNECTION_STRING=${{ env.BLOB_CONNECTION_STRING }}
+            KEY_VAULT_NAME=${{ env.AZURE_KEY_VAULT_NAME }}
+            ASPNETCORE_Kestrel__Limits__MaxRequestBodySize=31457280
 
       # Wait for Docker image to be available
       - name: Wait for Docker image to be available

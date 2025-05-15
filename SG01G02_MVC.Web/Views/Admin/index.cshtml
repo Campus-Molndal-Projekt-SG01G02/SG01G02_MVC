@@ -1,13 +1,61 @@
+@model IEnumerable<SG01G02_MVC.Web.Models.ProductViewModel>
+@inject SG01G02_MVC.Application.Interfaces.IBlobStorageService BlobStorageService
 @{
-    ViewData["Title"] = "Admin Dashboard";
+    ViewData["Title"] = "Admin - Product Management";
 }
 
 <div class="container mt-4">
     <h2>@ViewData["Title"]</h2>
-
-    <p>Welcome, Admin!</p>
-
-    <div class="alert alert-info">
-        Order listing coming soon...
-    </div>
+    <a asp-action="Create" class="btn btn-success mb-3">Add New Product</a>
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No products found.</div>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th width="100">Image</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var product in Model)
+                {
+                    <tr>
+                        <td>
+                            @if (product.HasImage)
+                            {
+                                @if (!string.IsNullOrEmpty(product.ImageName))
+                                {
+                                    <img src="@BlobStorageService.GetBlobUrl(product.ImageName)" class="img-thumbnail" style="max-width: 80px; max-height: 80px;" alt="@product.Name" />
+                                }
+                                else if (!string.IsNullOrEmpty(product.ImageUrl))
+                                {
+                                    <img src="@product.ImageUrl" class="img-thumbnail" style="max-width: 80px; max-height: 80px;" alt="@product.Name" />
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">No image</span>
+                            }
+                        </td>
+                        <td>@product.Name</td>
+                        <td>@(product.Description?.Length > 50 ? product.Description?.Substring(0, 50) + "..." : product.Description)</td>
+                        <td>@(product.Price.HasValue ? product.Price.Value.ToString("C") : "N/A")</td>
+                        <td>@product.StockQuantity</td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-sm btn-warning me-2">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-sm btn-danger">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 </div>
