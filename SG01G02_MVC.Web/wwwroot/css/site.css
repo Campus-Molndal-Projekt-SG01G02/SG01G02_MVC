@@ -136,7 +136,7 @@ h3 {
   border-bottom: none !important ;
 }
 
-.nav-item button {
+/* .nav-item button {
   background: var(--frost-white) !important;
   color: var(--mint-leaf) !important;
 }
@@ -144,7 +144,7 @@ h3 {
 .nav-item button.active {
   background: var(--frost-white) !important;
   color: var(--midnight) !important;
-}
+} */
 
 
 .navbar-collapse.show {
