@@ -136,15 +136,15 @@ h3 {
   border-bottom: none !important ;
 }
 
-/* .nav-item button {
+ #productTabs button {
   background: var(--frost-white) !important;
-  color: var(--mint-leaf) !important;
+  color: #808080 !important;
 }
 
-.nav-item button.active {
+#productTabs button.active {
   background: var(--frost-white) !important;
   color: var(--midnight) !important;
-} */
+}
 
 
 .navbar-collapse.show {
