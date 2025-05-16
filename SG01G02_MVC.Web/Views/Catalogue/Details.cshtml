@@ -131,12 +131,13 @@
                     {
                         <div class="alert alert-danger">@TempData["ReviewError"]</div>
                     }
-                    <form asp-controller="Review" asp-action="SubmitReview" method="post">
+                    <form asp-controller="Review" asp-action="SubmitReview" method="post" id="reviewForm">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="ProductId" value="@Model.Id" />
                         <div class="mb-3">
                             <label for="CustomerName" class="form-label">Your Name</label>
                             <input type="text" class="form-control" id="CustomerName" name="CustomerName" maxlength="50" required />
+                            <div class="invalid-feedback">Please enter your name.</div>
                         </div>
                         <div class="mb-3">
                             <label for="Rating" class="form-label">Rating</label>
@@ -147,17 +148,30 @@
                                     <option value="@i">@i</option>
                                 }
                             </select>
+                            <div class="invalid-feedback">Please select a rating.</div>
                         </div>
                         <div class="mb-3">
                             <label for="Title" class="form-label">Review Title</label>
                             <input type="text" class="form-control" id="Title" name="Title" maxlength="100" required />
+                            <div class="invalid-feedback">Please enter a title for your review.</div>
                         </div>
                         <div class="mb-3">
                             <label for="Content" class="form-label">Review</label>
                             <textarea class="form-control" id="Content" name="Content" rows="3" maxlength="1000" required></textarea>
+                            <div class="invalid-feedback">Please enter your review.</div>
                         </div>
-                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                        <button type="submit" class="btn btn-primary" id="submitReview">Submit Review</button>
                     </form>
+
+                    <script>
+                        document.getElementById('reviewForm').addEventListener('submit', function(e) {
+                            if (!this.checkValidity()) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                            }
+                            this.classList.add('was-validated');
+                        });
+                    </script>
                 </div>
             </div>
         </div>

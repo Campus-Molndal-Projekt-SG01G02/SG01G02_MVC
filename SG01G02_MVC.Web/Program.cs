@@ -198,6 +198,16 @@ void ConfigureKeyVault(WebApplicationBuilder builder)
         TryStoreSecret(keyVaultService, "BlobConnectionString",
         new[] { "BlobStorageSettings:ConnectionString", "BlobConnectionString" });
 
+        // Add Review API secrets
+        TryStoreSecret(keyVaultService, "ReviewApiURL",
+            new[] { "ReviewApiURL" });
+        TryStoreSecret(keyVaultService, "ReviewApiKey",
+            new[] { "ReviewApiKey" });
+        TryStoreSecret(keyVaultService, "MockReviewApiURL",
+            new[] { "MockReviewApiURL" });
+        TryStoreSecret(keyVaultService, "MockReviewApiKey",
+            new[] { "MockReviewApiKey" });
+
     }
     catch (Exception ex)
     {
