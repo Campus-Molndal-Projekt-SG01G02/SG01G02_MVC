@@ -38,7 +38,7 @@
 
                 @if (!string.IsNullOrEmpty(role))
                 {
-                    <span class="navbar-text text-frost ms-2">
+                    <span class="navbar-text text-frost ms-2 me-4">
                         @if (role == "admin")
                         {
                             <text>Your role is: Admin</text>
@@ -61,21 +61,21 @@
                     @if (role == "Admin")
                     {
                         <li class="nav-item">
-                            <a class="nav-link text-frost" asp-controller="Admin" asp-action="Index">Admin</a>
+                            <a class="nav-link text-frost btn-warning" asp-controller="Admin" asp-action="Index">Admin</a>
                         </li>
                     }
 
                     @if (string.IsNullOrEmpty(role))
                     {
                         <li class="nav-item">
-                            <a class="nav-link text-frost" asp-controller="Login" asp-action="Index">Login</a>
+                            <a class="nav-link text-frost btn-warning" asp-controller="Login" asp-action="Index">Login</a>
                         </li>
                     }
                     else
                     {
                         <li class="nav-item">
                             <form method="post" asp-controller="Login" asp-action="Logout" class="d-inline">
-                                <button class="btn btn-link nav-link" type="submit">Logout</button>
+                                <button class="btn btn-sm btn-warning" type="submit">Logout</button>
                             </form>
                         </li>
                     }
@@ -85,15 +85,15 @@
                         <li class="nav-item">
                             @if (role == "admin")
                             {
-                                <a class="nav-link text-dark btn btn-warning ms-2" asp-controller="Admin" asp-action="Index">Admin Page</a>
+                                <a class="nav-link text-frost btn btn-secondary ms-2" asp-controller="Admin" asp-action="Index">Admin Page</a>
                             }
                             else if (role == "staff")
                             {
-                                <a class="nav-link text-dark btn btn-warning ms-2" asp-controller="Staff" asp-action="Index">Staff Page</a>
+                                <a class="nav-link text-frost btn btn-primary ms-2" asp-controller="Staff" asp-action="Index">Staff Page</a>
                             }
                             else
                             {
-                                <a class="nav-link text-dark btn btn-warning ms-2" asp-controller="Home" asp-action="Index">User Page</a>
+                                <a class="nav-link text-frost btn btn-accent ms-2" asp-controller="Home" asp-action="Index">User Page</a>
                             }
                         </li>
                     }
