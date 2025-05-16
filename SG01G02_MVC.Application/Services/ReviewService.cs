@@ -35,6 +35,16 @@ public class ReviewService : IReviewService
 
     public async Task<bool> SubmitReviewAsync(ReviewDto review)
     {
-        return await _apiClient.SubmitReviewAsync(review);
+        _logger.LogInformation("Calling Review API for ProductId: {ProductId}", review.ProductId);
+        var result = await _apiClient.SubmitReviewAsync(review);
+        if (result)
+        {
+            _logger.LogInformation("Review API response: {StatusCode} - {ReasonPhrase}", 200, "OK");
+        }
+        else
+        {
+            _logger.LogError("Review API error: {Error}", "Review submission failed");
+        }
+        return result;
     }
 }

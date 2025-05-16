@@ -47,6 +47,8 @@ namespace SG01G02_MVC.Web.Controllers
                 return RedirectToAction("Details", "Catalogue", new { id = model.ProductId });
             }
 
+            _logger.LogInformation("Submitting review for ProductId: {ProductId}, Name: {Name}, Rating: {Rating}", model.ProductId, model.CustomerName, model.Rating);
+
             var reviewDto = new ReviewDto
             {
                 ProductId = model.ProductId.ToString(),
