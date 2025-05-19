@@ -15,6 +15,11 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Set the default culture for the application
+var cultureInfo = new System.Globalization.CultureInfo("sv-SE");
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+
 // Configure services
 ConfigureServices(builder);
 
