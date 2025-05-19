@@ -379,7 +379,17 @@ void ConfigureApp(WebApplication app)
     // Configure the HTTP pipeline
     if (!app.Environment.IsDevelopment())
     {
-        app.UseExceptionHandler("/Home/Error");
+        app.UseExceptionHandler(errorApp =>
+        {
+            errorApp.Run(async context =>
+            {
+                var error = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+                var ex = error?.Error;
+                var message = ex != null ? ex.ToString() : "Unknown error";
+                context.Response.ContentType = "text/plain";
+                await context.Response.WriteAsync("Custom error: " + message);
+            });
+        });
     }
 
     app.UseRouting();
