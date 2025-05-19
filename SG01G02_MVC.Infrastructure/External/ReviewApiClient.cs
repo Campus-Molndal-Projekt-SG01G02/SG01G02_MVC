@@ -107,7 +107,7 @@ public class ReviewApiClient : IReviewApiClient
             if (httpResponse.IsSuccessStatusCode)
             {
                 var reviewResponse = await httpResponse.Content.ReadFromJsonAsync<ReviewResponseDto>();
-                var reviews = reviewResponse?.Reviews ?? new List<ReviewDto>();
+                var reviews = (reviewResponse?.Reviews ?? new List<ReviewDto>()).Where(r => r != null).ToList();
                 _logger.LogInformation("Successfully retrieved {Count} reviews for product {ProductId}", reviews?.Count ?? 0, productId);
                 return reviews;
             }
