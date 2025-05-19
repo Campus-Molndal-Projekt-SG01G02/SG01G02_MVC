@@ -16,7 +16,7 @@ public class SessionTrackingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        // Definiera sessionId en gång och återanvänd den
+        // Define sessionId once and reuse it
         string sessionId;
 
         if (string.IsNullOrEmpty(context.Session.GetString("SessionId")))
@@ -49,13 +49,13 @@ public class SessionTrackingMiddleware
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Request failed");
-                throw; // Återkasta exception för att låta global felhantering ta hand om det
+                throw; // Rethrow exception to let global error handling take care of it
             }
         }
     }
 }
 
-// Extension method för att göra det enklare att använda middleware
+// Extension method to make it easier to use the middleware
 public static class SessionTrackingMiddlewareExtensions
 {
     public static IApplicationBuilder UseSessionTracking(this IApplicationBuilder builder)
