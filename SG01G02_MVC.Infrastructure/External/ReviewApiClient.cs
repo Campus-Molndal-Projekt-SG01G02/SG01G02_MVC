@@ -136,8 +136,18 @@ public class ReviewApiClient : IReviewApiClient
         {
             var postReviewUrl = $"{_baseUrl}/api/products/{review.ProductId}/reviews";
             using var request = await CreateAuthenticatedRequestAsync(HttpMethod.Post, postReviewUrl);
-            request.Content = JsonContent.Create(review);
-            
+
+            // Map to external API format
+            var apiReview = new
+            {
+                reviewerName = review.CustomerName,
+                text = review.Content,
+                rating = review.Rating,
+                reviewDate = review.CreatedAt
+            };
+
+            request.Content = JsonContent.Create(apiReview);
+
             var httpResponse = await _httpClient.SendAsync(request);
 
             if (httpResponse.IsSuccessStatusCode)

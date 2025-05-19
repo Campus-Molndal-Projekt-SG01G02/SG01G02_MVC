@@ -55,8 +55,6 @@ namespace SG01G02_MVC.Web.Controllers
                 CustomerName = model.CustomerName,
                 Rating = model.Rating,
                 Content = model.Content,
-                // If the external API supports a title, add it; otherwise, include in content
-                // Title = model.Title,
                 CreatedAt = DateTime.UtcNow
             };
 

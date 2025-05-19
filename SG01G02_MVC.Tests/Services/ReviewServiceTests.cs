@@ -5,6 +5,7 @@ using SG01G02_MVC.Application.Services;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Xunit;
+using System.Net.Http;
 
 namespace SG01G02_MVC.Tests.Services
 {
@@ -18,7 +19,9 @@ namespace SG01G02_MVC.Tests.Services
         {
             _mockReviewApiClient = new Mock<IReviewApiClient>();
             _mockLogger = new Mock<ILogger<ReviewService>>();
-            _reviewService = new ReviewService(_mockReviewApiClient.Object, _mockLogger.Object);
+            var httpClient = new HttpClient();
+            var baseUrl = "http://dummy-url";
+            _reviewService = new ReviewService(_mockReviewApiClient.Object, _mockLogger.Object, httpClient, baseUrl);
         }
 
         [Fact]
@@ -31,7 +34,6 @@ namespace SG01G02_MVC.Tests.Services
                     Id = "1",
                     ProductId = "productId",
                     CustomerName = "Alice",
-                    Title = "Great product!",
                     Content = "Great product!",
                     Rating = 5,
                     CreatedAt = DateTime.UtcNow,
@@ -41,7 +43,6 @@ namespace SG01G02_MVC.Tests.Services
                     Id = "2",
                     ProductId = "productId",
                     CustomerName = "Bob",
-                    Title = "Not bad.",
                     Content = "Not bad.",
                     Rating = 4,
                     CreatedAt = DateTime.UtcNow,

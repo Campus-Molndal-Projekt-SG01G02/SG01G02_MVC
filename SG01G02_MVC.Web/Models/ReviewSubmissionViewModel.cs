@@ -17,11 +17,6 @@ namespace SG01G02_MVC.Web.Models
         public int Rating { get; set; }
 
         [Required]
-        [Display(Name = "Review Title")]
-        [StringLength(100)]
-        public string Title { get; set; } = string.Empty;
-
-        [Required]
         [Display(Name = "Review")]
         [StringLength(1000)]
         public string Content { get; set; } = string.Empty;
