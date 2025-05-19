@@ -23,7 +23,7 @@ namespace SG01G02_MVC.Web.Controllers
 
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             return Content("Catalogue works!");
         }
