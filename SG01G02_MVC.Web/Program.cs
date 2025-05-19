@@ -21,10 +21,10 @@ var cultureInfo = new System.Globalization.CultureInfo("sv-SE");
 System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
-// Registrera KeyVaultService först
+// Register KeyVaultService first
 ConfigureKeyVault(builder);
 
-// Sedan registrera LoggingService baserat på KeyVaultService
+// Then register LoggingService based on KeyVaultService
 IKeyVaultService? keyVaultService = null;
 try {
     var tempProvider = builder.Services.BuildServiceProvider();
@@ -463,7 +463,7 @@ void ConfigureApp(WebApplication app)
             var controllerAction = endpoint.Metadata.GetMetadata<ControllerActionDescriptor>();
             if (controllerAction != null)
             {
-                // Kontrollera om denna sökvägär relaterad till filuppladdning baserat på namn
+                // Check if this path is related to file upload based on name
                 var actionName = controllerAction.ActionName.ToLower();
                 var controllerName = controllerAction.ControllerName.ToLower();
 
@@ -476,11 +476,11 @@ void ConfigureApp(WebApplication app)
 
                 if (isUploadRelated)
                 {
-                    // Öka gränsen för uppladdningssökvägar
+                    // Increase limit for upload-related paths
                     var bodySizeFeature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
                     if (bodySizeFeature != null && bodySizeFeature.IsReadOnly == false)
                     {
-                        // Sätt en hög gräns för dessa sökvägar
+                        // Set a high limit for these paths
                         bodySizeFeature.MaxRequestBodySize = 50 * 1024 * 1024; // 50 MB
                         Console.WriteLine($"Increased request size limit for path: {context.Request.Path}");
                     }

@@ -17,12 +17,12 @@ public class LoggingService : ILoggingService
 
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
-        // Hämta connection string från konfiguration eller miljövariabel
+        // Retrieve connection string from configuration or environment variable
         string? appInsightsConnectionString =
             configuration["ApplicationInsights:ConnectionString"] ??
             Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
 
-        // Försök hämta från Key Vault om tillgängligt
+        // Try to retrieve from Key Vault if available
         if (string.IsNullOrEmpty(appInsightsConnectionString) && _keyVaultService?.IsAvailable == true)
         {
             try
@@ -39,38 +39,23 @@ public class LoggingService : ILoggingService
             }
         }
 
-        // Konfigurera Application Insights och OpenTelemetry
+        // Configure Application Insights and OpenTelemetry
         if (!string.IsNullOrEmpty(appInsightsConnectionString))
         {
             Console.WriteLine("Configuring Application Insights with connection string");
 
-            // Lägg till Application Insights med connection string
-            services.AddApplicationInsightsTelemetry(options =>
-            {
-                options.ConnectionString = appInsightsConnectionString;
-            });
-
-            // Lägg till OpenTelemetry med Azure Monitor
-            services.AddOpenTelemetry().UseAzureMonitor();
-
-            // Konfigurera Application Insights Logger
-            services.AddLogging(builder =>
-            {
-                builder.AddApplicationInsights(
-                    configureTelemetryConfiguration: (config) =>
-                        config.ConnectionString = appInsightsConnectionString,
-                    configureApplicationInsightsLoggerOptions: (options) => { }
-                );
-            });
-
-            Console.WriteLine("Application Insights configured successfully");
+            // Configure OpenTelemetry with Azure Monitor Exporter
+            services.AddOpenTelemetry()
+                .UseAzureMonitor(options =>
+                {
+                    options.ConnectionString = appInsightsConnectionString;
+                });
         }
         else
         {
-            Console.WriteLine("WARNING: No Application Insights connection string found. Using default configuration.");
-            services.AddApplicationInsightsTelemetry();
+            Console.WriteLine("Application Insights connection string not found - using standard logging");
 
-            // Om ingen connection string finns, lägg till standardloggning
+            // Only basic logging without Azure Monitor
             services.AddLogging(builder =>
             {
                 builder.AddConsole();
