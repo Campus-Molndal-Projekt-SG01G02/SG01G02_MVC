@@ -36,7 +36,7 @@ public class ReviewService : IReviewService
         var reviews = await _apiClient.GetReviewsAsync(productId);
         _logger.LogInformation("Retrieved {Count} reviews for product {ProductId}", 
             reviews.Count(), productId);
-        return reviews;
+        return reviews ?? new List<ReviewDto>();
     }
 
     public async Task<bool> SubmitReviewAsync(ReviewDto review)
