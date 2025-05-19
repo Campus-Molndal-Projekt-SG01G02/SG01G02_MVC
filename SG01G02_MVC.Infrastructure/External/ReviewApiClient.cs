@@ -91,6 +91,8 @@ public class ReviewApiClient : IReviewApiClient
         
         var request = new HttpRequestMessage(method, requestUri);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _jwtToken);
+        if (!string.IsNullOrEmpty(_apiKey))
+            request.Headers.Add("X-API-KEY", _apiKey);
         return request;
     }
 
@@ -134,7 +136,7 @@ public class ReviewApiClient : IReviewApiClient
     {
         try
         {
-            var postReviewUrl = $"{_baseUrl}/api/products/{review.ProductId}/reviews";
+            var postReviewUrl = $"{_baseUrl}/api/product/{review.ProductId}/review";
             using var request = await CreateAuthenticatedRequestAsync(HttpMethod.Post, postReviewUrl);
 
             // Map to external API format

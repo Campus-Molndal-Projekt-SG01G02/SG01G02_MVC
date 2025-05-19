@@ -65,7 +65,7 @@ namespace SG01G02_MVC.Web.Controllers
             }
             else
             {
-                TempData["ReviewError"] = "There was a problem submitting your review. Please try again.";
+                TempData["ReviewError"] = "There was a problem submitting your review. Please try again. (API call failed)";
             }
             return RedirectToAction("Details", "Catalogue", new { id = model.ProductId });
         }
