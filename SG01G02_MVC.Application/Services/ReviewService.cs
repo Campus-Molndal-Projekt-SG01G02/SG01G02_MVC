@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 using System.Net.Http;
+using System.Linq;
 
 namespace SG01G02_MVC.Application.Services;
 
@@ -36,7 +37,7 @@ public class ReviewService : IReviewService
         var reviews = await _apiClient.GetReviewsAsync(productId);
         _logger.LogInformation("Retrieved {Count} reviews for product {ProductId}", 
             reviews.Count(), productId);
-        return reviews ?? new List<ReviewDto>();
+        return (reviews ?? new List<ReviewDto>()).Where(r => r != null);
     }
 
     public async Task<bool> SubmitReviewAsync(ReviewDto review)

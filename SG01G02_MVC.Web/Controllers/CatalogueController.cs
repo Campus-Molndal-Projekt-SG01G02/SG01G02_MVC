@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Web.Models;
+using SG01G02_MVC.Application.DTOs;
+using System.Linq;
 
 namespace SG01G02_MVC.Web.Controllers
 {
@@ -27,9 +29,11 @@ namespace SG01G02_MVC.Web.Controllers
             var viewModels = new List<ProductViewModel>();
             foreach (var dto in dtos)
             {
-                var reviews = (await _reviewService.GetReviewsForProduct(dto.Id.ToString())).ToList();
+                var reviewsEnumerable = await _reviewService.GetReviewsForProduct(dto.Id.ToString());
+                var reviews = (reviewsEnumerable ?? Enumerable.Empty<ReviewDto>()).Where(r => r != null).ToList();
+
                 double avgRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;
-                int reviewCount = reviews.Count;
+                int reviewCount = reviews.Count();
                 viewModels.Add(new ProductViewModel
                 {
                     Id = dto.Id,
@@ -53,9 +57,11 @@ namespace SG01G02_MVC.Web.Controllers
             if (product == null)
                 return NotFound();
 
-            var reviews = (await _reviewService.GetReviewsForProduct(product.Id.ToString())).ToList();
+            var reviewsEnumerable = await _reviewService.GetReviewsForProduct(product.Id.ToString());
+            var reviews = (reviewsEnumerable ?? Enumerable.Empty<ReviewDto>()).Where(r => r != null).ToList();
+
             double avgRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;
-            int reviewCount = reviews.Count;
+            int reviewCount = reviews.Count();
 
             var model = new ProductViewModel
             {
