@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using System.Net.Http.Json;
+using System.Net.Http;
 
 namespace SG01G02_MVC.Application.Services;
 
@@ -11,11 +13,15 @@ public class ReviewService : IReviewService
 {
     private readonly IReviewApiClient _apiClient;
     private readonly ILogger<ReviewService> _logger;
+    private readonly HttpClient _httpClient;
+    private readonly string _baseUrl;
 
-    public ReviewService(IReviewApiClient apiClient, ILogger<ReviewService> logger)
+    public ReviewService(IReviewApiClient apiClient, ILogger<ReviewService> logger, HttpClient httpClient, string baseUrl)
     {
         _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _baseUrl = baseUrl ?? throw new ArgumentNullException(nameof(baseUrl));
     }
 
     public async Task<IEnumerable<ReviewDto>> GetReviewsForProduct(string productId)
@@ -35,16 +41,53 @@ public class ReviewService : IReviewService
 
     public async Task<bool> SubmitReviewAsync(ReviewDto review)
     {
-        _logger.LogInformation("Calling Review API for ProductId: {ProductId}", review.ProductId);
-        var result = await _apiClient.SubmitReviewAsync(review);
-        if (result)
+        try
         {
-            _logger.LogInformation("Review API response: {StatusCode} - {ReasonPhrase}", 200, "OK");
+            var postReviewUrl = $"{_baseUrl}/api/products/{review.ProductId}/reviews";
+            using var request = CreateAuthenticatedRequestAsync(HttpMethod.Post, postReviewUrl);
+
+            // Map to external API format
+            var apiReview = new
+            {
+                reviewerName = review.CustomerName,
+                text = review.Content,
+                rating = review.Rating,
+                reviewDate = review.CreatedAt
+            };
+
+            request.Content = JsonContent.Create(apiReview);
+
+            var httpResponse = await _httpClient.SendAsync(request);
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Successfully submitted review for product {ProductId}", review.ProductId);
+                return true;
+            }
+            else
+            {
+                var errorContent = await httpResponse.Content.ReadAsStringAsync();
+                _logger.LogWarning("Failed to submit review for product {ProductId}. Status: {StatusCode}. Reason: {ReasonPhrase}. Content: {ErrorContent}", 
+                    review.ProductId, httpResponse.StatusCode, httpResponse.ReasonPhrase, errorContent);
+                return false;
+            }
         }
-        else
+        catch (HttpRequestException ex)
         {
-            _logger.LogError("Review API error: {Error}", "Review submission failed");
+            _logger.LogError(ex, "Error submitting review for product {ProductId}", review.ProductId);
+            return false;
         }
-        return result;
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error submitting review for product {ProductId}", review.ProductId);
+            return false;
+        }
+    }
+
+    private HttpRequestMessage CreateAuthenticatedRequestAsync(HttpMethod method, string requestUri)
+    {
+        var request = new HttpRequestMessage(method, requestUri);
+        // Add authentication headers here
+        return request;
     }
 }
