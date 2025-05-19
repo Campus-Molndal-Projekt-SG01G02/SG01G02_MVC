@@ -4,8 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using SG01G02_MVC.Web.Controllers;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Web.Models;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace SG01G02_MVC.Tests.Controllers
 {
