@@ -14,15 +14,11 @@ public class ReviewService : IReviewService
 {
     private readonly IReviewApiClient _apiClient;
     private readonly ILogger<ReviewService> _logger;
-    private readonly HttpClient _httpClient;
-    private readonly string _baseUrl;
 
-    public ReviewService(IReviewApiClient apiClient, ILogger<ReviewService> logger, HttpClient httpClient, string baseUrl)
+    public ReviewService(IReviewApiClient apiClient, ILogger<ReviewService> logger)
     {
         _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        _baseUrl = baseUrl ?? throw new ArgumentNullException(nameof(baseUrl));
     }
 
     public async Task<IEnumerable<ReviewDto>> GetReviewsForProduct(string productId)
