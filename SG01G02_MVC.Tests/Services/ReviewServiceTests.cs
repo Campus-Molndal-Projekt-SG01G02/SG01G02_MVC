@@ -19,9 +19,7 @@ namespace SG01G02_MVC.Tests.Services
         {
             _mockReviewApiClient = new Mock<IReviewApiClient>();
             _mockLogger = new Mock<ILogger<ReviewService>>();
-            var httpClient = new HttpClient();
-            var baseUrl = "http://dummy-url";
-            _reviewService = new ReviewService(_mockReviewApiClient.Object, _mockLogger.Object, httpClient, baseUrl);
+            _reviewService = new ReviewService(_mockReviewApiClient.Object, _mockLogger.Object);
         }
 
         [Fact]
