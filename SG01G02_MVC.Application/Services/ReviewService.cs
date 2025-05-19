@@ -4,8 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using System.Net.Http.Json;
-using System.Net.Http;
 using System.Linq;
 
 namespace SG01G02_MVC.Application.Services;
@@ -38,53 +36,6 @@ public class ReviewService : IReviewService
 
     public async Task<bool> SubmitReviewAsync(ReviewDto review)
     {
-        try
-        {
-            var postReviewUrl = $"{_baseUrl}/api/products/{review.ProductId}/reviews";
-            using var request = CreateAuthenticatedRequestAsync(HttpMethod.Post, postReviewUrl);
-
-            // Map to external API format
-            var apiReview = new
-            {
-                reviewerName = review.CustomerName,
-                text = review.Content,
-                rating = review.Rating,
-                reviewDate = review.CreatedAt
-            };
-
-            request.Content = JsonContent.Create(apiReview);
-
-            var httpResponse = await _httpClient.SendAsync(request);
-
-            if (httpResponse.IsSuccessStatusCode)
-            {
-                _logger.LogInformation("Successfully submitted review for product {ProductId}", review.ProductId);
-                return true;
-            }
-            else
-            {
-                var errorContent = await httpResponse.Content.ReadAsStringAsync();
-                _logger.LogWarning("Failed to submit review for product {ProductId}. Status: {StatusCode}. Reason: {ReasonPhrase}. Content: {ErrorContent}", 
-                    review.ProductId, httpResponse.StatusCode, httpResponse.ReasonPhrase, errorContent);
-                return false;
-            }
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogError(ex, "Error submitting review for product {ProductId}", review.ProductId);
-            return false;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unexpected error submitting review for product {ProductId}", review.ProductId);
-            return false;
-        }
-    }
-
-    private HttpRequestMessage CreateAuthenticatedRequestAsync(HttpMethod method, string requestUri)
-    {
-        var request = new HttpRequestMessage(method, requestUri);
-        // Add authentication headers here
-        return request;
+        return await _apiClient.SubmitReviewAsync(review);
     }
 }
