@@ -91,30 +91,37 @@
             }
             else
             {
-                @foreach (var review in Model.Reviews.OrderByDescending(r => r.CreatedAt))
+                @if (Model.Reviews != null && Model.Reviews.Any())
                 {
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">@review.Content</h5>
-                            <h6 class="card-subtitle mb-2 text-muted">
-                                By @review.CustomerName on @review.CreatedAt.ToString("MMMM dd, yyyy")
-                                <span class="ms-2">
-                                    @for (int i = 1; i <= 5; i++)
-                                    {
-                                        if (i <= review.Rating)
+                    @foreach (var review in Model.Reviews.OrderByDescending(r => r.CreatedAt))
+                    {
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">@review.Content</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">
+                                    By @review.CustomerName on @review.CreatedAt.ToString("MMMM dd, yyyy")
+                                    <span class="ms-2">
+                                        @for (int i = 1; i <= 5; i++)
                                         {
-                                            <span class="text-warning">&#9733;</span>
+                                            if (i <= review.Rating)
+                                            {
+                                                <span class="text-warning">&#9733;</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-secondary">&#9734;</span>
+                                            }
                                         }
-                                        else
-                                        {
-                                            <span class="text-secondary">&#9734;</span>
-                                        }
-                                    }
-                                </span>
-                            </h6>
-                            <p class="card-text">@review.Content</p>
+                                    </span>
+                                </h6>
+                                <p class="card-text">@review.Content</p>
+                            </div>
                         </div>
-                    </div>
+                    }
+                }
+                else
+                {
+                    <div>No reviews yet.</div>
                 }
             }
 
