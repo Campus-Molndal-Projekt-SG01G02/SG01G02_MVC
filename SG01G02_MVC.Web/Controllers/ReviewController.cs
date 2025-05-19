@@ -43,13 +43,8 @@ namespace SG01G02_MVC.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // Instead of redirect:
-                // TempData["ReviewError"] = "Please fill in all required fields correctly.";
-                // return RedirectToAction("Details", "Catalogue", new { id = model.ProductId });
-
-                // Return the view with errors
-                var product = ... // fetch product details for the view
-                return View("Details", product);
+                TempData["ReviewError"] = "Please fill in all required fields correctly.";
+                return RedirectToAction("Details", "Catalogue", new { id = model.ProductId });
             }
 
             _logger.LogInformation("Submitting review for ProductId: {ProductId}, Name: {Name}, Rating: {Rating}", model.ProductId, model.CustomerName, model.Rating);

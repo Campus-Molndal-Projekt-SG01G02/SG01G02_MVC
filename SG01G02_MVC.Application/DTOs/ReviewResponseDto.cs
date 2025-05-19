@@ -2,8 +2,8 @@ namespace SG01G02_MVC.Application.DTOs
 {
     public class ReviewResponseDto
     {
-        public List<ReviewDto> Reviews { get; set; }
-        public ReviewStatsDto Stats { get; set; }
+        public List<ReviewDto>? Reviews { get; set; }
+        public ReviewStatsDto? Stats { get; set; }
     }
 
     public class ReviewStatsDto
