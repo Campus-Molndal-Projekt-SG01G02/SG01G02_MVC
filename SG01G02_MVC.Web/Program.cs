@@ -4,14 +4,15 @@ using SG01G02_MVC.Application.Services;
 using SG01G02_MVC.Infrastructure.Repositories;
 using SG01G02_MVC.Infrastructure.Data;
 using SG01G02_MVC.Infrastructure.External;
+using SG01G02_MVC.Infrastructure.Services;
 using SG01G02_MVC.Web.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Diagnostics;
 using System.Text.Json;
-using SG01G02_MVC.Infrastructure.Services;
 using System.Collections;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.OpenApi.Models;
+using SG01G02_MVC.Web.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,22 @@ var builder = WebApplication.CreateBuilder(args);
 var cultureInfo = new System.Globalization.CultureInfo("sv-SE");
 System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+
+// Registrera KeyVaultService först
+ConfigureKeyVault(builder);
+
+// Sedan registrera LoggingService baserat på KeyVaultService
+IKeyVaultService? keyVaultService = null;
+try {
+    var tempProvider = builder.Services.BuildServiceProvider();
+    keyVaultService = tempProvider.GetService<IKeyVaultService>();
+} catch (Exception ex) {
+    Console.WriteLine($"Warning: Could not resolve KeyVaultService: {ex.Message}");
+}
+
+var loggingService = new LoggingService(keyVaultService);
+loggingService.ConfigureServices(builder.Services, builder.Configuration);
+builder.Services.AddSingleton<ILoggingService>(loggingService);
 
 // Configure services
 ConfigureServices(builder);
@@ -386,14 +403,33 @@ void ConfigureApp(WebApplication app)
                 var error = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
                 var ex = error?.Error;
                 var message = ex != null ? ex.ToString() : "Unknown error";
-                context.Response.ContentType = "text/plain";
-                await context.Response.WriteAsync("Custom error: " + message);
+
+                // Log the error
+                var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+                var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+                var exception = exceptionHandlerPathFeature?.Error;
+                var sessionId = context.Session.GetString("SessionId") ?? "unknown"; // Lagt till semikolon här
+
+                using (logger.BeginScope(new Dictionary<string, object>
+                {
+                    ["SessionId"] = sessionId,
+                    ["RequestPath"] = context.Request.Path.Value ?? "",
+                    ["StatusCode"] = context.Response.StatusCode
+                }))
+                {
+                    logger.LogError(exception, "Ohanterat undantag: {Message}", exception?.Message);
+                }
+
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                context.Response.ContentType = "text/html";
+                await context.Response.WriteAsync("Ett fel inträffade. Vänligen försök igen senare.");
             });
         });
     }
 
     app.UseRouting();
     app.UseSession();
+    app.UseSessionTracking();
     app.UseAuthentication();
     app.UseAuthorization();
     app.UseStaticFiles();
