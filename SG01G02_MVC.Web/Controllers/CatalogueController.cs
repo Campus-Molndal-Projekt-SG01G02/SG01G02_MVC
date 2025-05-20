@@ -45,7 +45,8 @@ namespace SG01G02_MVC.Web.Controllers
                     StockQuantity = dto.StockQuantity,
                     Reviews = reviews,
                     AverageRating = avgRating,
-                    ReviewCount = reviewCount
+                    ReviewCount = reviewCount,
+                    ExternalReviewApiProductId = dto.ExternalReviewApiProductId
                 });
             }
             return View(viewModels);
@@ -74,7 +75,8 @@ namespace SG01G02_MVC.Web.Controllers
                 ImageUrl = product.HasImage ? _blobStorageService.GetBlobUrl(product.ImageName) : product.ImageUrl,
                 Reviews = reviews,
                 AverageRating = avgRating,
-                ReviewCount = reviewCount
+                ReviewCount = reviewCount,
+                ExternalReviewApiProductId = product.ExternalReviewApiProductId
             };
 
             return View("Details", model);

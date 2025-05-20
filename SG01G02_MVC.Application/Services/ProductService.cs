@@ -64,7 +64,8 @@ namespace SG01G02_MVC.Application.Services
                 Description = product.Description,
                 StockQuantity = product.StockQuantity,
                 ImageUrl = product.ImageUrl,
-                ImageName = product.ImageName
+                ImageName = product.ImageName,
+                ExternalReviewApiProductId = product.ExternalReviewApiProductId
             };
         }
 
@@ -78,7 +79,8 @@ namespace SG01G02_MVC.Application.Services
                 Description = dto.Description ?? string.Empty,
                 StockQuantity = dto.StockQuantity,
                 ImageUrl = dto.ImageUrl ?? string.Empty,
-                ImageName = dto.ImageName ?? string.Empty
+                ImageName = dto.ImageName ?? string.Empty,
+                ExternalReviewApiProductId = dto.ExternalReviewApiProductId
             };
         }
     }
