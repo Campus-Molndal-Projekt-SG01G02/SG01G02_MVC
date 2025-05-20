@@ -9,5 +9,6 @@ namespace SG01G02_MVC.Application.Interfaces
         Task CreateProductAsync(ProductDto dto);
         Task UpdateProductAsync(ProductDto dto);
         Task DeleteProductAsync(int id);
+        Task<int> PatchMissingExternalReviewApiIdsAsync(int dummyValue = 31337);
     }
 }

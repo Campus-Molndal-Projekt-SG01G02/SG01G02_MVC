@@ -32,13 +32,16 @@ namespace SG01G02_MVC.Application.Services
             var product = MapToEntity(dto);
             await _repository.CreateProductAsync(product);
 
-            // Register with external review API
             var externalId = await _reviewApiClient.RegisterProductAsync(dto);
             if (externalId.HasValue)
             {
                 await _repository.UpdateExternalReviewApiProductIdAsync(product.Id, externalId.Value);
             }
-            // else: log warning, admin tool can fix later
+            else
+            {
+                // Set dummy value if registration fails
+                await _repository.UpdateExternalReviewApiProductIdAsync(product.Id, 31337);
+            }
         }
 
         public Task UpdateProductAsync(ProductDto dto)
@@ -50,6 +53,18 @@ namespace SG01G02_MVC.Application.Services
         public Task DeleteProductAsync(int id)
         {
             return _repository.DeleteProductAsync(id);
+        }
+
+        public async Task<int> PatchMissingExternalReviewApiIdsAsync(int dummyValue = 31337)
+        {
+            var products = await _repository.GetAllProductsAsync();
+            var toUpdate = products.Where(p => p.ExternalReviewApiProductId == null).ToList();
+            foreach (var product in toUpdate)
+            {
+                product.ExternalReviewApiProductId = dummyValue;
+                await _repository.UpdateProductAsync(product);
+            }
+            return toUpdate.Count;
         }
 
         // --- Mapping ---
