@@ -5,7 +5,7 @@
 namespace SG01G02_MVC.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddExternalReviewApiProductIdToProduct : Migration
+    public partial class EnsureExternalReviewApiProductId : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
