@@ -129,7 +129,7 @@ void ConfigureKeyVault(WebApplicationBuilder builder)
     Console.WriteLine("=== Environment variables for debugging ===");
     foreach (DictionaryEntry env in Environment.GetEnvironmentVariables())
     {
-        string key = env.Key.ToString();
+        string key = env.Key?.ToString() ?? "";
         if (key.Contains("KEY_VAULT") || key.Contains("POSTGRES") || key.Contains("AZURE"))
         {
             string value = key.Contains("CONNECTION_STRING") || key.Contains("TOKEN") || key.Contains("KEY")
@@ -523,148 +523,123 @@ void InitializeDatabase(WebApplication app)
             }
             else if (db.Database.ProviderName?.Contains("Npgsql") ?? false)
             {
-                logger.LogInformation("Testing PostgreSQL connection...");
+                logger.LogInformation("Applying migrations to PostgreSQL...");
+                db.Database.Migrate();
+                logger.LogInformation("Migrations applied successfully.");
+
+                // --- Manual schema checking code below is commented out for reference ---
+                /*
+                // Check if Products table exists but ImageName column doesn't
+                bool productsTableExists = false;
+                bool imageNameColumnExists = false;
 
                 try
                 {
-                    var canConnect = db.Database.CanConnect();
+                    // Create a connection and check both the table and column
+                    var conn = db.Database.GetDbConnection();
+                    if (conn.State != System.Data.ConnectionState.Open)
+                        conn.Open();
 
-                    if (canConnect)
+                    using (var cmd = conn.CreateCommand())
                     {
-                        logger.LogInformation("Successfully connected to PostgreSQL");
+                        // Check if Products table exists
+                        cmd.CommandText = "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'Products');";
+                        var result = cmd.ExecuteScalar();
+                        productsTableExists = result != null && (result.ToString() == "1" || result.ToString().ToLower() == "true");
+
+                        // If table exists, check if ImageName column exists
+                        if (productsTableExists)
+                        {
+                            cmd.CommandText = "SELECT EXISTS (SELECT FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'Products' AND column_name = 'ImageName');";
+                            result = cmd.ExecuteScalar();
+                            imageNameColumnExists = result != null && (result.ToString() == "1" || result.ToString().ToLower() == "true");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error checking database schema");
+                }
+
+                // Handle different scenarios
+                if (productsTableExists)
+                {
+                    logger.LogInformation("Products table exists. ImageName column exists: {ImageNameExists}", imageNameColumnExists);
+
+                    if (!imageNameColumnExists)
+                    {
+                        // Table exists but column doesn't - directly add the column
+                        logger.LogInformation("Adding ImageName column directly with SQL");
 
                         try
                         {
-                            // Check if Products table exists but ImageName column doesn't
-                            bool productsTableExists = false;
-                            bool imageNameColumnExists = false;
+                            // Add the column manually with SQL
+                            db.Database.ExecuteSqlRaw(
+                                "ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"ImageName\" text NULL; " +
+                                "ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"ImageDescription\" text NULL;"
+                            );
 
-                            try
+                            // Mark all migrations as applied in the history table
+                            db.Database.ExecuteSqlRaw(
+                                "CREATE TABLE IF NOT EXISTS \"__EFMigrationsHistory\" (" +
+                                "\"MigrationId\" character varying(150) NOT NULL, " +
+                                "\"ProductVersion\" character varying(32) NOT NULL, " +
+                                "CONSTRAINT \"PK___EFMigrationsHistory\" PRIMARY KEY (\"MigrationId\"));"
+                            );
+
+                            // Add all migrations to the history table to mark them as applied
+                            var allMigrations = db.Database.GetMigrations().ToList();
+                            foreach (var migration in allMigrations)
                             {
-                                // Create a connection and check both the table and column
-                                var conn = db.Database.GetDbConnection();
-                                if (conn.State != System.Data.ConnectionState.Open)
-                                    conn.Open();
-
-                                using (var cmd = conn.CreateCommand())
-                                {
-                                    // Check if Products table exists
-                                    cmd.CommandText = "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'Products');";
-                                    var result = cmd.ExecuteScalar();
-                                    productsTableExists = result != null && (result.ToString() == "1" || result.ToString().ToLower() == "true");
-
-                                    // If table exists, check if ImageName column exists
-                                    if (productsTableExists)
-                                    {
-                                        cmd.CommandText = "SELECT EXISTS (SELECT FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'Products' AND column_name = 'ImageName');";
-                                        result = cmd.ExecuteScalar();
-                                        imageNameColumnExists = result != null && (result.ToString() == "1" || result.ToString().ToLower() == "true");
-                                    }
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                logger.LogError(ex, "Error checking database schema");
+                                db.Database.ExecuteSqlRaw(
+                                    $"INSERT INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") " +
+                                    $"SELECT '{migration}', '9.0.4' " +
+                                    $"WHERE NOT EXISTS (SELECT 1 FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\" = '{migration}');"
+                                );
                             }
 
-                            // Handle different scenarios
-                            if (productsTableExists)
-                            {
-                                logger.LogInformation("Products table exists. ImageName column exists: {ImageNameExists}", imageNameColumnExists);
-
-                                if (!imageNameColumnExists)
-                                {
-                                    // Table exists but column doesn't - directly add the column
-                                    logger.LogInformation("Adding ImageName column directly with SQL");
-
-                                    try
-                                    {
-                                        // Add the column manually with SQL
-                                        db.Database.ExecuteSqlRaw(
-                                            "ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"ImageName\" text NULL; " +
-                                            "ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"ImageDescription\" text NULL;"
-                                        );
-
-                                        // Mark all migrations as applied in the history table
-                                        db.Database.ExecuteSqlRaw(
-                                            "CREATE TABLE IF NOT EXISTS \"__EFMigrationsHistory\" (" +
-                                            "\"MigrationId\" character varying(150) NOT NULL, " +
-                                            "\"ProductVersion\" character varying(32) NOT NULL, " +
-                                            "CONSTRAINT \"PK___EFMigrationsHistory\" PRIMARY KEY (\"MigrationId\"));"
-                                        );
-
-                                        // Add all migrations to the history table to mark them as applied
-                                        var allMigrations = db.Database.GetMigrations().ToList();
-                                        foreach (var migration in allMigrations)
-                                        {
-                                            db.Database.ExecuteSqlRaw(
-                                                $"INSERT INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") " +
-                                                $"SELECT '{migration}', '9.0.4' " +
-                                                $"WHERE NOT EXISTS (SELECT 1 FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\" = '{migration}');"
-                                            );
-                                        }
-
-                                        logger.LogInformation("Successfully added columns and marked migrations as applied");
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        logger.LogError(ex, "Error updating schema");
-                                        throw;
-                                    }
-                                }
-                                else
-                                {
-                                    // Both table and column exist - just make sure migrations are marked as applied
-                                    logger.LogInformation("Schema is already up-to-date. Ensuring migrations are marked as applied");
-
-                                    // Create migrations history table if it doesn't exist
-                                    db.Database.ExecuteSqlRaw(
-                                        "CREATE TABLE IF NOT EXISTS \"__EFMigrationsHistory\" (" +
-                                        "\"MigrationId\" character varying(150) NOT NULL, " +
-                                        "\"ProductVersion\" character varying(32) NOT NULL, " +
-                                        "CONSTRAINT \"PK___EFMigrationsHistory\" PRIMARY KEY (\"MigrationId\"));"
-                                    );
-
-                                    // Add all migrations to the history table
-                                    var allMigrations = db.Database.GetMigrations().ToList();
-                                    foreach (var migration in allMigrations)
-                                    {
-                                        db.Database.ExecuteSqlRaw(
-                                            $"INSERT INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") " +
-                                            $"SELECT '{migration}', '9.0.4' " +
-                                            $"WHERE NOT EXISTS (SELECT 1 FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\" = '{migration}');"
-                                        );
-                                    }
-
-                                    logger.LogInformation("Successfully marked all migrations as applied");
-                                }
-                            }
-                            else
-                            {
-                                // Products table doesn't exist - create the schema from scratch
-                                logger.LogInformation("Products table doesn't exist. Creating full schema");
-                                db.Database.EnsureCreated();
-                            }
+                            logger.LogInformation("Successfully added columns and marked migrations as applied");
                         }
                         catch (Exception ex)
                         {
-                            logger.LogError(ex, "Error during database schema update");
-
-                            // Last resort: try EnsureCreated
-                            logger.LogWarning("Attempting to ensure database is created as fallback");
-                            db.Database.EnsureCreated();
+                            logger.LogError(ex, "Error updating schema");
+                            throw;
                         }
                     }
                     else
                     {
-                        logger.LogError("Cannot connect to PostgreSQL - check firewall rules and credentials");
+                        // Both table and column exist - just make sure migrations are marked as applied
+                        logger.LogInformation("Schema is already up-to-date. Ensuring migrations are marked as applied");
+
+                        // Create migrations history table if it doesn't exist
+                        db.Database.ExecuteSqlRaw(
+                            "CREATE TABLE IF NOT EXISTS \"__EFMigrationsHistory\" (" +
+                            "\"MigrationId\" character varying(150) NOT NULL, " +
+                            "\"ProductVersion\" character varying(32) NOT NULL, " +
+                            "CONSTRAINT \"PK___EFMigrationsHistory\" PRIMARY KEY (\"MigrationId\"));"
+                        );
+
+                        // Add all migrations to the history table
+                        var allMigrations = db.Database.GetMigrations().ToList();
+                        foreach (var migration in allMigrations)
+                        {
+                            db.Database.ExecuteSqlRaw(
+                                $"INSERT INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") " +
+                                $"SELECT '{migration}', '9.0.4' " +
+                                $"WHERE NOT EXISTS (SELECT 1 FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\" = '{migration}');"
+                            );
+                        }
+
+                        logger.LogInformation("Successfully marked all migrations as applied");
                     }
                 }
-                catch (Exception dbEx)
+                else
                 {
-                    logger.LogError(dbEx, "Error connecting to PostgreSQL");
-                    logger.LogError("Check firewall rules, credentials, and network connectivity");
+                    // Products table doesn't exist - create the schema from scratch
+                    logger.LogInformation("Products table doesn't exist. Creating full schema");
+                    db.Database.EnsureCreated();
                 }
+                */
             }
         }
         catch (Exception ex)
