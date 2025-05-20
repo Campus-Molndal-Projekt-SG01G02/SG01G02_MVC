@@ -334,14 +334,6 @@ void ConfigureDatabase(WebApplicationBuilder builder)
         return;
     }
 
-    // TODO: Remove this debug code after testing, it shows the connection string for the database
-    var connStr = builder.Configuration.GetConnectionString("PostgreSQL") ?? builder.Configuration.GetConnectionString("DefaultConnection");
-    if (connStr != null)
-    {
-        var host = new System.Data.Common.DbConnectionStringBuilder { ConnectionString = connStr };
-        Console.WriteLine($"[DEBUG] Using DB host: {host["Host"]}");
-    }
-
     // If we got here, we have no valid database option
     throw new InvalidOperationException(
         "No database connection string available. Set POSTGRES_CONNECTION_STRING as an environment variable " +
