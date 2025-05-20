@@ -55,5 +55,11 @@ namespace SG01G02_MVC.Infrastructure.Repositories
             }
             return Task.CompletedTask;
         }
+
+        public Task UpdateExternalReviewApiProductIdAsync(int productId, int externalId)
+        {
+            // If this is a stub or not used, you can just return Task.CompletedTask for now.
+            return Task.CompletedTask;
+        }
     }
 }

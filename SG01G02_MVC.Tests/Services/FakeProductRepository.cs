@@ -48,5 +48,15 @@ namespace SG01G02_MVC.Tests.Services
             }
             return Task.CompletedTask;
         }
+
+        public Task UpdateExternalReviewApiProductIdAsync(int productId, int externalId)
+        {
+            var product = _products.FirstOrDefault(p => p.Id == productId);
+            if (product != null)
+            {
+                product.ExternalReviewApiProductId = externalId;
+            }
+            return Task.CompletedTask;
+        }
     }
 }

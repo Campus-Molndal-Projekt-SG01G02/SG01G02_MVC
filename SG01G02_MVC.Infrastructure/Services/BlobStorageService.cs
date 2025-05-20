@@ -12,9 +12,9 @@ namespace SG01G02_MVC.Infrastructure.Services
         private readonly BlobServiceClient _blobServiceClient;
         private readonly string _containerName;
         private readonly bool _isTestMode;
-        private readonly ILogger<BlobStorageService> _logger;
+        private readonly ILogger<BlobStorageService>? _logger;
 
-        public BlobStorageService(IConfiguration configuration, ILogger<BlobStorageService> logger = null)
+        public BlobStorageService(IConfiguration configuration, ILogger<BlobStorageService>? logger = null)
         {
             _logger = logger;
 
