@@ -254,5 +254,46 @@ namespace SG01G02_MVC.Web.Controllers
             await _productService.DeleteProductAsync(id);
             return RedirectToAction("Index");
         }
+
+        // Delete image action
+        [HttpGet]
+        public async Task<IActionResult> DeleteImage(int id)
+        {
+            if (!IsAdmin) return RedirectToAction("Index", "Login");
+
+            // Get the product
+            var product = await _productService.GetProductByIdAsync(id);
+            if (product == null) return NotFound();
+
+            // Delete the image from blob storage if it exists
+            if (!string.IsNullOrEmpty(product.ImageName))
+            {
+                try
+                {
+                    await _blobStorageService.DeleteImageAsync(product.ImageName);
+                }
+                catch (Exception ex)
+                {
+                    // Log the error but continue updating the product
+                    Console.WriteLine($"Error deleting blob: {ex.Message}");
+                }
+            }
+
+            // Update the product to remove image reference
+            var updatedProduct = new ProductDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                StockQuantity = product.StockQuantity,
+                ImageName = null,
+                ImageUrl = null
+            };
+
+            await _productService.UpdateProductAsync(updatedProduct);
+
+            return RedirectToAction(nameof(Edit), new { id });
+        }
     }
 }
