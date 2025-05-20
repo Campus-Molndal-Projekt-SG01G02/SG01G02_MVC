@@ -10,8 +10,8 @@ using SG01G02_MVC.Infrastructure.Data;
 namespace SG01G02_MVC.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250520120041_AddExternalReviewApiProductIdToProduct")]
-    partial class AddExternalReviewApiProductIdToProduct
+    [Migration("20250520214049_EnsureExternalReviewApiProductId")]
+    partial class EnsureExternalReviewApiProductId
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

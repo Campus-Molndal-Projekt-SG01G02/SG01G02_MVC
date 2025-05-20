@@ -21,13 +21,13 @@ SG01G02_MVC/
 │   │   ├── IAuthService.cs                         - Authentication service contract
 │   │   ├── IProductRepository.cs                   - Product data access contract
 │   │   ├── IProductService.cs                      - Product business logic contract
-│   │   ├── IReviewApiClient.cs                     - TODO:  
+│   │   ├── IReviewApiClient.cs                     - Review API client contract
 │   │   ├── IReviewService.cs                       - Review management contract
 │   │   └── IUserRepository.cs                      - User data access contract
 │   ├── Services/
 │   │   ├── AuthService.cs                          - Authentication implementation
 │   │   ├── ProductService.cs                       - Product business logic implementation
-│   │   └── ReviewService.cs                        - TODO:  
+│   │   └── ReviewService.cs                        - Review logic implementation
 │   └── SG01G02_MVC.Application.csproj
 │
 ├── SG01G02_MVC.Domain/
