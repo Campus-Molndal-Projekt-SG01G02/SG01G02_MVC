@@ -27,20 +27,26 @@ namespace SG01G02_MVC.Web.Controllers
 
         public async Task<IActionResult> Index()
         {
-            if (!IsAdmin) return RedirectToAction("Index", "Login");
-            var products = await _productService.GetAllProductsAsync();
-            var viewModels = products.Select(p => new ProductViewModel
+            try
             {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                Price = p.Price,
-                StockQuantity = p.StockQuantity,
-                ImageName = p.ImageName,
-                ImageUrl = p.HasImage ? _blobStorageService.GetBlobUrl(p.ImageName) : p.ImageUrl
-
-            }).ToList();
-            return View(viewModels);
+                if (!IsAdmin) return RedirectToAction("Index", "Login");
+                var products = await _productService.GetAllProductsAsync();
+                var viewModels = products.Select(p => new ProductViewModel
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Price = p.Price,
+                    StockQuantity = p.StockQuantity,
+                    ImageName = p.ImageName,
+                    ImageUrl = p.HasImage ? _blobStorageService.GetBlobUrl(p.ImageName ?? string.Empty) : p.ImageUrl
+                }).ToList();
+                return View(viewModels);
+            }
+            catch (Exception ex)
+            {
+                return Content($"Error: {ex.Message}\n{ex.StackTrace}");
+            }
         }
 
         [HttpGet]
@@ -296,7 +302,7 @@ namespace SG01G02_MVC.Web.Controllers
             return RedirectToAction(nameof(Edit), new { id });
         }
 
-        [HttpPost]
+        [HttpGet]
         public async Task<IActionResult> FixMissingExternalReviewApiIds()
         {
             if (!IsAdmin) return RedirectToAction("Index", "Login");
