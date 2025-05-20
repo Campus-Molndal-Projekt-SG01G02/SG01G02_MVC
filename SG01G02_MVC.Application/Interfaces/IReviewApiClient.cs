@@ -8,6 +8,6 @@ namespace SG01G02_MVC.Application.Interfaces
     {
         Task<IEnumerable<ReviewDto>> GetReviewsAsync(string productId);
         Task<bool> SubmitReviewAsync(ReviewDto review);
-        // Eventuella andra metoder...
+        Task<int?> RegisterProductAsync(ProductDto product);
     }
 }
