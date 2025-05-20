@@ -21,6 +21,7 @@ namespace SG01G02_MVC.Infrastructure.Data
             {
                 entity.Property(p => p.Name).IsRequired();
                 entity.Property(p => p.Price).HasColumnType("decimal(10,2)");
+                entity.Property(p => p.ExternalReviewApiProductId).IsRequired(false);
             });
 
             modelBuilder.Entity<AppUser>(entity =>
