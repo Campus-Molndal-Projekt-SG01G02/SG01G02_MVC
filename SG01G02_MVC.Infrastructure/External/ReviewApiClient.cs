@@ -16,8 +16,9 @@ public class ReviewApiClient : IReviewApiClient
     private readonly string _baseUrl;
     private readonly string? _apiKey;
     private readonly ILogger<ReviewApiClient> _logger;
-    private string? _jwtToken;
-    private DateTime _tokenExpiry = DateTime.MinValue;
+    // Commenting out external API token handling for now
+    // private string? _jwtToken;
+    // private DateTime _tokenExpiry = DateTime.MinValue;
 
     public ReviewApiClient(
         HttpClient httpClient,
@@ -25,18 +26,17 @@ public class ReviewApiClient : IReviewApiClient
         ILogger<ReviewApiClient> logger)
     {
         _httpClient = httpClient;
-        _baseUrl = configuration["ReviewApiURL"];
-        _apiKey = configuration["ReviewApiKey"];
-
-        if (string.IsNullOrEmpty(_baseUrl) || string.IsNullOrEmpty(_apiKey))
-        {
-            // Fallback to mock if main API is not configured
-            _baseUrl = configuration["MockReviewApiURL"] ?? throw new InvalidOperationException("MockReviewApiURL is not configured");
-            _apiKey = configuration["MockReviewApiKey"];
-        }
+        // Using mock API URL from configuration
+        _baseUrl = configuration["MockReviewApiURL"] ?? throw new InvalidOperationException("MockReviewApiURL is not configured");
+        _apiKey = configuration["MockReviewApiKey"];
         _logger = logger;
+
+        // Log the configured base URL for debugging
+        _logger.LogInformation("ReviewApiClient initialized with base URL: {BaseUrl}", _baseUrl);
     }
 
+    // Commenting out external API authentication for now
+    /*
     private async Task EnsureValidTokenAsync()
     {
         // If we have a valid token that hasn't expired, use it
@@ -90,13 +90,12 @@ public class ReviewApiClient : IReviewApiClient
             throw;
         }
     }
+    */
 
     private async Task<HttpRequestMessage> CreateAuthenticatedRequestAsync(HttpMethod method, string requestUri)
     {
-        await EnsureValidTokenAsync();
-        
+        // Temporarily simplified for mock API
         var request = new HttpRequestMessage(method, requestUri);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _jwtToken);
         if (!string.IsNullOrEmpty(_apiKey))
             request.Headers.Add("X-API-KEY", _apiKey);
         return request;
@@ -106,8 +105,9 @@ public class ReviewApiClient : IReviewApiClient
     {
         try
         {
-            _logger.LogInformation("Fetching reviews for product {ProductId} from {BaseUrl}", productId, _baseUrl);
-            string requestUrl = $"{_baseUrl}/api/products/{productId}/reviews";
+            // Ensure the URL is properly constructed
+            string requestUrl = $"{_baseUrl.TrimEnd('/')}/products/{productId}/reviews";
+            _logger.LogInformation("Fetching reviews for product {ProductId} from {Url}", productId, requestUrl);
             
             using var request = await CreateAuthenticatedRequestAsync(HttpMethod.Get, requestUrl);
             var httpResponse = await _httpClient.SendAsync(request);
@@ -121,19 +121,20 @@ public class ReviewApiClient : IReviewApiClient
             }
             else
             {
-                _logger.LogWarning("Failed to fetch reviews for product {ProductId}. Status: {StatusCode}. Reason: {ReasonPhrase}", 
-                    productId, httpResponse.StatusCode, httpResponse.ReasonPhrase);
+                var responseContent = await httpResponse.Content.ReadAsStringAsync();
+                _logger.LogWarning("Failed to fetch reviews for product {ProductId}. Status: {StatusCode}. Reason: {ReasonPhrase}. Content: {Content}", 
+                    productId, httpResponse.StatusCode, httpResponse.ReasonPhrase, responseContent);
                 return new List<ReviewDto>();
             }
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "Error fetching reviews for product {ProductId}", productId);
+            _logger.LogError(ex, "Error fetching reviews for product {ProductId}. Message: {Message}", productId, ex.Message);
             return new List<ReviewDto>();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error fetching reviews for product {ProductId}", productId);
+            _logger.LogError(ex, "Unexpected error fetching reviews for product {ProductId}. Message: {Message}", productId, ex.Message);
             return new List<ReviewDto>();
         }
     }
@@ -150,18 +151,13 @@ public class ReviewApiClient : IReviewApiClient
                 return false;
             }
 
-            if (string.IsNullOrEmpty(_apiKey))
-            {
-                _logger.LogError("Review API Key is not configured");
-                return false;
-            }
-
-            var postReviewUrl = $"{_baseUrl}/api/product/{review.ProductId}/review";
+            // Ensure the URL is properly constructed
+            var postReviewUrl = $"{_baseUrl.TrimEnd('/')}/products/{review.ProductId}/review";
             _logger.LogInformation("Submitting review to URL: {Url}", postReviewUrl);
             
             using var request = await CreateAuthenticatedRequestAsync(HttpMethod.Post, postReviewUrl);
 
-            // Map to external API format
+            // Map to mock API format
             var apiReview = new
             {
                 reviewerName = review.CustomerName,
@@ -205,8 +201,11 @@ public class ReviewApiClient : IReviewApiClient
         }
     }
 
+    // Commenting out external API response model for now
+    /*
     private class AuthResponse
     {
         public string? Token { get; set; }
     }
+    */
 }
