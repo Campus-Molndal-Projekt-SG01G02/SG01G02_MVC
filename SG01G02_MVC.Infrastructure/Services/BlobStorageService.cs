@@ -9,12 +9,12 @@ namespace SG01G02_MVC.Infrastructure.Services
 {
     public class BlobStorageService : IBlobStorageService
     {
-        private readonly BlobServiceClient _blobServiceClient;
+        private readonly BlobServiceClient? _blobServiceClient;
         private readonly string _containerName;
         private readonly bool _isTestMode;
-        private readonly ILogger<BlobStorageService> _logger;
+        private readonly ILogger<BlobStorageService>? _logger;
 
-        public BlobStorageService(IConfiguration configuration, ILogger<BlobStorageService> logger = null)
+        public BlobStorageService(IConfiguration configuration, ILogger<BlobStorageService>? logger = null)
         {
             _logger = logger;
 
@@ -95,7 +95,7 @@ namespace SG01G02_MVC.Infrastructure.Services
 
             try
             {
-                var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+                var containerClient = _blobServiceClient?.GetBlobContainerClient(_containerName);
                 LogInfo($"Checking if container '{_containerName}' exists...");
 
                 // Check if exists first to avoid unnecessary create attempts
@@ -148,7 +148,7 @@ namespace SG01G02_MVC.Infrastructure.Services
                 string blobName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
                 LogInfo($"Uploading file {file.FileName} as blob {blobName}");
 
-                var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+                var containerClient = _blobServiceClient?.GetBlobContainerClient(_containerName);
                 var blobClient = containerClient.GetBlobClient(blobName);
 
                 // Set content type and upload
@@ -193,7 +193,7 @@ namespace SG01G02_MVC.Infrastructure.Services
             {
                 LogInfo($"Deleting blob {blobName}");
 
-                var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+                var containerClient = _blobServiceClient?.GetBlobContainerClient(_containerName);
                 var blobClient = containerClient.GetBlobClient(blobName);
 
                 var response = await blobClient.DeleteIfExistsAsync();
@@ -235,7 +235,7 @@ namespace SG01G02_MVC.Infrastructure.Services
 
             try
             {
-                var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+                var containerClient = _blobServiceClient?.GetBlobContainerClient(_containerName);
                 var blobClient = containerClient.GetBlobClient(blobName);
                 var url = blobClient.Uri.ToString();
 

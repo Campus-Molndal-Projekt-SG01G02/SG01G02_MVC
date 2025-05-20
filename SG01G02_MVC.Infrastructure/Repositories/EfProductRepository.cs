@@ -54,5 +54,15 @@ namespace SG01G02_MVC.Infrastructure.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task UpdateExternalReviewApiProductIdAsync(int productId, int externalId)
+        {
+            var product = await _context.Products.FindAsync(productId);
+            if (product != null)
+            {
+                product.ExternalReviewApiProductId = externalId;
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

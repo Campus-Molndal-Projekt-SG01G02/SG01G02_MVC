@@ -7,10 +7,12 @@ namespace SG01G02_MVC.Application.Services
     public class ProductService : IProductService
     {
         private readonly IProductRepository _repository;
+        private readonly IReviewApiClient _reviewApiClient;
 
-        public ProductService(IProductRepository repository)
+        public ProductService(IProductRepository repository, IReviewApiClient reviewApiClient)
         {
             _repository = repository;
+            _reviewApiClient = reviewApiClient;
         }
 
         public async Task<IEnumerable<ProductDto>> GetAllProductsAsync()
@@ -25,10 +27,18 @@ namespace SG01G02_MVC.Application.Services
             return product == null ? null : MapToDto(product);
         }
 
-        public Task CreateProductAsync(ProductDto dto)
+        public async Task CreateProductAsync(ProductDto dto)
         {
             var product = MapToEntity(dto);
-            return _repository.CreateProductAsync(product);
+            await _repository.CreateProductAsync(product);
+
+            // Register with external review API
+            var externalId = await _reviewApiClient.RegisterProductAsync(dto);
+            if (externalId.HasValue)
+            {
+                await _repository.UpdateExternalReviewApiProductIdAsync(product.Id, externalId.Value);
+            }
+            // else: log warning, admin tool can fix later
         }
 
         public Task UpdateProductAsync(ProductDto dto)
