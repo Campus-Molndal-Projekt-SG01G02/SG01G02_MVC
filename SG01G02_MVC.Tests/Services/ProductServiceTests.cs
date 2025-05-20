@@ -1,5 +1,7 @@
 using SG01G02_MVC.Application.Services;
 using SG01G02_MVC.Application.DTOs;
+using SG01G02_MVC.Application.Interfaces;
+using Moq;
 
 namespace SG01G02_MVC.Tests.Services
 {
@@ -10,7 +12,8 @@ namespace SG01G02_MVC.Tests.Services
         {
             // Arrange
             var repo = new FakeProductRepository(); // Create a dummy in-memory test class
-            var service = new ProductService(repo);
+            var fakeReviewApiClient = new Mock<IReviewApiClient>().Object; // or use a real fake if you have one
+            var service = new ProductService(repo, fakeReviewApiClient);
 
             // Act
             var result = await service.GetAllProductsAsync();
