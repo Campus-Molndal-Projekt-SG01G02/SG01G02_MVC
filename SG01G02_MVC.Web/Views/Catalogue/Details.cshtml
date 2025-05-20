@@ -9,7 +9,7 @@
 
     @if (Model.HasImage)
     {
-        <img src="@Model.ImageUrl" class="card-img-top product-image img-fluid" style="max-height: 400px; object-fit: contain;" alt="@Model.Name">
+        <img src="@Model.ImageUrl" class="card-img-top product-image img-fluid" style="max-height: 500px; object-fit: contain;" alt="@Model.Name">
     }
     else
     {
@@ -44,7 +44,7 @@
         }
         else
         {
-            <span class="text-muted">No reviews yet</span>
+            <span class="text-frost">No reviews yet</span>
         }
     </div>
     <hr/>
@@ -97,7 +97,7 @@
                     {
                         <div class="card mb-3">
                             <div class="card-body">
-                                <h5 class="card-title">@review.Content ?? ""</h5>
+                                <h5 class="card-title mt-4">@review.Content ?? ""</h5>
                                 <h6 class="card-subtitle mb-2 text-muted">
                                     By @review.CustomerName ?? "Anonymous" on @review.CreatedAt.ToString("MMMM dd, yyyy")
                                     <span class="ms-2">
