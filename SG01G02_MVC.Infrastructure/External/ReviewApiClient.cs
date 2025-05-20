@@ -201,6 +201,39 @@ public class ReviewApiClient : IReviewApiClient
         }
     }
 
+    public async Task<int?> RegisterProductAsync(ProductDto product)
+    {
+        // Adjust the endpoint and payload to match the external API spec!
+        var url = $"{_baseUrl.TrimEnd('/')}/product/save";
+        var payload = new
+        {
+            name = product.Name,
+            description = product.Description,
+            price = product.Price,
+            // Add other fields as needed
+        };
+
+        using var request = await CreateAuthenticatedRequestAsync(HttpMethod.Post, url);
+        request.Content = JsonContent.Create(payload);
+
+        var response = await _httpClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Failed to register product. Status: {StatusCode}, Content: {Content}",
+                response.StatusCode, await response.Content.ReadAsStringAsync());
+            return null;
+        }
+
+        // Adjust this to match the actual response structure!
+        var responseBody = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(responseBody);
+        if (doc.RootElement.TryGetProperty("productId", out var idProp))
+            return idProp.GetInt32();
+
+        _logger.LogWarning("No productId found in register product response: {Response}", responseBody);
+        return null;
+    }
+
     // Commenting out external API response model for now
     /*
     private class AuthResponse
