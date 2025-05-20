@@ -3,7 +3,7 @@ using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Web.Models;
 using SG01G02_MVC.Web.Services;
 using SG01G02_MVC.Application.DTOs;
-
+using Microsoft.EntityFrameworkCore;
 
 namespace SG01G02_MVC.Web.Controllers
 {
@@ -294,6 +294,14 @@ namespace SG01G02_MVC.Web.Controllers
             await _productService.UpdateProductAsync(updatedProduct);
 
             return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> FixMissingExternalReviewApiIds()
+        {
+            if (!IsAdmin) return RedirectToAction("Index", "Login");
+            int updated = await _productService.PatchMissingExternalReviewApiIdsAsync();
+            return Content($"Updated {updated} products with dummy ExternalReviewApiProductId.");
         }
     }
 }
