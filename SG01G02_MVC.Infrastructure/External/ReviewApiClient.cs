@@ -68,40 +68,55 @@ public class ReviewApiClient : IReviewApiClient
 
     public async Task<bool> SubmitReviewAsync(ReviewDto review)
     {
-        var postUrl = $"{_baseUrl.TrimEnd('/')}/products/{review.ProductId}/review";
-        _logger.LogInformation("Submitting review to: {Url}", postUrl);
-
         try
         {
-            using var request = await CreateRequestAsync(HttpMethod.Post, postUrl);
-            request.Content = JsonContent.Create(new
+            string endpointPath = _baseUrl.Contains("agreeablewater")
+                ? $"api/product/{review.ProductId}/review?code={_apiKey}"
+                : $"products/{review.ProductId}/review?code={_apiKey}";
+
+            var postReviewUrl = $"{_baseUrl.TrimEnd('/')}/{endpointPath}";
+            _logger.LogInformation("Submitting review to URL: {Url}", postReviewUrl);
+
+            using var request = await CreateRequestAsync(HttpMethod.Post, postReviewUrl);
+
+            var apiReview = new
             {
                 reviewerName = review.CustomerName,
                 text = review.Content,
                 rating = review.Rating,
                 reviewDate = review.CreatedAt
-            });
+            };
 
-            var response = await _httpClient.SendAsync(request);
-            var content = await response.Content.ReadAsStringAsync();
+            request.Content = JsonContent.Create(apiReview);
 
-            if (response.IsSuccessStatusCode)
+            var httpResponse = await _httpClient.SendAsync(request);
+            var responseContent = await httpResponse.Content.ReadAsStringAsync();
+
+            _logger.LogInformation("API Response - Status: {StatusCode}, Content: {Content}",
+                httpResponse.StatusCode, responseContent);
+
+            if (httpResponse.IsSuccessStatusCode)
             {
                 _logger.LogInformation("Successfully submitted review for product {ProductId}", review.ProductId);
                 return true;
             }
-
-            _logger.LogWarning("Failed to submit review for product {ProductId}. Status: {StatusCode}. Content: {Content}", review.ProductId, response.StatusCode, content);
-            return false;
+            else
+            {
+                _logger.LogWarning("Failed to submit review for product {ProductId}. Status: {StatusCode}. Reason: {ReasonPhrase}. Content: {ErrorContent}",
+                    review.ProductId, httpResponse.StatusCode, httpResponse.ReasonPhrase, responseContent);
+                return false;
+            }
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "HTTP error submitting review for product {ProductId}", review.ProductId);
+            _logger.LogError(ex, "HTTP request error submitting review for product {ProductId}. Message: {Message}",
+                review.ProductId, ex.Message);
             return false;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error submitting review for product {ProductId}", review.ProductId);
+            _logger.LogError(ex, "Unexpected error submitting review for product {ProductId}. Message: {Message}",
+                review.ProductId, ex.Message);
             return false;
         }
     }
