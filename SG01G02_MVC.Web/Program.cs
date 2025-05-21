@@ -512,32 +512,6 @@ void InitializeDatabase(WebApplication app)
             logger.LogInformation("Database provider: {Provider}", db.Database.ProviderName);
             logger.LogInformation("EXACT Database provider name: '{ExactProvider}'", db.Database.ProviderName ?? "null");
 
-
-            // TODO: Remove this later
-            // Detta säkerställer att det körs innan något annat
-            try
-            {
-                // Försök att öppna en anslutning för att se om databasen är tillgänglig
-                if (db.Database.CanConnect())
-                {
-                    // Om vi kan ansluta, kör SQL
-                    Console.WriteLine($"XYZ - Running SQL command: ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"ExternalReviewApiProductId\" text NULL;");
-                    db.Database.ExecuteSqlRaw(
-                        "ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"ExternalReviewApiProductId\" text NULL;"
-                    );
-                    logger.LogInformation("IMPORTANT: Added ExternalReviewApiProductId column if it didn't exist");
-                }
-                else
-                {
-                    logger.LogWarning("Cannot connect to database to add column");
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "CRITICAL ERROR: Failed to add ExternalReviewApiProductId column");
-            }
-
-
             if (db.Database.ProviderName?.Contains("InMemory") ?? false)
             {
                 logger.LogInformation("Using in-memory database - no migrations needed");
@@ -570,13 +544,6 @@ void InitializeDatabase(WebApplication app)
                         cmd.CommandText = "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'Products');";
                         var result = cmd.ExecuteScalar();
                         productsTableExists = result != null && (result.ToString() == "1" || result.ToString().ToLower() == "true");
-
-                        // TODO: Remove later
-                        Console.WriteLine($"XYZ - Running SQL command: {cmd.CommandText}");
-                        db.Database.ExecuteSqlRaw(
-                            "ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"ExternalReviewApiProductId\" text NULL;"
-                        );
-                        logger.LogInformation("Added ExternalReviewApiProductId column if it didn't exist");
 
                         // If table exists, check if ImageName column exists
                         if (productsTableExists)
