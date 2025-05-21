@@ -19,17 +19,16 @@ public class ReviewService : IReviewService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<IEnumerable<ReviewDto>> GetReviewsForProduct(string productId)
+    public async Task<IEnumerable<ReviewDto>> GetReviewsForProduct(int productId)
     {
         // TODO: TEMP DEBUG LINE
         Console.WriteLine("ReviewService.GetReviewsForProduct() called");
         Console.WriteLine("📦 ReviewService.GetReviewsForProduct called with productId = " + productId);
 
-
-        if (string.IsNullOrEmpty(productId))
+        if (productId <= 0)
         {
-            _logger.LogWarning("Attempted to get reviews with null or empty product ID");
-            throw new ArgumentException("Product ID cannot be null or empty.", nameof(productId));
+            _logger.LogWarning("Attempted to get reviews with invalid product ID: {ProductId}", productId);
+            throw new ArgumentException("Product ID must be greater than 0.", nameof(productId));
         }
 
         _logger.LogInformation("Getting reviews for product {ProductId}", productId);

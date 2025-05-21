@@ -105,7 +105,7 @@ void ConfigureServices(WebApplicationBuilder builder)
     {
         builder.Services.AddHttpClient("ExternalReviewApi", client =>
         {
-            client.BaseAddress = new Uri(reviewApiUrl); // ex: https://sg01g02funcapp250513.azurewebsites.net/api
+            client.BaseAddress = new Uri(reviewApiUrl);
             // NOTE: Azure Function expects ?code=APIKEY in query, not header
             // So no x-api-key header needed
         });
@@ -113,7 +113,7 @@ void ConfigureServices(WebApplicationBuilder builder)
 
     builder.Services.AddHttpClient("MockReviewApi", client =>
     {
-        client.BaseAddress = new Uri(builder.Configuration["MockReviewApiURL"]!); // ex: https://sg01g02funcapp250513.azurewebsites.net/api
+        client.BaseAddress = new Uri(builder.Configuration["MockReviewApiURL"]!);
         // Again, API key is passed as query param
     });
 
@@ -306,9 +306,9 @@ void ConfigureKeyVault(WebApplicationBuilder builder)
         }
     }
 
-    // TODO: Force fallback to mock for local testing! REMOVE THIS LATER!
-    builder.Configuration["ReviewApiURL"] = "";
-    builder.Configuration["ReviewApiKey"] = "";
+    // // TODO: Force fallback to mock for local testing! REMOVE THIS LATER!
+    // builder.Configuration["ReviewApiURL"] = "";
+    // builder.Configuration["ReviewApiKey"] = "";
 
     // Verify that we have a database connection string
     if (string.IsNullOrEmpty(builder.Configuration["ConnectionStrings:PostgreSQL"]))
