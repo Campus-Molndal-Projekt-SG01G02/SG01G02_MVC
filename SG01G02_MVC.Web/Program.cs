@@ -89,8 +89,36 @@ void ConfigureServices(WebApplicationBuilder builder)
     ConfigureBlobStorage(builder);
 
     // 6. Register other services
-    builder.Services.AddHttpClient<IReviewApiClient, ReviewApiClient>();
-    builder.Services.AddScoped<IReviewService, ReviewService>();
+    // builder.Services.AddHttpClient<IReviewApiClient, ReviewApiClient>();
+    // builder.Services.AddScoped<IReviewService, ReviewService>();
+    // Register external API client
+    builder.Services.AddHttpClient("ExternalReviewApi", client =>
+    {
+        client.BaseAddress = new Uri(builder.Configuration["ReviewApiURL"]!);
+        client.DefaultRequestHeaders.Add("x-api-key", builder.Configuration["ReviewApiKey"]!);
+    });
+
+    // Register mock API client
+    builder.Services.AddHttpClient("MockReviewApi", client =>
+    {
+        client.BaseAddress = new Uri(builder.Configuration["MockReviewApiURL"]!);
+        client.DefaultRequestHeaders.Add("x-api-key", builder.Configuration["MockReviewApiKey"]!);
+    });
+    // Register DualReviewApiClient (wrapper)
+    builder.Services.AddScoped<IReviewApiClient>(sp =>
+    {
+        var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
+        var config = sp.GetRequiredService<IConfiguration>();
+        var logger = sp.GetRequiredService<ILogger<DualReviewApiClient>>();
+
+        var externalLogger = sp.GetRequiredService<ILogger<ReviewApiClient>>();
+        var mockLogger = sp.GetRequiredService<ILogger<MockReviewApiClient>>();
+
+        var external = new ReviewApiClient(httpFactory.CreateClient("ExternalReviewApi"), config, externalLogger);
+        var fallback = new MockReviewApiClient(httpFactory.CreateClient("MockReviewApi"), config, mockLogger);
+
+        return new DualReviewApiClient(external, fallback, logger);
+    });
 
     // 7. Session and authentication
     builder.Services.AddDistributedMemoryCache();
