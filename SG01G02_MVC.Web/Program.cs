@@ -90,7 +90,6 @@ void ConfigureServices(WebApplicationBuilder builder)
 
     // 6. Register other services
     // builder.Services.AddHttpClient<IReviewApiClient, ReviewApiClient>();
-    // builder.Services.AddScoped<IReviewService, ReviewService>();
     // Register external API client
     builder.Services.AddHttpClient("ExternalReviewApi", client =>
     {
@@ -119,6 +118,8 @@ void ConfigureServices(WebApplicationBuilder builder)
 
         return new DualReviewApiClient(external, fallback, logger);
     });
+    
+    builder.Services.AddScoped<IReviewService, ReviewService>();
 
     // 7. Session and authentication
     builder.Services.AddDistributedMemoryCache();
