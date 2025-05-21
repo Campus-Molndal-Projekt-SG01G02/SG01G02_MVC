@@ -512,44 +512,6 @@ void InitializeDatabase(WebApplication app)
             logger.LogInformation("Database provider: {Provider}", db.Database.ProviderName);
             logger.LogInformation("EXACT Database provider name: '{ExactProvider}'", db.Database.ProviderName ?? "null");
 
-            // TODO: Lägg till kod för att ändra datatypen på ExternalReviewApiProductId från text till integer
-            try
-            {
-                // Försök att öppna en anslutning för att se om databasen är tillgänglig
-                if (db.Database.CanConnect())
-                {
-                    // Om vi kan ansluta, kör SQL för att ändra kolumntyp
-                    logger.LogInformation("Attempting to change ExternalReviewApiProductId column type from text to integer");
-
-                    try
-                    {
-                        // Om kolumnen inte existerar, kommer detta att misslyckas tyst
-                        db.Database.ExecuteSqlRaw(@"
-                            -- Först, nollställ kolumnen för att undvika konverteringsfel
-                            UPDATE ""Products"" SET ""ExternalReviewApiProductId"" = NULL;
-
-                            -- Sedan, ändra datatypen
-                            ALTER TABLE ""Products""
-                            ALTER COLUMN ""ExternalReviewApiProductId"" TYPE integer
-                            USING NULL;
-                        ");
-                        logger.LogInformation("Successfully changed ExternalReviewApiProductId column type to integer");
-                    }
-                    catch (Exception ex)
-                    {
-                        // Det kan misslyckas om kolumnen inte finns - det är okej
-                        logger.LogWarning("Could not change column type, possibly column doesn't exist yet or already is integer: {Message}", ex.Message);
-                    }
-                }
-                else
-                {
-                    logger.LogWarning("Cannot connect to database to change column type");
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error while attempting to change column type");
-            }
 
             if (db.Database.ProviderName?.Contains("InMemory") ?? false)
             {
