@@ -91,19 +91,33 @@ void ConfigureServices(WebApplicationBuilder builder)
     // 6. Register other services
     // builder.Services.AddHttpClient<IReviewApiClient, ReviewApiClient>();
     // Register external API client
-    builder.Services.AddHttpClient("ExternalReviewApi", client =>
-    {
-        client.BaseAddress = new Uri(builder.Configuration["ReviewApiURL"]!);
-        client.DefaultRequestHeaders.Add("x-api-key", builder.Configuration["ReviewApiKey"]!);
-    });
+    // builder.Services.AddHttpClient("ExternalReviewApi", client =>
+    // {
+    //     client.BaseAddress = new Uri(builder.Configuration["ReviewApiURL"]!);
+    //     client.DefaultRequestHeaders.Add("x-api-key", builder.Configuration["ReviewApiKey"]!);
+    // });
 
-    // Register mock API client
+    // === REVIEW API CLIENT SETUP ===
+    var reviewApiUrl = builder.Configuration["ReviewApiURL"];
+    var reviewApiKey = builder.Configuration["ReviewApiKey"];
+
+    if (!string.IsNullOrWhiteSpace(reviewApiUrl))
+    {
+        builder.Services.AddHttpClient("ExternalReviewApi", client =>
+        {
+            client.BaseAddress = new Uri(reviewApiUrl);
+            // NOTE: Azure Function expects ?code=APIKEY in query, not header
+            // So no x-api-key header needed
+        });
+    }
+
     builder.Services.AddHttpClient("MockReviewApi", client =>
     {
         client.BaseAddress = new Uri(builder.Configuration["MockReviewApiURL"]!);
-        client.DefaultRequestHeaders.Add("x-api-key", builder.Configuration["MockReviewApiKey"]!);
+        // Again, API key is passed as query param
     });
-    // Register DualReviewApiClient (wrapper)
+
+    // === DUAL WRAPPER ===
     builder.Services.AddScoped<IReviewApiClient>(sp =>
     {
         var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
@@ -113,12 +127,24 @@ void ConfigureServices(WebApplicationBuilder builder)
         var externalLogger = sp.GetRequiredService<ILogger<ReviewApiClient>>();
         var mockLogger = sp.GetRequiredService<ILogger<MockReviewApiClient>>();
 
-        var external = new ReviewApiClient(httpFactory.CreateClient("ExternalReviewApi"), config, externalLogger);
+        IReviewApiClient primary;
+
+        if (!string.IsNullOrWhiteSpace(config["ReviewApiURL"]))
+        {
+            var externalHttp = httpFactory.CreateClient("ExternalReviewApi");
+            primary = new ReviewApiClient(externalHttp, config, externalLogger); // ✅ Will build ?code=... internally
+        }
+        else
+        {
+            Console.WriteLine("⚠️ ExternalReviewApi not configured. Skipping registration and forcing mock fallback.");
+            primary = new DisabledReviewApiClient();
+        }
+
         var fallback = new MockReviewApiClient(httpFactory.CreateClient("MockReviewApi"), config, mockLogger);
 
-        return new DualReviewApiClient(external, fallback, logger);
+        return new DualReviewApiClient(primary, fallback, logger); // ✅ FIXED: was 'external'
     });
-    
+
     builder.Services.AddScoped<IReviewService, ReviewService>();
 
     // 7. Session and authentication
@@ -146,6 +172,13 @@ void ConfigureServices(WebApplicationBuilder builder)
 
 void ConfigureKeyVault(WebApplicationBuilder builder)
 {
+    // Skip Key Vault completely in Development mode
+    if (builder.Environment.IsDevelopment())
+    {
+        Console.WriteLine("Running locally in Development - skipping Azure Key Vault.");
+        return;
+    }
+
     // Skip Key Vault in test environment
     if (builder.Environment.IsEnvironment("Testing") ||
         Environment.GetEnvironmentVariable("USE_IN_MEMORY_DB") == "true")
@@ -272,6 +305,10 @@ void ConfigureKeyVault(WebApplicationBuilder builder)
             builder.Configuration["ConnectionStrings:PostgreSQL"] = postgresConnectionString;
         }
     }
+
+    // // TODO: Force fallback to mock for local testing! REMOVE THIS LATER!
+    // builder.Configuration["ReviewApiURL"] = "";
+    // builder.Configuration["ReviewApiKey"] = "";
 
     // Verify that we have a database connection string
     if (string.IsNullOrEmpty(builder.Configuration["ConnectionStrings:PostgreSQL"]))

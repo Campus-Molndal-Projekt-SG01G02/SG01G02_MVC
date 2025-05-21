@@ -18,7 +18,7 @@ namespace SG01G02_MVC.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetProductReviews(string productId)
+        public async Task<IActionResult> GetProductReviews(int productId)
         {
             try
             {
@@ -51,7 +51,7 @@ namespace SG01G02_MVC.Web.Controllers
 
             var reviewDto = new ReviewDto
             {
-                ProductId = model.ProductId.ToString(),
+                ProductId = model.ProductId,
                 CustomerName = model.CustomerName,
                 Rating = model.Rating,
                 Content = model.Content,

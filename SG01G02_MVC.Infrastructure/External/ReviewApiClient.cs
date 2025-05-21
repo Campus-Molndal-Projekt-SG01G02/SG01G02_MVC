@@ -101,12 +101,12 @@ public class ReviewApiClient : IReviewApiClient
         return request;
     }
 
-    public async Task<IEnumerable<ReviewDto>> GetReviewsAsync(string productId)
+    public async Task<IEnumerable<ReviewDto>> GetReviewsAsync(int productId)
     {
         try
         {
             // Ensure the URL is properly constructed
-            string requestUrl = $"{_baseUrl.TrimEnd('/')}/products/{productId}/reviews";
+            string requestUrl = $"{_baseUrl.TrimEnd('/')}/api/products/{productId}/reviews?code={_apiKey}";
             _logger.LogInformation("Fetching reviews for product {ProductId} from {Url}", productId, requestUrl);
             
             using var request = await CreateAuthenticatedRequestAsync(HttpMethod.Get, requestUrl);

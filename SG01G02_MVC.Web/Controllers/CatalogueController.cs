@@ -25,13 +25,16 @@ namespace SG01G02_MVC.Web.Controllers
 
         public async Task<IActionResult> Index()
         {
+            // TODO: TEMP DEBUG LINE
+            Console.WriteLine("📋 CatalogueController: Fetching reviews...");
+
             try
             {
                 var dtos = await _productService.GetAllProductsAsync();
                 var viewModels = new List<ProductViewModel>();
                 foreach (var dto in dtos)
                 {
-                    var reviewsEnumerable = await _reviewService.GetReviewsForProduct(dto.Id.ToString());
+                    var reviewsEnumerable = await _reviewService.GetReviewsForProduct(dto.Id);
                     var reviews = (reviewsEnumerable ?? Enumerable.Empty<ReviewDto>()).Where(r => r != null).ToList();
 
                     double avgRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;
@@ -61,11 +64,14 @@ namespace SG01G02_MVC.Web.Controllers
 
         public async Task<IActionResult> Details(int id)
         {
+            // TODO: TEMP DEBUG LINE
+            Console.WriteLine("📋 CatalogueController: Fetching reviews...");
+
             var product = await _productService.GetProductByIdAsync(id);
             if (product == null)
                 return NotFound();
 
-            var reviewsEnumerable = await _reviewService.GetReviewsForProduct(product.Id.ToString());
+            var reviewsEnumerable = await _reviewService.GetReviewsForProduct(product.Id);
             var reviews = (reviewsEnumerable ?? Enumerable.Empty<ReviewDto>()).Where(r => r != null).ToList();
 
             double avgRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;

@@ -30,7 +30,7 @@ namespace SG01G02_MVC.Tests.Services
             {
                 new ReviewDto {
                     Id = "1",
-                    ProductId = "productId",
+                    ProductId = 1,
                     CustomerName = "Alice",
                     Content = "Great product!",
                     Rating = 5,
@@ -39,7 +39,7 @@ namespace SG01G02_MVC.Tests.Services
                 },
                 new ReviewDto {
                     Id = "2",
-                    ProductId = "productId",
+                    ProductId = 2,
                     CustomerName = "Bob",
                     Content = "Not bad.",
                     Rating = 4,
@@ -47,11 +47,11 @@ namespace SG01G02_MVC.Tests.Services
                     Status = "approved"
                 }
             };
-            _mockReviewApiClient.Setup(client => client.GetReviewsAsync(It.IsAny<string>()))
+            _mockReviewApiClient.Setup(client => client.GetReviewsAsync(1))
                 .ReturnsAsync(expectedReviews);
 
             // Act
-            var reviews = await _reviewService.GetReviewsForProduct("productId");
+            var reviews = await _reviewService.GetReviewsForProduct(1);
 
             // Assert
             Assert.NotNull(reviews);
@@ -61,36 +61,25 @@ namespace SG01G02_MVC.Tests.Services
         }
 
         [Fact]
-        public async Task GetReviewsForProduct_EmptyProductId_ThrowsArgumentException()
+        public async Task GetReviewsForProduct_ProductIdLessThanOrEqualToZero_ThrowsArgumentException()
         {
             // Arrange
-            string emptyProductId = "";
+            // No need to arrange anything as the test will throw an exception
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentException>(() => 
-                _reviewService.GetReviewsForProduct(emptyProductId));
-        }
-
-        [Fact]
-        public async Task GetReviewsForProduct_NullProductId_ThrowsArgumentException()
-        {
-            // Arrange
-            string? nullProductId = null;
-
-            // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() => 
-                _reviewService.GetReviewsForProduct(nullProductId!));
+                _reviewService.GetReviewsForProduct(0));
         }
 
         [Fact]
         public async Task GetReviewsForProduct_ApiClientReturnsEmptyList_ReturnsEmptyList()
         {
             // Arrange
-            _mockReviewApiClient.Setup(client => client.GetReviewsAsync(It.IsAny<string>()))
+            _mockReviewApiClient.Setup(client => client.GetReviewsAsync(1))
                 .ReturnsAsync(new List<ReviewDto>());
 
             // Act
-            var reviews = await _reviewService.GetReviewsForProduct("productId");
+            var reviews = await _reviewService.GetReviewsForProduct(1);
 
             // Assert
             Assert.NotNull(reviews);
