@@ -41,6 +41,7 @@ namespace SG01G02_MVC.Infrastructure.Repositories
                 existing.ImageUrl = product.ImageUrl;
                 existing.Description = product.Description;
                 existing.ImageName = product.ImageName;
+                existing.ExternalReviewApiProductId = product.ExternalReviewApiProductId;
                 await _context.SaveChangesAsync();
             }
         }

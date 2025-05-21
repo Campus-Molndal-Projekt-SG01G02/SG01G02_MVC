@@ -30,6 +30,12 @@
             <input asp-for="StockQuantity" class="form-control" type="number" />
             <span asp-validation-for="StockQuantity" class="text-danger"></span>
         </div>
+        <div class="mb-3">
+            <label asp-for="ExternalReviewApiProductId" class="form-label">External Review API Product ID</label>
+            <input asp-for="ExternalReviewApiProductId" class="form-control" type="number" />
+            <span asp-validation-for="ExternalReviewApiProductId" class="text-danger"></span>
+            <small class="form-text text-muted">Leave empty to sync automatically on next patch, or enter manually if known.</small>
+        </div>
 
         @if (Model.HasImage)
         {

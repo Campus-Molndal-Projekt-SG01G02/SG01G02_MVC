@@ -129,7 +129,8 @@ namespace SG01G02_MVC.Web.Controllers
                 ImageName = product.ImageName,
                 ImageUrl = !string.IsNullOrEmpty(product.ImageName)
                     ? _blobStorageService.GetBlobUrl(product.ImageName)
-                    : product.ImageUrl
+                    : product.ImageUrl,
+                ExternalReviewApiProductId = product.ExternalReviewApiProductId
             };
 
             return View(model);
@@ -206,7 +207,8 @@ namespace SG01G02_MVC.Web.Controllers
                 Price = model.Price ?? 0,
                 StockQuantity = model.StockQuantity,
                 ImageUrl = model.ImageUrl,
-                ImageName = model.ImageName
+                ImageName = model.ImageName,
+                ExternalReviewApiProductId = model.ExternalReviewApiProductId
             };
 
             await _productService.UpdateProductAsync(productDto);
@@ -230,7 +232,8 @@ namespace SG01G02_MVC.Web.Controllers
                 ImageName = product.ImageName,
                 ImageUrl = !string.IsNullOrEmpty(product.ImageName)
                     ? _blobStorageService.GetBlobUrl(product.ImageName)
-                    : product.ImageUrl
+                    : product.ImageUrl,
+                ExternalReviewApiProductId = product.ExternalReviewApiProductId
             };
 
             return View(model);
