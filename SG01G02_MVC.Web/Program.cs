@@ -607,7 +607,8 @@ void InitializeDatabase(WebApplication app)
                             // Add the column manually with SQL
                             db.Database.ExecuteSqlRaw(
                                 "ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"ImageName\" text NULL; " +
-                                "ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"ImageDescription\" text NULL;"
+                                "ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"ImageDescription\" text NULL; " +
+                                "ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"ExternalReviewApiProductId\" integer NULL;"
                             );
 
                             // Mark all migrations as applied in the history table
