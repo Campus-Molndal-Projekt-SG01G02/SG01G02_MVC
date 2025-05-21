@@ -49,8 +49,8 @@
                     else if (!string.IsNullOrEmpty(Model.ImageUrl))
                     {
                         <img src="@Model.ImageUrl" class="img-thumbnail" style="max-height: 200px;" alt="@Model.Name" />
-                        <button type="button" class="btn btn-sm btn-danger position-absolute rounded-circle"
-                        style="width: 24px; height: 24px; padding: 0; font-size: 12px; top: 10px !important; right: 10px !important;"
+                        <button type="button" class="btn btn-sm btn-danger position-absolute rounded-circle delete-img"
+                        style="width: 24px; height: 24px; padding: 0; font-size: 12px;"
                         data-bs-toggle="modal" data-bs-target="#deleteImageModal">
                             ×
                         </button>
