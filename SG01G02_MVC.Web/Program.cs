@@ -544,6 +544,13 @@ void InitializeDatabase(WebApplication app)
                         var result = cmd.ExecuteScalar();
                         productsTableExists = result != null && (result.ToString() == "1" || result.ToString().ToLower() == "true");
 
+                        // TODO: Remove later
+                        db.Database.ExecuteSqlRaw(
+                            "ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"ExternalReviewApiProductId\" text NULL;"
+                        );
+                        logger.LogInformation("Added ExternalReviewApiProductId column if it didn't exist");
+
+
                         // If table exists, check if ImageName column exists
                         if (productsTableExists)
                         {
