@@ -18,7 +18,7 @@ namespace SG01G02_MVC.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetProductReviews(string productId)
+        public async Task<IActionResult> GetProductReviews(int productId)
         {
             try
             {
