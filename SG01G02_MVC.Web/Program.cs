@@ -526,7 +526,6 @@ void InitializeDatabase(WebApplication app)
                 db.Database.Migrate();
                 logger.LogInformation("Migrations applied successfully.");
 
-                // --- Manual schema checking code below is commented out for reference ---
                 // Check if Products table exists but ImageName column doesn't
                 bool productsTableExists = false;
                 bool imageNameColumnExists = false;
