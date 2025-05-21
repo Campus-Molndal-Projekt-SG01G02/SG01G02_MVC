@@ -527,7 +527,6 @@ void InitializeDatabase(WebApplication app)
                 logger.LogInformation("Migrations applied successfully.");
 
                 // --- Manual schema checking code below is commented out for reference ---
-                /*
                 // Check if Products table exists but ImageName column doesn't
                 bool productsTableExists = false;
                 bool imageNameColumnExists = false;
@@ -545,6 +544,13 @@ void InitializeDatabase(WebApplication app)
                         cmd.CommandText = "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'Products');";
                         var result = cmd.ExecuteScalar();
                         productsTableExists = result != null && (result.ToString() == "1" || result.ToString().ToLower() == "true");
+
+                        // TODO: Remove later
+                        db.Database.ExecuteSqlRaw(
+                            "ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"ExternalReviewApiProductId\" text NULL;"
+                        );
+                        logger.LogInformation("Added ExternalReviewApiProductId column if it didn't exist");
+
 
                         // If table exists, check if ImageName column exists
                         if (productsTableExists)
@@ -638,7 +644,6 @@ void InitializeDatabase(WebApplication app)
                     logger.LogInformation("Products table doesn't exist. Creating full schema");
                     db.Database.EnsureCreated();
                 }
-                */
             }
         }
         catch (Exception ex)
