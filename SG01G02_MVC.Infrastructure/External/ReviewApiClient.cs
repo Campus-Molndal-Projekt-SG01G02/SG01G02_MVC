@@ -106,7 +106,7 @@ public class ReviewApiClient : IReviewApiClient
         try
         {
             // Ensure the URL is properly constructed
-            string requestUrl = $"{_baseUrl.TrimEnd('/')}/products/{productId}/reviews";
+            string requestUrl = $"{_baseUrl.TrimEnd('/')}/api/products/{productId}/reviews?code={_apiKey}";
             _logger.LogInformation("Fetching reviews for product {ProductId} from {Url}", productId, requestUrl);
             
             using var request = await CreateAuthenticatedRequestAsync(HttpMethod.Get, requestUrl);

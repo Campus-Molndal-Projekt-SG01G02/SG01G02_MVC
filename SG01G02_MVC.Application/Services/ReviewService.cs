@@ -21,6 +21,11 @@ public class ReviewService : IReviewService
 
     public async Task<IEnumerable<ReviewDto>> GetReviewsForProduct(string productId)
     {
+        // TODO: TEMP DEBUG LINE
+        Console.WriteLine("ReviewService.GetReviewsForProduct() called");
+        Console.WriteLine("📦 ReviewService.GetReviewsForProduct called with productId = " + productId);
+
+
         if (string.IsNullOrEmpty(productId))
         {
             _logger.LogWarning("Attempted to get reviews with null or empty product ID");

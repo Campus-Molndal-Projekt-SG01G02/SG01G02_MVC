@@ -25,6 +25,9 @@ namespace SG01G02_MVC.Web.Controllers
 
         public async Task<IActionResult> Index()
         {
+            // TODO: TEMP DEBUG LINE
+            Console.WriteLine("📋 CatalogueController: Fetching reviews...");
+
             try
             {
                 var dtos = await _productService.GetAllProductsAsync();
@@ -61,6 +64,9 @@ namespace SG01G02_MVC.Web.Controllers
 
         public async Task<IActionResult> Details(int id)
         {
+            // TODO: TEMP DEBUG LINE
+            Console.WriteLine("📋 CatalogueController: Fetching reviews...");
+
             var product = await _productService.GetProductByIdAsync(id);
             if (product == null)
                 return NotFound();
