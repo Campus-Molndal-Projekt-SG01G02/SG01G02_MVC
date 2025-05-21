@@ -12,7 +12,7 @@ namespace SG01G02_MVC.Infrastructure.External
     /// </summary>
     public class DisabledReviewApiClient : IReviewApiClient
     {
-        public Task<IEnumerable<ReviewDto>> GetReviewsAsync(string productId)
+        public Task<IEnumerable<ReviewDto>> GetReviewsAsync(int productId)
             => throw new InvalidOperationException("ExternalReviewApi is disabled");
 
         public Task<bool> SubmitReviewAsync(ReviewDto review)

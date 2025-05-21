@@ -101,7 +101,7 @@ public class ReviewApiClient : IReviewApiClient
         return request;
     }
 
-    public async Task<IEnumerable<ReviewDto>> GetReviewsAsync(string productId)
+    public async Task<IEnumerable<ReviewDto>> GetReviewsAsync(int productId)
     {
         try
         {

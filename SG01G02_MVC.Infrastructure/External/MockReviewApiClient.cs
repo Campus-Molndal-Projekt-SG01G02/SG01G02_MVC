@@ -21,7 +21,7 @@ public class MockReviewApiClient : IReviewApiClient
         _apiKey = configuration["MockReviewApiKey"] ?? throw new ArgumentNullException("MockReviewApiKey"); // ✅ NEW LINE
     }
 
-    public async Task<IEnumerable<ReviewDto>> GetReviewsAsync(string productId)
+    public async Task<IEnumerable<ReviewDto>> GetReviewsAsync(int productId)
     {
         var url = $"{_baseUrl}/api/products/{productId}/reviews?code={_apiKey}";
         Console.WriteLine($"[MOCK] GET {url}");
