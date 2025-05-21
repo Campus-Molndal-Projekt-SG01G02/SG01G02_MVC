@@ -510,6 +510,33 @@ void InitializeDatabase(WebApplication app)
         try
         {
             logger.LogInformation("Database provider: {Provider}", db.Database.ProviderName);
+            logger.LogInformation("EXACT Database provider name: '{ExactProvider}'", db.Database.ProviderName ?? "null");
+
+
+            // TODO: Remove this later
+            // Detta säkerställer att det körs innan något annat
+            try
+            {
+                // Försök att öppna en anslutning för att se om databasen är tillgänglig
+                if (db.Database.CanConnect())
+                {
+                    // Om vi kan ansluta, kör SQL
+                    Console.WriteLine($"XYZ - Running SQL command: ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"ExternalReviewApiProductId\" text NULL;");
+                    db.Database.ExecuteSqlRaw(
+                        "ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"ExternalReviewApiProductId\" text NULL;"
+                    );
+                    logger.LogInformation("IMPORTANT: Added ExternalReviewApiProductId column if it didn't exist");
+                }
+                else
+                {
+                    logger.LogWarning("Cannot connect to database to add column");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "CRITICAL ERROR: Failed to add ExternalReviewApiProductId column");
+            }
+
 
             if (db.Database.ProviderName?.Contains("InMemory") ?? false)
             {
@@ -545,11 +572,11 @@ void InitializeDatabase(WebApplication app)
                         productsTableExists = result != null && (result.ToString() == "1" || result.ToString().ToLower() == "true");
 
                         // TODO: Remove later
+                        Console.WriteLine($"XYZ - Running SQL command: {cmd.CommandText}");
                         db.Database.ExecuteSqlRaw(
                             "ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"ExternalReviewApiProductId\" text NULL;"
                         );
                         logger.LogInformation("Added ExternalReviewApiProductId column if it didn't exist");
-
 
                         // If table exists, check if ImageName column exists
                         if (productsTableExists)
@@ -644,6 +671,12 @@ void InitializeDatabase(WebApplication app)
                     logger.LogInformation("Products table doesn't exist. Creating full schema");
                     db.Database.EnsureCreated();
                 }
+            }
+            else
+            {
+                logger.LogWarning("Unknown database provider: {Provider}. Attempting EnsureCreated as fallback",
+                                 db.Database.ProviderName);
+                db.Database.EnsureCreated();
             }
         }
         catch (Exception ex)
