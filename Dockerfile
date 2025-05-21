@@ -19,6 +19,9 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 
+# Installera curl för healthcheck
+RUN apt-get update && apt-get install -y curl && apt-get clean
+
 # Set environment variable from build-arg
 ARG KEY_VAULT_NAME
 ENV KEY_VAULT_NAME=${KEY_VAULT_NAME}
