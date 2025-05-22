@@ -110,7 +110,7 @@ public class AdminControllerTests : TestBase
             .Setup(c => c.RegisterProductAsync(It.IsAny<ProductDto>()))
             .ReturnsAsync(123); // simulate success
 
-        var (controller, mockService) = CreateController();
+        var (controller, mockService) = CreateController(reviewApiClient: mockReviewClient);
         var product = new ProductViewModel { Name = "Test", Price = 10 };
 
         var result = await controller.Create(product);
