@@ -17,13 +17,15 @@ public class AdminControllerTests : TestBase
     private (AdminController controller, Mock<IProductService> mockService) CreateController(
         Mock<IProductService>? productService = null,
         Mock<IUserSessionService>? sessionService = null,
-        Mock<IBlobStorageService>? blobStorageService = null)
+        Mock<IBlobStorageService>? blobStorageService = null,
+        Mock<IReviewApiClient>? reviewApiClient = null)
     {
         var mockSession = sessionService ?? new Mock<IUserSessionService>();
         mockSession.Setup(s => s.Role).Returns("Admin"); // Default role is admin for testing, override if needed
 
         var mockProductService = productService ?? new Mock<IProductService>();
         var mockBlobService = blobStorageService ?? new Mock<IBlobStorageService>();
+        var mockReviewApiClient = reviewApiClient ?? new Mock<IReviewApiClient>();
 
         // Setup basic behavior för blob service
         mockBlobService
@@ -33,7 +35,8 @@ public class AdminControllerTests : TestBase
         var controller = new AdminController(
             mockProductService.Object,
             mockSession.Object,
-            mockBlobService.Object
+            mockBlobService.Object,
+            mockReviewApiClient.Object
         );
 
         return (controller, mockProductService);
@@ -53,7 +56,8 @@ public class AdminControllerTests : TestBase
         var controller = new AdminController(
             mockProductService.Object, 
             mockSession.Object,
-            mockBlobService.Object
+            mockBlobService.Object,
+            new Mock<IReviewApiClient>().Object
         );
 
         // Simulate authenticated user
