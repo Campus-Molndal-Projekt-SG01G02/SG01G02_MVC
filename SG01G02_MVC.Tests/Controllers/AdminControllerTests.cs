@@ -105,6 +105,11 @@ public class AdminControllerTests : TestBase
     [Fact]
     public async Task Create_ValidProduct_RedirectsToIndex()
     {
+        var mockReviewClient = new Mock<IReviewApiClient>();
+        mockReviewClient
+            .Setup(c => c.RegisterProductAsync(It.IsAny<ProductDto>()))
+            .ReturnsAsync(123); // simulate success
+
         var (controller, mockService) = CreateController();
         var product = new ProductViewModel { Name = "Test", Price = 10 };
 
@@ -158,13 +163,17 @@ public class AdminControllerTests : TestBase
         // Setup mocks
         var mockProductService = new Mock<IProductService>();
         var mockBlobService = new Mock<IBlobStorageService>();
-        
-        // Setup the blob service to return a filename when UploadImageAsync is called
+        var mockReviewClient = new Mock<IReviewApiClient>();
+
+        mockReviewClient
+            .Setup(c => c.RegisterProductAsync(It.IsAny<ProductDto>()))
+            .ReturnsAsync(123); // simulate success
+
         mockBlobService
             .Setup(b => b.UploadImageAsync(It.IsAny<IFormFile>()))
             .ReturnsAsync("test-image-filename.jpg");
             
-        var (controller, mockService) = CreateController(mockProductService, null, mockBlobService);
+        var (controller, mockService) = CreateController(mockProductService, null, mockBlobService, mockReviewClient);
         
         // Create a mock IFormFile
         var fileMock = new Mock<IFormFile>();
