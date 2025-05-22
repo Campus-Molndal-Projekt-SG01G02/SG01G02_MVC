@@ -10,6 +10,6 @@ namespace SG01G02_MVC.Application.DTOs
         public string? ImageName { get; set; }
         public string? ImageUrl { get; set; }
         public bool HasImage => !string.IsNullOrEmpty(ImageUrl) || !string.IsNullOrEmpty(ImageName);
-        public int? ExternalReviewApiProductId { get; set; }
+        public string? ExternalReviewApiProductId { get; set; }
     }
 }

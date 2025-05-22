@@ -32,6 +32,6 @@ public class ProductViewModel
     // --- Review properties ---
     public double AverageRating { get; set; }
     public int ReviewCount { get; set; }
-    public int? ExternalReviewApiProductId { get; set; }
+    public string? ExternalReviewApiProductId { get; set; }
     public List<SG01G02_MVC.Application.DTOs.ReviewDto> Reviews { get; set; } = new();
 }

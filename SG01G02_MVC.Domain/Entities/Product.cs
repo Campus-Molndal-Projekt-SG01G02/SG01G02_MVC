@@ -11,6 +11,6 @@ namespace SG01G02_MVC.Domain.Entities
         public string? ImageUrl { get; set; }
         // public bool HasImage => !string.IsNullOrEmpty(ImageName);
         public bool HasImage => !string.IsNullOrEmpty(ImageName) || !string.IsNullOrEmpty(ImageUrl);
-        public int? ExternalReviewApiProductId { get; set; }
+        public string? ExternalReviewApiProductId { get; set; }
     }
 }

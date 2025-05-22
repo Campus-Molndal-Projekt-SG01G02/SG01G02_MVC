@@ -41,7 +41,7 @@ namespace SG01G02_MVC.Infrastructure.Repositories
                 existing.ImageUrl = product.ImageUrl;
                 existing.Description = product.Description;
                 existing.ImageName = product.ImageName;
-                existing.ExternalReviewApiProductId = product.ExternalReviewApiProductId;
+                existing.ExternalReviewApiProductId = product.ExternalReviewApiProductId ?? string.Empty;
                 await _context.SaveChangesAsync();
             }
         }
@@ -61,7 +61,7 @@ namespace SG01G02_MVC.Infrastructure.Repositories
             var product = await _context.Products.FindAsync(productId);
             if (product != null)
             {
-                product.ExternalReviewApiProductId = externalId;
+                product.ExternalReviewApiProductId = externalId.ToString();
                 await _context.SaveChangesAsync();
             }
         }

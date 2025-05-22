@@ -51,7 +51,7 @@ namespace SG01G02_MVC.Web.Controllers
                         Reviews = reviews,
                         AverageRating = avgRating,
                         ReviewCount = reviewCount,
-                        ExternalReviewApiProductId = dto.ExternalReviewApiProductId
+                        ExternalReviewApiProductId = dto.ExternalReviewApiProductId ?? string.Empty
                     });
                 }
                 return View(viewModels);
@@ -89,7 +89,7 @@ namespace SG01G02_MVC.Web.Controllers
                 Reviews = reviews,
                 AverageRating = avgRating,
                 ReviewCount = reviewCount,
-                ExternalReviewApiProductId = product.ExternalReviewApiProductId
+                ExternalReviewApiProductId = product.ExternalReviewApiProductId ?? string.Empty
             };
 
             return View("Details", model);
