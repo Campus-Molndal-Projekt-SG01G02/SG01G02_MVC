@@ -34,7 +34,11 @@ public class ReviewApiClient : IReviewApiClient
 
     public async Task<IEnumerable<ReviewDto>> GetReviewsAsync(int productId)
     {
-        var requestUrl = $"{_baseUrl.TrimEnd('/')}/api/products/{productId}/reviews?code={_apiKey}";
+        string endpointPath = _baseUrl.Contains("agreeablewater")
+            ? $"api/product/review/{productId}?code={_apiKey}"   // External API
+            : $"products/{productId}/reviews?code={_apiKey}";     // Mock API
+
+        var requestUrl = $"{_baseUrl.TrimEnd('/')}/{endpointPath}";
         _logger.LogInformation("Fetching reviews for product {ProductId} from {Url}", productId, requestUrl);
 
         try
