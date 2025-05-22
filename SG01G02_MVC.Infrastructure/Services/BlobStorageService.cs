@@ -18,9 +18,8 @@ namespace SG01G02_MVC.Infrastructure.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _containerName = configuration["BlobStorageSettings:ContainerName"] ?? "product-images";
 
-            // Get connection string from configuration
             var connectionString = configuration["BlobStorageSettings:ConnectionString"] ??
-                                 configuration["BlobConnectionString"];
+                                configuration["BlobConnectionString"];
 
             if (string.IsNullOrEmpty(connectionString))
             {
@@ -31,16 +30,13 @@ namespace SG01G02_MVC.Infrastructure.Services
 
             try
             {
-                // Log connection attempt (masking sensitive info)
                 var connStrParts = connectionString.Split(';');
                 var safeConnStr = string.Join(";",
                     Array.FindAll(connStrParts, p => !p.StartsWith("AccountKey=", StringComparison.OrdinalIgnoreCase)));
                 _logger.LogInformation("Connecting to Blob Storage with: {SafeConnectionString}", safeConnStr);
 
-                // Initialize the blob service client
                 _blobServiceClient = new BlobServiceClient(connectionString);
 
-                // Ensure the container exists
                 EnsureContainerExistsAsync().GetAwaiter().GetResult();
                 _logger.LogInformation("Successfully connected to Blob Storage and verified container: {ContainerName}", _containerName);
             }

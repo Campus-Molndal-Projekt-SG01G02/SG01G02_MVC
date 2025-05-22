@@ -14,7 +14,7 @@
     else
     {
         <div class="card-img-top bg-frost text-center p-5 rounded-corners">
-            <span class="text-muted">No image available</span>
+            <span class="text-muted">Ingen bild tillgänglig</span>
         </div>
     }
 
@@ -23,7 +23,7 @@
     <div class="mb-2">
         @if (Model.ReviewCount > 0)
         {
-            <span title="@Model.AverageRating.ToString("0.0") out of 5">
+            <span title="@Model.AverageRating.ToString("0.0") av 5">
                 @for (int i = 1; i <= 5; i++)
                 {
                     if (i <= Math.Floor(Model.AverageRating))
@@ -39,43 +39,54 @@
                         <span class="text-secondary">&#9734;</span>
                     }
                 }
-                <span class="ms-1 text-muted">(@Model.ReviewCount review@(Model.ReviewCount > 1 ? "s" : ""))</span>
+                <span class="ms-1 text-muted">(@Model.ReviewCount recension@(Model.ReviewCount > 1 ? "er" : ""))</span>
             </span>
         }
         else
         {
-            <span class="text-frost">No reviews yet</span>
+            <span class="text-muted">Inga recensioner ännu</span>
         }
     </div>
+
+    <!-- Debug Info -->
+    @if (ViewBag.DebugMode == true)
+    {
+        <div class="alert alert-warning small">
+            <strong>🛠 Debug-info:</strong><br />
+            Intern produkt-ID: @Model.Id<br />
+            ExternalReviewApiProductId: @Model.ExternalReviewApiProductId
+        </div>
+    }
+
     <hr/>
 
     <dl class="row">
-        <dt class="col-sm-2">Description</dt>
+        <dt class="col-sm-2">Beskrivning</dt>
         <dd class="col-sm-10">@Model.Description</dd>
 
-        <dt class="col-sm-2">Price</dt>
+        <dt class="col-sm-2">Pris</dt>
         <dd class="col-sm-10">@($"{Model.Price:C}")</dd>
 
-        <dt class="col-sm-2">Stock Status</dt>
+        <dt class="col-sm-2">Lagerstatus</dt>
         <dd class="col-sm-10">
             @if (Model.StockQuantity > 0)
             {
-                <span class="text-success">In Stock</span>
+                <span class="text-success">I lager</span>
             }
             else
             {
-                <span class="text-danger">Out of Stock</span>
+                <span class="text-danger">Slut i lager</span>
             }
         </dd>
     </dl>
 
     <ul class="nav nav-tabs" id="productTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="desc-tab" data-bs-toggle="tab" data-bs-target="#desc" type="button" role="tab" aria-controls="desc" aria-selected="true">Description</button>
+            <button class="nav-link active" id="desc-tab" data-bs-toggle="tab" data-bs-target="#desc" type="button" role="tab" aria-controls="desc" aria-selected="true">Beskrivning</button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab" aria-controls="reviews" aria-selected="false">
-                Reviews (@Model.ReviewCount)
+                Recensioner (@Model.ReviewCount)
             </button>
         </li>
     </ul>
@@ -84,10 +95,10 @@
             <p>@Model.Description</p>
         </div>
         <div class="tab-pane fade p-3" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
-            <h4>Customer Reviews</h4>
+            <h4>Kundrecensioner</h4>
             @if (Model.ReviewCount == 0)
             {
-                <div class="alert alert-info">No reviews yet for this product.</div>
+                <div class="alert alert-info">Inga recensioner ännu för den här produkten.</div>
             }
             else
             {
@@ -99,7 +110,7 @@
                             <div class="card-body">
                                 <h5 class="card-title mt-4">@review.Content ?? ""</h5>
                                 <h6 class="card-subtitle mb-2 text-muted">
-                                    By @review.CustomerName ?? "Anonymous" on @review.CreatedAt.ToString("MMMM dd, yyyy")
+                                    @("Av " + (review.CustomerName ?? "Anonym") + " den " + review.CreatedAt.ToString("dd MMMM yyyy", System.Globalization.CultureInfo.GetCultureInfo("sv-SE")))
                                     <span class="ms-2">
                                         @for (int i = 1; i <= 5; i++)
                                         {
@@ -121,13 +132,13 @@
                 }
                 else
                 {
-                    <div>No reviews yet.</div>
+                    <div>Inga recensioner ännu.</div>
                 }
             }
 
             <div class="card mt-4">
                 <div class="card-header bg-light">
-                    <h5 class="mb-0">Write a Review</h5>
+                    <h5 class="mb-0">Skriv en recension</h5>
                 </div>
                 <div class="card-body">
                     @if (TempData["ReviewSuccess"] != null)
@@ -142,27 +153,27 @@
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="ProductId" value="@Model.Id" />
                         <div class="mb-3">
-                            <label for="CustomerName" class="form-label">Your Name</label>
+                            <label for="CustomerName" class="form-label">Ditt namn</label>
                             <input type="text" class="form-control" id="CustomerName" name="CustomerName" maxlength="50" required />
-                            <div class="invalid-feedback">Please enter your name.</div>
+                            <div class="invalid-feedback">Ange ditt namn.</div>
                         </div>
                         <div class="mb-3">
-                            <label for="Rating" class="form-label">Rating</label>
+                            <label for="Rating" class="form-label">Betyg</label>
                             <select class="form-select" id="Rating" name="Rating" required>
-                                <option value="">Select Rating</option>
+                                <option value="">Välj betyg</option>
                                 @for (int i = 1; i <= 5; i++)
                                 {
                                     <option value="@i">@i</option>
                                 }
                             </select>
-                            <div class="invalid-feedback">Please select a rating.</div>
+                            <div class="invalid-feedback">Välj ett betyg.</div>
                         </div>
                         <div class="mb-3">
-                            <label for="Content" class="form-label">Review</label>
+                            <label for="Content" class="form-label">Recension</label>
                             <textarea class="form-control" id="Content" name="Content" rows="3" maxlength="1000" required></textarea>
-                            <div class="invalid-feedback">Please enter your review.</div>
+                            <div class="invalid-feedback">Skriv din recension.</div>
                         </div>
-                        <button type="submit" class="btn btn-primary" id="submitReview">Submit Review</button>
+                        <button type="submit" class="btn btn-primary" id="submitReview">Skicka recension</button>
                     </form>
 
                     <script>
@@ -179,6 +190,6 @@
         </div>
     </div>
     <a asp-controller="Catalogue" asp-action="Index" class="btn btn-secondary">
-        Back to Catalogue
+        Tillbaka till katalogen
     </a>
 </div>

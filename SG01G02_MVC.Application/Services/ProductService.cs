@@ -1,6 +1,7 @@
 using SG01G02_MVC.Application.DTOs;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace SG01G02_MVC.Application.Services
 {
@@ -8,6 +9,7 @@ namespace SG01G02_MVC.Application.Services
     {
         private readonly IProductRepository _repository;
         private readonly IReviewApiClient _reviewApiClient;
+        private readonly ILogger<ProductService> _logger;
 
         public ProductService(IProductRepository repository, IReviewApiClient reviewApiClient)
         {
@@ -32,15 +34,24 @@ namespace SG01G02_MVC.Application.Services
             var product = MapToEntity(dto);
             await _repository.CreateProductAsync(product);
 
-            var externalId = await _reviewApiClient.RegisterProductAsync(dto);
-            if (externalId.HasValue)
+            try
             {
-                await _repository.UpdateExternalReviewApiProductIdAsync(product.Id, externalId.Value);
+                var externalId = await _reviewApiClient.RegisterProductAsync(dto);
+                if (externalId.HasValue)
+                {
+                    await _repository.UpdateExternalReviewApiProductIdAsync(product.Id, externalId.Value);
+                    _logger.LogInformation("✅ Synced product {LocalId} to external review API with ID {ExternalId}", product.Id, externalId.Value);
+                }
+                else
+                {
+                    await _repository.UpdateExternalReviewApiProductIdAsync(product.Id, 31337);
+                    _logger.LogWarning("⚠️ Could not register product {LocalId} to review API. Set fallback external ID: 31337", product.Id);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // Set dummy value if registration fails
                 await _repository.UpdateExternalReviewApiProductIdAsync(product.Id, 31337);
+                _logger.LogError(ex, "❌ Exception while registering product {LocalId} to review API. Set fallback external ID: 31337", product.Id);
             }
         }
 

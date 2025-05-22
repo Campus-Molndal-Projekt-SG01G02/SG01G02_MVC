@@ -39,6 +39,8 @@ SG01G02_MVC/
 │   └── SG01G02_MVC.Domain.csproj
 │
 ├── SG01G02_MVC.Infrastructure/
+│   ├── Configuration/
+│   │   └── ConfigurationLoader.cs                  - TODO:  
 │   ├── Data/
 │   │   └── AppDbContext.cs                         - Entity Framework Core context
 │   ├── External/
@@ -52,7 +54,8 @@ SG01G02_MVC/
 │   │   └── UserRepository.cs                       - User data access implementation
 │   ├── Services/
 │   │   ├── BlobStorageService.cs                   - Azure Blob Storage integration
-│   │   └── DatabaseHealthCheck.cs                  - Database connectivity monitoring
+│   │   ├── DatabaseHealthCheck.cs                  - Database connectivity monitoring
+│   │   └── InMemoryBlobStorageService.cs           - TODO:  
 │   └── SG01G02_MVC.Infrastructure.csproj
 │
 ├── SG01G02_MVC.Tests/
@@ -215,6 +218,8 @@ The application uses PostgreSQL in production environments, with a fallback to S
 - Connection strings are injected by CI/CD pipeline
 - Database access is restricted to the application's network
 - Regular security audits and updates are performed
+
+This project supports appsettings.{Environment}.Local.json for local overrides. It's loaded via ConfigurationLoader in the Infrastructure layer. This file is ignored by Git for safe local secrets.
 
 ---
 
