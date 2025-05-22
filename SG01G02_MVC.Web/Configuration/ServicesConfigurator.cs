@@ -67,34 +67,74 @@ public class ServicesConfigurator
 
     private void RegisterHttpClients(WebApplicationBuilder builder)
     {
-        // Register external API client
-        builder.Services.AddHttpClient("ExternalReviewApi", client =>
-        {
-            client.BaseAddress = new Uri(builder.Configuration["ReviewApiURL"]!);
-            client.DefaultRequestHeaders.Add("x-api-key", builder.Configuration["ReviewApiKey"]!);
-        });
+        var config = builder.Configuration;
+        var services = builder.Services;
+        var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 
-        // Register mock API client
-        builder.Services.AddHttpClient("MockReviewApi", client =>
-        {
-            client.BaseAddress = new Uri(builder.Configuration["MockReviewApiURL"]!);
-            client.DefaultRequestHeaders.Add("x-api-key", builder.Configuration["MockReviewApiKey"]!);
-        });
+        // --- External API client registration ---
+        var reviewApiUrl = config["ReviewApiURL"];
+        var reviewApiKey = config["ReviewApiKey"];
 
-        // Register DualReviewApiClient (wrapper)
-        builder.Services.AddScoped<IReviewApiClient>(sp =>
+        if (!string.IsNullOrWhiteSpace(reviewApiUrl))
+        {
+            services.AddHttpClient("ExternalReviewApi", client =>
+            {
+                client.BaseAddress = new Uri(reviewApiUrl);
+                if (!string.IsNullOrWhiteSpace(reviewApiKey))
+                    client.DefaultRequestHeaders.Add("x-api-key", reviewApiKey);
+            });
+        }
+
+        // --- Mock API client registration ---
+        var mockApiUrl = config["MockReviewApiURL"];
+        var mockApiKey = config["MockReviewApiKey"];
+
+        if (!string.IsNullOrWhiteSpace(mockApiUrl))
+        {
+            services.AddHttpClient("MockReviewApi", client =>
+            {
+                client.BaseAddress = new Uri(mockApiUrl);
+                if (!string.IsNullOrWhiteSpace(mockApiKey))
+                    client.DefaultRequestHeaders.Add("x-api-key", mockApiKey);
+            });
+        }
+
+        // --- Register DualReviewApiClient ---
+        services.AddScoped<IReviewApiClient>(sp =>
         {
             var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
-            var config = sp.GetRequiredService<IConfiguration>();
             var logger = sp.GetRequiredService<ILogger<DualReviewApiClient>>();
-
             var externalLogger = sp.GetRequiredService<ILogger<ReviewApiClient>>();
             var mockLogger = sp.GetRequiredService<ILogger<MockReviewApiClient>>();
 
-            var external = new ReviewApiClient(httpFactory.CreateClient("ExternalReviewApi"), config, externalLogger);
-            var fallback = new MockReviewApiClient(httpFactory.CreateClient("MockReviewApi"), config, mockLogger);
+            var config = sp.GetRequiredService<IConfiguration>();
 
-            return new DualReviewApiClient(external, fallback, logger);
+            IReviewApiClient? externalClient = null;
+            IReviewApiClient? fallbackClient = null;
+
+            if (!string.IsNullOrWhiteSpace(reviewApiUrl))
+            {
+                externalClient = new ReviewApiClient(httpFactory.CreateClient("ExternalReviewApi"), config, externalLogger);
+            }
+
+            if (!string.IsNullOrWhiteSpace(mockApiUrl))
+            {
+                fallbackClient = new MockReviewApiClient(httpFactory.CreateClient("MockReviewApi"), config, mockLogger);
+            }
+
+            if (externalClient != null && fallbackClient != null)
+            {
+                return new DualReviewApiClient(externalClient, fallbackClient, logger);
+            }
+            else if (fallbackClient != null)
+            {
+                logger.LogWarning("External API not configured. Using MockReviewApiClient only.");
+                return fallbackClient;
+            }
+            else
+            {
+                throw new InvalidOperationException("No valid API configuration found for reviews.");
+            }
         });
     }
 

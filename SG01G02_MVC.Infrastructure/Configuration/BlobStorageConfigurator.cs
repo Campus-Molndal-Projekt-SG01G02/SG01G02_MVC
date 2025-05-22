@@ -9,16 +9,26 @@ public class BlobStorageConfigurator
 {
     public void Configure(WebApplicationBuilder builder)
     {
-        LogCurrentConfiguration(builder);
+        var config = builder.Configuration;
 
-        var blobConnectionString = GetBlobConnectionString(builder);
-        blobConnectionString = ProcessConnectionString(blobConnectionString, builder);
+        var connectionString = config["BlobStorageSettings:ConnectionString"] ?? config["BlobConnectionString"];
+        var isEmulated = connectionString == "InMemoryEmulation=true";
 
-        SetDefaultContainerName(builder);
+        if (isEmulated || string.IsNullOrWhiteSpace(connectionString))
+        {
+            Console.WriteLine("💡 Using InMemoryBlobStorageService");
+            builder.Services.AddSingleton<IBlobStorageService, InMemoryBlobStorageService>();
+        }
+        else
+        {
+            Console.WriteLine("✅ Using real BlobStorageService");
+            builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
+        }
 
-        LogFinalConfiguration(builder, blobConnectionString);
-
-        builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
+        if (string.IsNullOrEmpty(config["BlobStorageSettings:ContainerName"]))
+        {
+            builder.Configuration["BlobStorageSettings:ContainerName"] = "product-images";
+        }
     }
 
     private void LogCurrentConfiguration(WebApplicationBuilder builder)

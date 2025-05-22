@@ -5,6 +5,9 @@ using SG01G02_MVC.Web.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Load the application configuration
+ConfigurationLoader.LoadAppConfiguration(builder);
+
 // Set the default culture for the application
 var cultureInfo = new System.Globalization.CultureInfo("sv-SE");
 System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;

@@ -82,3 +82,9 @@ docker-compose.override.yml
 
 .DS_Store
 Thumbs.db
+
+############################
+# Local
+############################
+
+appsettings.Development.local.json
