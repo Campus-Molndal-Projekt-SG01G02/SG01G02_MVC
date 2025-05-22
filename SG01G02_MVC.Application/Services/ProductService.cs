@@ -69,10 +69,10 @@ namespace SG01G02_MVC.Application.Services
         public async Task<int> PatchMissingExternalReviewApiIdsAsync(int dummyValue = 31337)
         {
             var products = await _repository.GetAllProductsAsync();
-            var toUpdate = products.Where(p => string.IsNullOrEmpty(p.ExternalReviewApiProductId)).ToList();
+            var toUpdate = products.Where(p => !p.ExternalReviewApiProductId.HasValue).ToList();
             foreach (var product in toUpdate)
             {
-                product.ExternalReviewApiProductId = dummyValue.ToString();
+                product.ExternalReviewApiProductId = dummyValue;
                 await _repository.UpdateProductAsync(product);
             }
             return toUpdate.Count;
@@ -91,7 +91,7 @@ namespace SG01G02_MVC.Application.Services
                 StockQuantity = product.StockQuantity,
                 ImageUrl = product.ImageUrl,
                 ImageName = product.ImageName,
-                ExternalReviewApiProductId = product.ExternalReviewApiProductId ?? string.Empty
+                ExternalReviewApiProductId = product.ExternalReviewApiProductId
             };
         }
 
@@ -106,7 +106,7 @@ namespace SG01G02_MVC.Application.Services
                 StockQuantity = dto.StockQuantity,
                 ImageUrl = dto.ImageUrl ?? string.Empty,
                 ImageName = dto.ImageName ?? string.Empty,
-                ExternalReviewApiProductId = dto.ExternalReviewApiProductId ?? string.Empty
+                ExternalReviewApiProductId = dto.ExternalReviewApiProductId
             };
         }
     }

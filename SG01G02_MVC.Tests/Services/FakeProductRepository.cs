@@ -54,7 +54,7 @@ namespace SG01G02_MVC.Tests.Services
             var product = _products.FirstOrDefault(p => p.Id == productId);
             if (product != null)
             {
-                product.ExternalReviewApiProductId = externalId.ToString();
+                product.ExternalReviewApiProductId = externalId;
             }
             return Task.CompletedTask;
         }

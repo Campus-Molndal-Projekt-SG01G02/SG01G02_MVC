@@ -130,7 +130,7 @@ namespace SG01G02_MVC.Web.Controllers
                 ImageUrl = !string.IsNullOrEmpty(product.ImageName)
                     ? _blobStorageService.GetBlobUrl(product.ImageName)
                     : product.ImageUrl,
-                ExternalReviewApiProductId = product.ExternalReviewApiProductId ?? string.Empty
+                ExternalReviewApiProductId = product.ExternalReviewApiProductId?.ToString()
             };
 
             return View(model);
@@ -208,7 +208,7 @@ namespace SG01G02_MVC.Web.Controllers
                 StockQuantity = model.StockQuantity,
                 ImageUrl = model.ImageUrl,
                 ImageName = model.ImageName,
-                ExternalReviewApiProductId = model.ExternalReviewApiProductId ?? string.Empty
+                ExternalReviewApiProductId = int.TryParse(model.ExternalReviewApiProductId, out int id) ? id : null
             };
 
             await _productService.UpdateProductAsync(productDto);
@@ -233,7 +233,7 @@ namespace SG01G02_MVC.Web.Controllers
                 ImageUrl = !string.IsNullOrEmpty(product.ImageName)
                     ? _blobStorageService.GetBlobUrl(product.ImageName)
                     : product.ImageUrl,
-                ExternalReviewApiProductId = product.ExternalReviewApiProductId ?? string.Empty
+                ExternalReviewApiProductId = product.ExternalReviewApiProductId?.ToString()
             };
 
             return View(model);

@@ -150,8 +150,18 @@ public class ReviewApiClient : IReviewApiClient
             }
 
             using var doc = JsonDocument.Parse(content);
+            // Dynamically handle both string and integer IDs
             if (doc.RootElement.TryGetProperty("productId", out var idProp))
-                return idProp.GetInt32();
+            {
+                string? idString = idProp.ValueKind switch
+                {
+                    JsonValueKind.String => idProp.GetString(),
+                    JsonValueKind.Number => idProp.GetRawText(),
+                    _ => null
+                };
+
+                return ReviewApiIdConverter.Parse(idString, _logger);
+            }
 
             _logger.LogWarning("No productId returned in response: {Content}", content);
             return null;

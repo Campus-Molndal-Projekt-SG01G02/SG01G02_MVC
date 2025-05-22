@@ -29,9 +29,9 @@ namespace SG01G02_MVC.Application.Services
 
         public async Task<int?> EnsureExternalReviewProductIdAsync(Product product)
         {
-            if (!string.IsNullOrEmpty(product.ExternalReviewApiProductId))
+            if (product.ExternalReviewApiProductId.HasValue)
             {
-                return int.Parse(product.ExternalReviewApiProductId);
+                return product.ExternalReviewApiProductId.Value;
             }
 
             _logger.LogInformation("Registering product {ProductId} with external review API", product.Id);
@@ -50,7 +50,7 @@ namespace SG01G02_MVC.Application.Services
             var externalId = await _reviewApiClient.RegisterProductAsync(dto);
             if (externalId.HasValue)
             {
-                product.ExternalReviewApiProductId = externalId.Value.ToString();
+                product.ExternalReviewApiProductId = externalId.Value;
                 await _productRepository.UpdateProductAsync(product);
                 _logger.LogInformation("Product {ProductId} successfully registered. External ID = {ExternalId}", product.Id, externalId.Value);
             }
