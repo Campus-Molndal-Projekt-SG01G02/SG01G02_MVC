@@ -75,8 +75,8 @@ public class ReviewApiClient : IReviewApiClient
         try
         {
             string endpointPath = _baseUrl.Contains("agreeablewater")
-                ? $"api/product/review/{productId}?code={_apiKey}"
-                : $"products/{productId}/reviews?code={_apiKey}";
+                ? $"api/product/{review.ProductId}/review?code={_apiKey}"
+                : $"products/{review.ProductId}/review?code={_apiKey}";
 
             var postReviewUrl = $"{_baseUrl.TrimEnd('/')}/{endpointPath}";
             _logger.LogInformation("Submitting review to URL: {Url}", postReviewUrl);
