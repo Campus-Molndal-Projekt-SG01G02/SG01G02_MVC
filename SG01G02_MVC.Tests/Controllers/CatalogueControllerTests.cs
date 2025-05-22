@@ -23,7 +23,7 @@ namespace SG01G02_MVC.Tests.Controllers
                     new SG01G02_MVC.Application.DTOs.ProductDto { Id = 1, Name = "Test Product", Price = 10 }
                 });
 
-            mockReviewService.Setup(s => s.GetReviewsForProduct(It.IsAny<string>()))
+            mockReviewService.Setup(s => s.GetReviewsForProduct(It.IsAny<int>()))
                 .ReturnsAsync(new List<SG01G02_MVC.Application.DTOs.ReviewDto>());
 
             var controller = new CatalogueController(
@@ -53,7 +53,7 @@ namespace SG01G02_MVC.Tests.Controllers
             mockProductService.Setup(s => s.GetProductByIdAsync(1))
                 .ReturnsAsync(new SG01G02_MVC.Application.DTOs.ProductDto { Id = 1, Name = "Test Product", Price = 10 });
 
-            mockReviewService.Setup(s => s.GetReviewsForProduct(It.IsAny<string>()))
+            mockReviewService.Setup(s => s.GetReviewsForProduct(It.IsAny<int>()))
                 .ReturnsAsync(new List<SG01G02_MVC.Application.DTOs.ReviewDto>());
 
             var controller = new CatalogueController(

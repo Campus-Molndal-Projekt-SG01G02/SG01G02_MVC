@@ -11,17 +11,20 @@ public class MockReviewApiClient : IReviewApiClient
     private readonly HttpClient _httpClient;
     private readonly ILogger<MockReviewApiClient> _logger;
     private readonly string _baseUrl;
+    private readonly string _apiKey;
 
     public MockReviewApiClient(HttpClient httpClient, IConfiguration configuration, ILogger<MockReviewApiClient> logger)
     {
         _httpClient = httpClient;
         _logger = logger;
         _baseUrl = configuration["MockReviewApiURL"] ?? throw new ArgumentNullException("MockReviewApiURL");
+        _apiKey = configuration["MockReviewApiKey"] ?? throw new ArgumentNullException("MockReviewApiKey"); // ✅ NEW LINE
     }
 
-    public async Task<IEnumerable<ReviewDto>> GetReviewsAsync(string productId)
+    public async Task<IEnumerable<ReviewDto>> GetReviewsAsync(int productId)
     {
-        var url = $"{_baseUrl}/api/products/{productId}/reviews";
+        var url = $"{_baseUrl}/api/products/{productId}/reviews?code={_apiKey}";
+        Console.WriteLine($"[MOCK] GET {url}");
         _logger.LogInformation("Fetching mock reviews from: {Url}", url);
 
         var response = await _httpClient.GetAsync(url);
