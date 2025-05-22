@@ -2,11 +2,12 @@
 using Azure.Security.KeyVault.Secrets;
 using SG01G02_MVC.Application.Interfaces;
 
-namespace SG01G02_MVC.Web.Services;
+namespace SG01G02_MVC.Infrastructure.Services;
 
 public class KeyVaultService : IKeyVaultService
 {
-    private readonly SecretClient _secretClient;
+    
+    private readonly SecretClient _secretClient = null!;
     private bool _isAvailable;
 
     public bool IsAvailable => _isAvailable;

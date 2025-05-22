@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-
 namespace SG01G02_MVC.Web.Middleware;
 
 public class SessionTrackingMiddleware
@@ -19,14 +16,15 @@ public class SessionTrackingMiddleware
         // Define sessionId once and reuse it
         string sessionId;
 
-        if (string.IsNullOrEmpty(context.Session.GetString("SessionId")))
+        var existingSessionId = context.Session.GetString("SessionId");
+        if (string.IsNullOrEmpty(existingSessionId))
         {
             sessionId = Guid.NewGuid().ToString();
             context.Session.SetString("SessionId", sessionId);
         }
         else
         {
-            sessionId = context.Session.GetString("SessionId");
+            sessionId = existingSessionId;
         }
 
         using (_logger.BeginScope(new Dictionary<string, object>
@@ -49,7 +47,7 @@ public class SessionTrackingMiddleware
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Request failed");
-                throw; // Rethrow exception to let global error handling take care of it
+                throw;
             }
         }
     }
