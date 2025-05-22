@@ -7,7 +7,7 @@ on:
     #   - '.github/workflows/**'
 
   pull_request:
-     branches: [ main ]
+    branches: [ main ]
 
   #   paths-ignore:
   #     - '.github/workflows/**'
@@ -25,17 +25,23 @@ on:
 jobs:
   build_and_test:
     name: Build and Test
-#    runs-on: ubuntu-latest
-    runs-on: self-hosted
+    runs-on: ubuntu-latest  # Can easily switch between ubuntu-latest and self-hosted
+    #runs-on: self-hosted
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
 
-      # Setup .NET
+      # Setup .NET with custom installation path to avoid permission issues
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
+        env:
+          DOTNET_INSTALL_DIR: ${{ github.workspace }}/.dotnet
+
+      # Add .NET to PATH
+      - name: Add .NET to PATH
+        run: echo "${{ github.workspace }}/.dotnet" >> $GITHUB_PATH
 
       - name: Restore dependencies
         run: dotnet restore SG01G02_MVC.sln
@@ -75,11 +81,11 @@ jobs:
           echo "All tests passed successfully!" >> $GITHUB_STEP_SUMMARY
 
   deploy:
-#    needs: build_and_test
+    # needs: build_and_test
     name: Deploy to Production
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' # Only run on push to main
-    # runs-on: ubuntu-latest
-    runs-on: self-hosted
+    runs-on: ubuntu-latest  # Can easily switch between ubuntu-latest and self-hosted
+    #runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
 
@@ -89,14 +95,14 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Verifiera Azure-autentisering
+      # Verify Azure authentication
       - name: Verify Azure Authentication
         run: |
           echo "Checking Azure authentication status..."
           az account show --query "name" -o tsv
 
           echo "Testing Key Vault access..."
-          # Använd Key Vault-namnet från GitHub Secrets
+          # Use Key Vault name from GitHub Secrets
           az keyvault show --name ${{ secrets.AZURE_KEY_VAULT_NAME }} --query "name" -o tsv || \
             (echo "Error: Could not access Key Vault" && exit 1)
 
@@ -173,7 +179,7 @@ jobs:
             exit 1
           fi
 
-          # Maskera hemligheterna i loggen men visa att de existerar
+          # Mask secrets in logs but show they exist
           echo "- DOCKERHUB_USERNAME exists"
           echo "- DOCKERHUB_TOKEN exists"
           echo "- WATCHTOWER_TOKEN exists"
@@ -195,7 +201,7 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
 
-      # Tagging and pushing Docker image if smoke test is successful
+      # Tag and push Docker image if smoke test is successful
       - name: Tag and push Docker image
         uses: docker/build-push-action@v4
         with:
@@ -259,5 +265,5 @@ jobs:
       - name: Watchtower Fallback Message
         if: steps.notify.outcome == 'failure'
         run: |
-          echo "::warning::Kunde inte notifiera Watchtower direkt, men applikationen kommer ändå att uppdateras inom 30 sekunder via automatisk polling."
-          echo "::notice::Docker-image har publicerats till DockerHub: ${{ env.DOCKERHUB_USERNAME }}/sg01g02mvc:latest"
+          echo "::warning::Could not notify Watchtower directly, but the application will still be updated within 30 seconds via automatic polling."
+          echo "::notice::Docker image has been published to DockerHub: ${{ env.DOCKERHUB_USERNAME }}/sg01g02mvc:latest"
