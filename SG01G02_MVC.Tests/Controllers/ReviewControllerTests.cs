@@ -32,16 +32,17 @@ namespace SG01G02_MVC.Tests.Controllers
                 new ReviewDto { Id = "1", Content = "Great product!" },
                 new ReviewDto { Id = "2", Content = "Not bad." }
             };
-            _mockReviewService.Setup(service => service.GetReviewsForProduct(It.IsAny<string>()))
+            _mockReviewService.Setup(service => service.GetReviewsForProduct(It.IsAny<int>()))
                 .ReturnsAsync(expectedReviews);
 
             // Act
-            var result = await _controller.GetProductReviews("productId");
+            var result = await _controller.GetProductReviews(1);
 
             // Assert
             var jsonResult = Assert.IsType<JsonResult>(result);
             var json = JsonConvert.SerializeObject(jsonResult.Value);
             var dict = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+            Assert.NotNull(dict);
             Assert.True((bool)dict["success"]);
             Assert.NotNull(dict["reviews"]);
         }
@@ -50,17 +51,18 @@ namespace SG01G02_MVC.Tests.Controllers
         public async Task GetProductReviews_InvalidProductId_ReturnsBadRequest()
         {
             // Arrange
-            _mockReviewService.Setup(service => service.GetReviewsForProduct(It.IsAny<string>()))
+            _mockReviewService.Setup(service => service.GetReviewsForProduct(It.IsAny<int>()))
                 .ThrowsAsync(new ArgumentException("Invalid product ID"));
 
             // Act
-            var result = await _controller.GetProductReviews("invalid");
+            var result = await _controller.GetProductReviews(0);
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
             Assert.NotNull(badRequestResult.Value);
             var json = JsonConvert.SerializeObject(badRequestResult.Value);
             var dict = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+            Assert.NotNull(dict);
             Assert.False((bool)dict["success"]);
             Assert.Equal("Invalid product ID", dict["message"]);
         }
@@ -69,11 +71,11 @@ namespace SG01G02_MVC.Tests.Controllers
         public async Task GetProductReviews_ServiceThrowsException_ReturnsServerError()
         {
             // Arrange
-            _mockReviewService.Setup(service => service.GetReviewsForProduct(It.IsAny<string>()))
+            _mockReviewService.Setup(service => service.GetReviewsForProduct(It.IsAny<int>()))
                 .ThrowsAsync(new Exception("Unexpected error"));
 
             // Act
-            var result = await _controller.GetProductReviews("productId");
+            var result = await _controller.GetProductReviews(1);
 
             // Assert
             var statusCodeResult = Assert.IsType<ObjectResult>(result);
@@ -81,6 +83,7 @@ namespace SG01G02_MVC.Tests.Controllers
             Assert.NotNull(statusCodeResult.Value);
             var json = JsonConvert.SerializeObject(statusCodeResult.Value);
             var dict = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+            Assert.NotNull(dict);
             Assert.False((bool)dict["success"]);
             Assert.Equal("An error occurred while fetching reviews.", dict["message"]);
         }

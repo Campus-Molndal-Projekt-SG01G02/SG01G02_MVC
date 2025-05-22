@@ -17,8 +17,10 @@ public class DualReviewApiClient : IReviewApiClient
         _logger = logger;
     }
 
-    public async Task<IEnumerable<ReviewDto>> GetReviewsAsync(string productId)
+    public async Task<IEnumerable<ReviewDto>> GetReviewsAsync(int productId)
     {
+        Console.WriteLine("→ Trying external API...");
+
         try
         {
             _logger.LogInformation("Trying to fetch reviews from external API...");
