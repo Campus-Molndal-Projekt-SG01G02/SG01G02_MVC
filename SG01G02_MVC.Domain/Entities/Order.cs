@@ -1,7 +1,6 @@
-namespace SG01G02_MVC.Domain.Entities
+namespace SG01G02_MVC.Domain.Entities;
+
+public class Order
 {
-    public class Order
-    {
-        // TODO: Implement the Order entity
-    }
+    // TODO: Implement the Order entity
 }

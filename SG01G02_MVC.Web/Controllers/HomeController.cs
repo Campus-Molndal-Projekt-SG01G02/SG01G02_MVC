@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using SG01G02_MVC.Web.Models;
 using Microsoft.EntityFrameworkCore;
 using SG01G02_MVC.Infrastructure.Data;
-using System.Collections.Generic;
 
 namespace SG01G02_MVC.Web.Controllers;
 
@@ -19,7 +18,6 @@ public class HomeController : Controller
         _context = context;
     }
 
-    // TODO: We will protect this via [Authorize(Roles = "Admin")] in the future!
     [HttpGet("dbinfo")]
     public IActionResult DbInfo()
 {

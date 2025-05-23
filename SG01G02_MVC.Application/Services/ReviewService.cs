@@ -1,10 +1,6 @@
 using SG01G02_MVC.Application.DTOs;
 using SG01G02_MVC.Application.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using System.Linq;
 
 namespace SG01G02_MVC.Application.Services;
 

@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Http; // Lägg till denna import för IFormFile
 
 namespace SG01G02_MVC.Web.Models;
 public class ProductViewModel

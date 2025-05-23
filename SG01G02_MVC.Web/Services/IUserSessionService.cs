@@ -1,10 +1,8 @@
-namespace SG01G02_MVC.Web.Services
+namespace SG01G02_MVC.Web.Services;
+
+public interface IUserSessionService
 {
-    // This is a mock interface for testing purposes.
-    public interface IUserSessionService
-    {
-        string? Username { get; set; }
-        string? Role { get; set; }
-        void Clear();
-    }
+    string? Username { get; set; }
+    string? Role { get; set; }
+    void Clear();
 }

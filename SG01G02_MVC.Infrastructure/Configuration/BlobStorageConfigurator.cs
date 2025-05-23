@@ -16,12 +16,12 @@ public class BlobStorageConfigurator
 
         if (isEmulated || string.IsNullOrWhiteSpace(connectionString))
         {
-            Console.WriteLine("💡 Using InMemoryBlobStorageService");
+            Console.WriteLine("Using InMemoryBlobStorageService");
             builder.Services.AddSingleton<IBlobStorageService, InMemoryBlobStorageService>();
         }
         else
         {
-            Console.WriteLine("✅ Using real BlobStorageService");
+            Console.WriteLine("Using real BlobStorageService");
             builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
         }
 
@@ -30,69 +30,71 @@ public class BlobStorageConfigurator
             builder.Configuration["BlobStorageSettings:ContainerName"] = "product-images";
         }
     }
+    
+    // TODO: Remove the code below if it is not needed
 
-    private void LogCurrentConfiguration(WebApplicationBuilder builder)
-    {
-        Console.WriteLine("=== Blob Storage Configuration ===");
-        Console.WriteLine($"BlobStorageSettings:ConnectionString: {
-            (string.IsNullOrEmpty(builder.Configuration["BlobStorageSettings:ConnectionString"]) ? "missing" : "exists")
-        }");
-        Console.WriteLine($"BlobConnectionString: {
-            (string.IsNullOrEmpty(builder.Configuration["BlobConnectionString"]) ? "missing" : "exists")}");
-    }
+    // private void UpdateBlobConnectionStringConfiguration(WebApplicationBuilder builder, string blobConnectionString)
+    // {
+    //     builder.Configuration["BlobStorageSettings:ConnectionString"] = blobConnectionString;
+    //     builder.Configuration["BlobConnectionString"] = blobConnectionString;
+    // }
 
-    private string? GetBlobConnectionString(WebApplicationBuilder builder)
-    {
-        return builder.Configuration["BlobStorageSettings:ConnectionString"] ??
-               builder.Configuration["BlobConnectionString"];
-    }
+    // private void LogCurrentConfiguration(WebApplicationBuilder builder)
+    // {
+    //     Console.WriteLine("=== Blob Storage Configuration ===");
+    //     Console.WriteLine($"BlobStorageSettings:ConnectionString: {
+    //         (string.IsNullOrEmpty(builder.Configuration["BlobStorageSettings:ConnectionString"]) ? "missing" : "exists")
+    //     }");
+    //     Console.WriteLine($"BlobConnectionString: {
+    //         (string.IsNullOrEmpty(builder.Configuration["BlobConnectionString"]) ? "missing" : "exists")}");
+    // }
 
-    private string ProcessConnectionString(string? blobConnectionString, WebApplicationBuilder builder)
-    {
-        if (blobConnectionString == "UseDevelopmentStorage=true")
-        {
-            Console.WriteLine(
-                "WARNING: Connection string is set to UseDevelopmentStorage=true but Azure Storage Emulator is not available");
-            Console.WriteLine("Using in-memory fallback for blob storage instead");
+    // private string? GetBlobConnectionString(WebApplicationBuilder builder)
+    // {
+    //     return builder.Configuration["BlobStorageSettings:ConnectionString"] ??
+    //            builder.Configuration["BlobConnectionString"];
+    // }
 
-            blobConnectionString = "InMemoryEmulation=true";
-            UpdateBlobConnectionStringConfiguration(builder, blobConnectionString);
-        }
-        else if (string.IsNullOrEmpty(blobConnectionString))
-        {
-            Console.WriteLine("WARNING: No Blob connection string found in configuration from Key Vault");
-            Console.WriteLine(
-                "Using fallback test mode for blob storage (no actual blob operations will be performed)");
+    // private string ProcessConnectionString(string? blobConnectionString, WebApplicationBuilder builder)
+    // {
+    //     if (blobConnectionString == "UseDevelopmentStorage=true")
+    //     {
+    //         Console.WriteLine(
+    //             "WARNING: Connection string is set to UseDevelopmentStorage=true but Azure Storage Emulator is not available");
+    //         Console.WriteLine("Using in-memory fallback for blob storage instead");
 
-            blobConnectionString = "InMemoryEmulation=true";
-            UpdateBlobConnectionStringConfiguration(builder, blobConnectionString);
-        }
-        else
-        {
-            Console.WriteLine("Found Blob connection string in configuration from Key Vault");
-        }
+    //         blobConnectionString = "InMemoryEmulation=true";
+    //         UpdateBlobConnectionStringConfiguration(builder, blobConnectionString);
+    //     }
+    //     else if (string.IsNullOrEmpty(blobConnectionString))
+    //     {
+    //         Console.WriteLine("WARNING: No Blob connection string found in configuration from Key Vault");
+    //         Console.WriteLine(
+    //             "Using fallback test mode for blob storage (no actual blob operations will be performed)");
 
-        return blobConnectionString;
-    }
+    //         blobConnectionString = "InMemoryEmulation=true";
+    //         UpdateBlobConnectionStringConfiguration(builder, blobConnectionString);
+    //     }
+    //     else
+    //     {
+    //         Console.WriteLine("Found Blob connection string in configuration from Key Vault");
+    //     }
 
-    private void UpdateBlobConnectionStringConfiguration(WebApplicationBuilder builder, string blobConnectionString)
-    {
-        builder.Configuration["BlobStorageSettings:ConnectionString"] = blobConnectionString;
-        builder.Configuration["BlobConnectionString"] = blobConnectionString;
-    }
+    //     return blobConnectionString;
+    // }
 
-    private void SetDefaultContainerName(WebApplicationBuilder builder)
-    {
-        if (string.IsNullOrEmpty(builder.Configuration["BlobStorageSettings:ContainerName"]))
-        {
-            builder.Configuration["BlobStorageSettings:ContainerName"] = "product-images";
-        }
-    }
+    // private void SetDefaultContainerName(WebApplicationBuilder builder)
+    // {
+    //     if (string.IsNullOrEmpty(builder.Configuration["BlobStorageSettings:ContainerName"]))
+    //     {
+    //         builder.Configuration["BlobStorageSettings:ContainerName"] = "product-images";
+    //     }
+    // }
 
-    private void LogFinalConfiguration(WebApplicationBuilder builder, string blobConnectionString)
-    {
-        Console.WriteLine($"Using Blob connection string: {
-            (blobConnectionString.Contains("AccountKey") ? "Real Azure Blob" : blobConnectionString)}");
-        Console.WriteLine($"Container name: {builder.Configuration["BlobStorageSettings:ContainerName"]}");
-    }
+    // private void LogFinalConfiguration(WebApplicationBuilder builder, string blobConnectionString)
+    // {
+    //     Console.WriteLine($"Using Blob connection string: {
+    //         (blobConnectionString.Contains("AccountKey") ? "Real Azure Blob" : blobConnectionString)}");
+    //     Console.WriteLine($"Container name: {builder.Configuration["BlobStorageSettings:ContainerName"]}");
+    // }
 }

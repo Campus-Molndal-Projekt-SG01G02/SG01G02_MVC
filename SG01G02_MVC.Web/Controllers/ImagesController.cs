@@ -1,41 +1,40 @@
 using Microsoft.AspNetCore.Mvc;
 using SG01G02_MVC.Application.Interfaces;
 
-namespace SG01G02_MVC.Web.Controllers
+namespace SG01G02_MVC.Web.Controllers;
+
+[Route("api/[controller]")]
+public class ImagesController : Controller
 {
-    [Route("api/[controller]")]
-    public class ImagesController : Controller
+    private readonly IBlobStorageService _blobService;
+
+    public ImagesController(IBlobStorageService blobService)
     {
-        private readonly IBlobStorageService _blobService;
+        _blobService = blobService;
+    }
 
-        public ImagesController(IBlobStorageService blobService)
+    [HttpPost("upload")]
+    public async Task<IActionResult> UploadImage(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
         {
-            _blobService = blobService;
+            return BadRequest("No file was uploaded");
         }
 
-        [HttpPost("upload")]
-        public async Task<IActionResult> UploadImage(IFormFile file)
+        // Check file type (only images)
+        if (!file.ContentType.StartsWith("image/"))
         {
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest("Ingen fil har skickats");
-            }
-
-            // Kontrollera filtyp (endast bilder)
-            if (!file.ContentType.StartsWith("image/"))
-            {
-                return BadRequest("Endast bildfiler tillåts");
-            }
-
-            var imageUrl = await _blobService.UploadImageAsync(file);
-            return Ok(new { url = imageUrl });
+            return BadRequest("Only image files are allowed");
         }
 
-        [HttpDelete("{blobName}")]
-        public async Task<IActionResult> DeleteImage(string blobName)
-        {
-            var result = await _blobService.DeleteImageAsync(blobName);
-            return result ? Ok() : NotFound();
-        }
+        var imageUrl = await _blobService.UploadImageAsync(file);
+        return Ok(new { url = imageUrl });
+    }
+
+    [HttpDelete("{blobName}")]
+    public async Task<IActionResult> DeleteImage(string blobName)
+    {
+        var result = await _blobService.DeleteImageAsync(blobName);
+        return result ? Ok() : NotFound();
     }
 }
