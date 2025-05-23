@@ -81,13 +81,13 @@ SG01G02_MVC/
 │   │   ├── HomeController.cs                       - Landing page and navigation
 │   │   ├── ImageController.cs                      - Image upload management
 │   │   ├── LoginController.cs                      - Authentication handling
-│   │   ├── ReviewController.cs                     - TODO:   
+│   │   ├── ReviewController.cs                     - TODO:  
 │   │   └── StaffController.cs                      - Order management
 │   ├── Models/
 │   │   ├── ErrorViewModel.cs                       - Error page data
 │   │   ├── LoginViewModel.cs                       - Login form data
 │   │   ├── ProductViewModel.cs                     - Product display data
-│   │   └── ReviewSubmissionViewModel.cs            - TODO:   
+│   │   └── ReviewSubmissionViewModel.cs            - TODO:  
 │   ├── Services/
 │   │   ├── IUserSessionService.cs                  - Session management contract
 │   │   ├── SeederHelper.cs                         - Initial data seeding
