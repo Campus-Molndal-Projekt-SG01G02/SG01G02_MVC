@@ -13,17 +13,20 @@ namespace SG01G02_MVC.Web.Controllers
         private readonly IUserSessionService _session;
         private readonly IBlobStorageService _blobStorageService;
         private readonly IReviewApiClient _reviewApiClient;
+        private readonly IFeatureToggleService _featureToggleService;
 
         public AdminController(
             IProductService productService,
             IUserSessionService session,
             IBlobStorageService blobStorageService,
-            IReviewApiClient reviewApiClient)
+            IReviewApiClient reviewApiClient,
+            IFeatureToggleService featureToggleService)
         {
             _productService = productService;
             _session = session;
             _blobStorageService = blobStorageService;
             _reviewApiClient = reviewApiClient;
+            _featureToggleService = featureToggleService;
         }
 
         private bool IsAdmin => _session?.Role == "Admin";
@@ -44,6 +47,10 @@ namespace SG01G02_MVC.Web.Controllers
                     ImageName = p.ImageName,
                     ImageUrl = p.HasImage ? _blobStorageService.GetBlobUrl(p.ImageName ?? string.Empty) : p.ImageUrl
                 }).ToList();
+                
+                // Check if the feature toggle is enabled
+                ViewBag.UseMockApi = _featureToggleService.UseMockReviewApi();
+                
                 return View(viewModels);
             }
             catch (Exception ex)
@@ -56,6 +63,10 @@ namespace SG01G02_MVC.Web.Controllers
         public IActionResult Create()
         {
             if (!IsAdmin) return RedirectToAction("Index", "Login");
+            
+            // Check if the feature toggle is enabled
+            ViewBag.UseMockApi = _featureToggleService.UseMockReviewApi();
+            
             return View(new ProductViewModel());
         }
 
@@ -65,38 +76,44 @@ namespace SG01G02_MVC.Web.Controllers
         {
             if (!IsAdmin) return RedirectToAction("Index", "Login");
 
-            // Validera modellen och filtyperna manuellt
+            // Validate model and file types manually
             if (model.ImageFile != null && model.ImageFile.Length > 0)
             {
-                // Kontrollera filtyp
+                // Check file type
                 var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
                 if (!allowedTypes.Contains(model.ImageFile.ContentType))
                 {
                     ModelState.AddModelError("ImageFile", "Only image files (JPEG, PNG, GIF, WebP) are allowed.");
                 }
 
-                // Kontrollera filstorlek (max 5MB)
+                // Check file size (max 5MB)
                 if (model.ImageFile.Length > 5 * 1024 * 1024)
                 {
                     ModelState.AddModelError("ImageFile", "Image size cannot exceed 5MB.");
                 }
             }
 
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid) 
+            {
+                // Re-add feature toggle information if validation fails
+                ViewBag.UseMockApi = _featureToggleService.UseMockReviewApi();
+                return View(model);
+            }
 
-            // Hantera bilduppladdning om en bild tillhandahålls
+            // Handle image upload if an image is provided
             if (model.ImageFile != null && model.ImageFile.Length > 0)
             {
                 try
                 {
-                    // Ladda upp bilden
+                    // Upload the image
                     model.ImageName = await _blobStorageService.UploadImageAsync(model.ImageFile);
-                    // Sätt ImageUrl till null så att vi använder blob URL istället
+                    // Set ImageUrl to null so we use blob URL instead
                     model.ImageUrl = null;
                 }
                 catch (Exception ex)
                 {
                     ModelState.AddModelError("", $"Error uploading image: {ex.Message}");
+                    ViewBag.UseMockApi = _featureToggleService.UseMockReviewApi();
                     return View(model);
                 }
             }
@@ -116,10 +133,21 @@ namespace SG01G02_MVC.Web.Controllers
                 // 1. Register product with external API
                 productDto.ExternalReviewApiProductId = await _reviewApiClient.RegisterProductAsync(productDto);
 
-                // Optional null check to inform the user
+                // Show different messages based on feature toggle
                 if (productDto.ExternalReviewApiProductId == null)
                 {
-                    TempData["ReviewError"] = "Extern produktregistrering misslyckades. Produkten sparades, men recensioner fungerar ej.";
+                    if (_featureToggleService.UseMockReviewApi())
+                    {
+                        TempData["ReviewInfo"] = "Product created with Mock API (development mode).";
+                    }
+                    else
+                    {
+                        TempData["ReviewError"] = "External product registration failed. Product saved, but reviews won't work.";
+                    }
+                }
+                else if (_featureToggleService.UseMockReviewApi())
+                {
+                    TempData["ReviewInfo"] = $"Product registered with Mock API (ID: {productDto.ExternalReviewApiProductId}).";
                 }
 
                 // 2. Save product to internal DB
@@ -129,7 +157,8 @@ namespace SG01G02_MVC.Web.Controllers
             catch (Exception ex)
             {
                 // 3. Surface the exception to the UI for now (instead of _logger)
-                ModelState.AddModelError("", $"Ett fel uppstod vid skapande av produkten: {ex.Message}");
+                ModelState.AddModelError("", $"An error occurred while creating the product: {ex.Message}");
+                ViewBag.UseMockApi = _featureToggleService.UseMockReviewApi();
                 return View(model);
             }
         }
@@ -155,6 +184,9 @@ namespace SG01G02_MVC.Web.Controllers
                 ExternalReviewApiProductId = product.ExternalReviewApiProductId?.ToString()
             };
 
+            // Add feature toggle information
+            ViewBag.UseMockApi = _featureToggleService.UseMockReviewApi();
+
             return View(model);
         }
 
@@ -164,57 +196,62 @@ namespace SG01G02_MVC.Web.Controllers
         {
             if (!IsAdmin) return RedirectToAction("Index", "Login");
 
-            // Validera modellen och filtyperna manuellt
+            // Validate model and file types manually
             if (model.ImageFile != null && model.ImageFile.Length > 0)
             {
-                // Kontrollera filtyp
+                // Check file type
                 var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
                 if (!allowedTypes.Contains(model.ImageFile.ContentType))
                 {
                     ModelState.AddModelError("ImageFile", "Only image files (JPEG, PNG, GIF, WebP) are allowed.");
                 }
 
-                // Kontrollera filstorlek (max 5MB)
+                // Check file size (max 5MB)
                 if (model.ImageFile.Length > 5 * 1024 * 1024)
                 {
                     ModelState.AddModelError("ImageFile", "Image size cannot exceed 5MB.");
                 }
             }
 
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid) 
+            {
+                ViewBag.UseMockApi = _featureToggleService.UseMockReviewApi();
+                return View(model);
+            }
 
-            // Hämta befintlig produkt för att kontrollera om vi behöver ta bort en gammal bild
+            // Get existing product to check if we need to delete an old image
             var existingProduct = await _productService.GetProductByIdAsync(model.Id);
 
-            // Hantera bilduppladdning om en ny bild tillhandahålls
+            // Handle image upload if a new image is provided
             if (model.ImageFile != null && model.ImageFile.Length > 0)
             {
                 try
                 {
-                    // Om produkten redan har en bild i Blob Storage, ta bort den gamla
+                    // If the product already has an image in Blob Storage, delete the old one
                     if (existingProduct != null && !string.IsNullOrEmpty(existingProduct.ImageName))
                     {
                         await _blobStorageService.DeleteImageAsync(existingProduct.ImageName);
                     }
 
-                    // Ladda upp ny bild
+                    // Upload new image
                     model.ImageName = await _blobStorageService.UploadImageAsync(model.ImageFile);
-                    // Sätt ImageUrl till null så att vi använder blob URL istället
+                    // Set ImageUrl to null so we use blob URL instead
                     model.ImageUrl = null;
                 }
                 catch (Exception ex)
                 {
                     ModelState.AddModelError("", $"Error uploading image: {ex.Message}");
+                    ViewBag.UseMockApi = _featureToggleService.UseMockReviewApi();
                     return View(model);
                 }
             }
             else if (existingProduct != null)
             {
-                // Behåll befintlig bild om ingen ny laddas upp
+                // Keep existing image if no new one is uploaded
                 model.ImageName = existingProduct.ImageName;
 
-                // Om det inte finns en ImageName (Blob Storage) men det finns en ImageUrl
-                // (från tidigare implementation), behåll ImageUrl
+                // If there's no ImageName (Blob Storage) but there's an ImageUrl
+                // (from previous implementation), keep ImageUrl
                 if (string.IsNullOrEmpty(model.ImageName) && !string.IsNullOrEmpty(existingProduct.ImageUrl))
                 {
                     model.ImageUrl = existingProduct.ImageUrl;
@@ -258,16 +295,19 @@ namespace SG01G02_MVC.Web.Controllers
                 ExternalReviewApiProductId = product.ExternalReviewApiProductId?.ToString()
             };
 
+            // Add feature toggle information
+            ViewBag.UseMockApi = _featureToggleService.UseMockReviewApi();
+
             return View(model);
         }
-
+        
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             if (!IsAdmin) return RedirectToAction("Index", "Login");
 
-            // Hämta produkten innan den tas bort så vi kan ta bort bilden
+            // Get the product before it's deleted so we can delete the image
             var product = await _productService.GetProductByIdAsync(id);
             if (product != null && !string.IsNullOrEmpty(product.ImageName))
             {
@@ -277,7 +317,7 @@ namespace SG01G02_MVC.Web.Controllers
                 }
                 catch (Exception ex)
                 {
-                    // Logga felet men fortsätt radera produkten
+                    // Log the error but continue deleting the product
                     Console.WriteLine($"Error deleting blob: {ex.Message}");
                 }
             }
@@ -333,6 +373,47 @@ namespace SG01G02_MVC.Web.Controllers
             if (!IsAdmin) return RedirectToAction("Index", "Login");
             int updated = await _productService.PatchMissingExternalReviewApiIdsAsync();
             return Content($"Updated {updated} products with dummy ExternalReviewApiProductId.");
+        }
+        
+        // Feature toggle action
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ToggleFeatureFlag(string featureName, string newValue)
+        {
+            if (!IsAdmin) return RedirectToAction("Index", "Login");
+
+            try
+            {
+                if (featureName == "UseMockApi")
+                {
+                    // Update configuration in memory
+                    var configuration = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+            
+                    // Note: This is a runtime change that affects the current session
+                    // For persistent changes, you'd need to update appsettings.json or use a database
+                    if (configuration is IConfigurationRoot configRoot)
+                    {
+                        configRoot["FeatureToggles:UseMockApi"] = newValue;
+                    }
+
+                    bool isEnabled = bool.Parse(newValue);
+                    string message = isEnabled 
+                        ? "Switched to Mock API mode (Development)" 
+                        : "Switched to Production API mode";
+                
+                    TempData["FeatureToggleMessage"] = message;
+                }
+                else
+                {
+                    TempData["FeatureToggleError"] = "Unknown feature toggle.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["FeatureToggleError"] = $"Error updating feature toggle: {ex.Message}";
+            }
+
+            return RedirectToAction("Index");
         }
     }
 }

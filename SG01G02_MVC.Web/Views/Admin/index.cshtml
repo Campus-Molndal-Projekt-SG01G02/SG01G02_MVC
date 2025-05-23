@@ -5,8 +5,89 @@
 }
 
 <div class="container mt-4">
+    
     <h2>@ViewData["Title"]</h2>
+    
+    @* Feature Toggle Control Panel *@
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">
+                <i class="fas fa-cog me-2"></i>Development Settings
+            </h5>
+            <div class="d-flex align-items-center">
+                @if (ViewBag.UseMockApi == true)
+                {
+                    <div class="me-3">
+                        <span class="badge bg-warning text-dark">
+                            <i class="fas fa-flask me-1"></i>Mock API Active
+                        </span>
+                    </div>
+                    <form asp-action="ToggleFeatureFlag" method="post" class="d-inline">
+                        <input type="hidden" name="featureName" value="UseMockApi" />
+                        <input type="hidden" name="newValue" value="false" />
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <i class="fas fa-toggle-off me-1"></i>Switch to Production API
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <div class="me-3">
+                        <span class="badge bg-success">
+                            <i class="fas fa-cloud me-1"></i>Production API Active
+                        </span>
+                    </div>
+                    <form asp-action="ToggleFeatureFlag" method="post" class="d-inline">
+                        <input type="hidden" name="featureName" value="UseMockApi" />
+                        <input type="hidden" name="newValue" value="true" />
+                        <button type="submit" class="btn btn-warning btn-sm">
+                            <i class="fas fa-toggle-on me-1"></i>Switch to Mock API
+                        </button>
+                    </form>
+                }
+                <small class="text-muted ms-3">
+                    Current mode affects how products are registered for reviews
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    @* Show development mode warning if using Mock API *@
+    @if (ViewBag.UseMockApi == true)
+    {
+        <div class="alert alert-warning" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Utvecklingsläge:</strong> Använder Mock API för recensioner
+        </div>
+    }
+    
+    @* Show any messages from TempData *@
+    @if (TempData["ReviewInfo"] != null)
+    {
+        <div class="alert alert-info" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            @TempData["ReviewInfo"]
+        </div>
+    }
+    
+    @if (TempData["ReviewError"] != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            @TempData["ReviewError"]
+        </div>
+    }
+    
+    @if (TempData["FeatureToggleMessage"] != null)
+    {
+        <div class="alert alert-success" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            @TempData["FeatureToggleMessage"]
+        </div>
+    }
+    
     <a asp-action="Create" class="btn btn-success mb-3">Add New Product</a>
+    
     @if (!Model.Any())
     {
         <div class="alert alert-info">No products found.</div>
@@ -15,46 +96,56 @@
     {
         <table class="table table-striped">
             <thead>
-                <tr>
-                    <th width="100">Image</th>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Price</th>
-                    <th>Stock</th>
-                    <th>Actions</th>
-                </tr>
+            <tr>
+                <th width="100">Image</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Price</th>
+                <th>Stock</th>
+                @if (ViewBag.UseMockApi == true)
+                {
+                    <th>API Mode</th>
+                }
+                <th>Actions</th>
+            </tr>
             </thead>
             <tbody>
-                @foreach (var product in Model)
-                {
-                    <tr>
-                        <td>
-                            @if (product.HasImage)
+            @foreach (var product in Model)
+            {
+                <tr>
+                    <td>
+                        @if (product.HasImage)
+                        {
+                            @if (!string.IsNullOrEmpty(product.ImageName))
                             {
-                                @if (!string.IsNullOrEmpty(product.ImageName))
-                                {
-                                    <img src="@BlobStorageService.GetBlobUrl(product.ImageName)" class="img-thumbnail" style="max-width: 80px; max-height: 80px;" alt="@product.Name" />
-                                }
-                                else if (!string.IsNullOrEmpty(product.ImageUrl))
-                                {
-                                    <img src="@product.ImageUrl" class="img-thumbnail" style="max-width: 80px; max-height: 80px;" alt="@product.Name" />
-                                }
+                                <img src="@BlobStorageService.GetBlobUrl(product.ImageName)" class="img-thumbnail" style="max-width: 80px; max-height: 80px;" alt="@product.Name"/>
                             }
-                            else
+                            else if (!string.IsNullOrEmpty(product.ImageUrl))
                             {
-                                <span class="text-muted">No image</span>
+                                <img src="@product.ImageUrl" class="img-thumbnail" style="max-width: 80px; max-height: 80px;" alt="@product.Name"/>
                             }
-                        </td>
-                        <td>@product.Name</td>
-                        <td>@(product.Description?.Length > 50 ? product.Description?.Substring(0, 50) + "..." : product.Description)</td>
-                        <td>@(product.Price.HasValue ? product.Price.Value.ToString("C") : "N/A")</td>
-                        <td>@product.StockQuantity</td>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No image</span>
+                        }
+                    </td>
+                    <td>@product.Name</td>
+                    <td>@(product.Description?.Length > 50 ? product.Description?.Substring(0, 50) + "..." : product.Description)</td>
+                    <td>@(product.Price.HasValue ? product.Price.Value.ToString("C") : "N/A")</td>
+                    <td>@product.StockQuantity</td>
+                    @if (ViewBag.UseMockApi == true)
+                    {
                         <td>
-                            <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-sm btn-warning me-2">Edit</a>
-                            <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-sm btn-danger">Delete</a>
+                            <span class="badge bg-warning text-dark">Mock</span>
                         </td>
-                    </tr>
-                }
+                    }
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-sm btn-warning me-2">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+            }
             </tbody>
         </table>
     }

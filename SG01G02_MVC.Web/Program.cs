@@ -1,4 +1,5 @@
 using SG01G02_MVC.Application.Interfaces;
+using SG01G02_MVC.Infrastructure;
 using SG01G02_MVC.Infrastructure.Services;
 using SG01G02_MVC.Infrastructure.Configuration;
 using SG01G02_MVC.Web.Configuration;
@@ -23,23 +24,8 @@ var appConfig = new AppConfigurator();
 // Configure using the objects
 keyVaultConfig.Configure(builder);
 
-// Register LoggingServiceFactory
-builder.Services.AddSingleton<ILoggingServiceFactory, LoggingServiceFactory>();
-
-// Setup logging using factory pattern and DI
-builder.Services.AddSingleton<ILoggingService>(sp =>
-{
-    var factory = sp.GetRequiredService<ILoggingServiceFactory>();
-    var keyVaultService = sp.GetService<IKeyVaultService>();
-    var configuration = sp.GetRequiredService<IConfiguration>();
-    
-    var loggingService = factory.Create(keyVaultService);
-    
-    // Configure the logging service
-    loggingService.ConfigureServices(builder.Services, configuration);
-    
-    return loggingService;
-});
+// Add Infrastructure services
+builder.Services.AddInfrastructure(builder.Configuration);
 
 // Configure database and blob storage services
 servicesConfig.Configure(builder, keyVaultConfig, databaseConfig, blobStorageConfig);
