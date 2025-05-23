@@ -110,7 +110,7 @@ public class ServicesConfigurator
             var config = sp.GetRequiredService<IConfiguration>();
 
             IReviewApiClient? externalClient = null;
-            IReviewApiClient? fallbackClient = null;
+            IReviewApiClient? mockClient = null;
 
             if (!string.IsNullOrWhiteSpace(reviewApiUrl))
             {
@@ -119,17 +119,20 @@ public class ServicesConfigurator
 
             if (!string.IsNullOrWhiteSpace(mockApiUrl))
             {
-                fallbackClient = new MockReviewApiClient(httpFactory.CreateClient("MockReviewApi"), config, mockLogger);
+                mockClient = new MockReviewApiClient(httpFactory.CreateClient("MockReviewApi"), config, mockLogger);
             }
 
-            if (externalClient != null && fallbackClient != null)
+            if (externalClient != null && mockClient != null)
             {
-                return new DualReviewApiClient(externalClient, fallbackClient, logger);
+                // PRIORITIZE MOCK, fallback to external
+                // This could have been updated to a config-based toggle:
+                // example : config["UseMockApi"] == "true"
+                return new DualReviewApiClient(mockClient, externalClient, logger);
             }
-            else if (fallbackClient != null)
+            else if (mockClient != null)
             {
                 logger.LogWarning("External API not configured. Using MockReviewApiClient only.");
-                return fallbackClient;
+                return mockClient;
             }
             else
             {
