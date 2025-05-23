@@ -8,36 +8,52 @@ using SG01G02_MVC.Tests.Helpers;
 using SG01G02_MVC.Web.Controllers;
 using SG01G02_MVC.Web.Models;
 using SG01G02_MVC.Web.Services;
-using SG01G02_MVC.Infrastructure.Services;
 
 namespace SG01G02_MVC.Tests.Controllers;
+
 public class AdminControllerTests : TestBase
 {
-    // Helper method to create a controller with mocked dependencies
+    // This method creates a new instance of the AdminController with mocked dependencies.
     private (AdminController controller, Mock<IProductService> mockService) CreateController(
         Mock<IProductService>? productService = null,
         Mock<IUserSessionService>? sessionService = null,
         Mock<IBlobStorageService>? blobStorageService = null,
-        Mock<IReviewApiClient>? reviewApiClient = null)
+        Mock<IReviewApiClient>? reviewApiClient = null,
+        Mock<IFeatureToggleService>? featureToggleService = null)
     {
         var mockSession = sessionService ?? new Mock<IUserSessionService>();
-        mockSession.Setup(s => s.Role).Returns("Admin"); // Default role is admin for testing, override if needed
+        mockSession.Setup(s => s.Role).Returns("Admin");
 
         var mockProductService = productService ?? new Mock<IProductService>();
         var mockBlobService = blobStorageService ?? new Mock<IBlobStorageService>();
         var mockReviewApiClient = reviewApiClient ?? new Mock<IReviewApiClient>();
+        var mockFeatureToggle = featureToggleService ?? new Mock<IFeatureToggleService>();
 
-        // Setup basic behavior för blob service
+        // Setup basic behavior for blob service
         mockBlobService
             .Setup(b => b.GetBlobUrl(It.IsAny<string>()))
             .Returns<string>(blobName => $"https://fakeblob.example.com/{blobName}");
+
+        // IMPORTANT: Only set default if no specific featureToggleService was provided
+        if (featureToggleService == null)
+        {
+            mockFeatureToggle
+                .Setup(f => f.UseMockReviewApi())
+                .Returns(true); // Default to mock API
+        }
 
         var controller = new AdminController(
             mockProductService.Object,
             mockSession.Object,
             mockBlobService.Object,
-            mockReviewApiClient.Object
+            mockReviewApiClient.Object,
+            mockFeatureToggle.Object
         );
+
+        // Set up the controller context with a mock user
+        controller.TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(
+            new DefaultHttpContext(),
+            Mock.Of<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataProvider>());
 
         return (controller, mockProductService);
     }
@@ -50,6 +66,7 @@ public class AdminControllerTests : TestBase
 
         var mockProductService = new Mock<IProductService>();
         var mockBlobService = new Mock<IBlobStorageService>();
+        var mockFeatureToggle = new Mock<IFeatureToggleService>();
         var context = GetInMemoryDbContext();
         context.Database.EnsureCreated(); // Simulate DB being connectable
 
@@ -57,7 +74,8 @@ public class AdminControllerTests : TestBase
             mockProductService.Object, 
             mockSession.Object,
             mockBlobService.Object,
-            new Mock<IReviewApiClient>().Object
+            new Mock<IReviewApiClient>().Object,
+            mockFeatureToggle.Object
         );
 
         // Simulate authenticated user
@@ -99,7 +117,38 @@ public class AdminControllerTests : TestBase
         };
 
         var result = await controller.Index();
-        Assert.IsType<ViewResult>(result);
+        var viewResult = Assert.IsType<ViewResult>(result);
+        
+        // Verify that ViewBag.UseMockApi is set
+        Assert.NotNull(controller.ViewBag.UseMockApi);
+        Assert.True((bool)controller.ViewBag.UseMockApi);
+    }
+
+    [Fact]
+    public async Task Index_WithMockApiEnabled_ShouldSetViewBagCorrectly()
+    {
+        var mockFeatureToggle = new Mock<IFeatureToggleService>();
+        mockFeatureToggle.Setup(f => f.UseMockReviewApi()).Returns(true);
+        
+        var (controller, _) = CreateController(featureToggleService: mockFeatureToggle);
+
+        var identity = new ClaimsIdentity(new[]
+        {
+            new Claim(ClaimTypes.Name, "admin"),
+            new Claim(ClaimTypes.Role, "Admin")
+        }, "mock");
+
+        controller.ControllerContext = new ControllerContext()
+        {
+            HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) }
+        };
+
+        var result = await controller.Index();
+        var viewResult = Assert.IsType<ViewResult>(result);
+        
+        // Verify that ViewBag.UseMockApi is set to true
+        Assert.NotNull(controller.ViewBag.UseMockApi);
+        Assert.True((bool)controller.ViewBag.UseMockApi);
     }
 
     [Fact]
@@ -118,6 +167,64 @@ public class AdminControllerTests : TestBase
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Index", redirect.ActionName);
         mockService.Verify(s => s.CreateProductAsync(It.IsAny<ProductDto>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Create_WithMockApiEnabled_ShouldShowMockApiMessage()
+    {
+        var mockReviewClient = new Mock<IReviewApiClient>();
+        mockReviewClient
+            .Setup(c => c.RegisterProductAsync(It.IsAny<ProductDto>()))
+            .ReturnsAsync(123); // simulate success
+
+        var mockFeatureToggle = new Mock<IFeatureToggleService>();
+        mockFeatureToggle.Setup(f => f.UseMockReviewApi()).Returns(true);
+
+        var (controller, mockService) = CreateController(
+            reviewApiClient: mockReviewClient, 
+            featureToggleService: mockFeatureToggle);
+        
+        var product = new ProductViewModel { Name = "Test", Price = 10 };
+
+        var result = await controller.Create(product);
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Index", redirect.ActionName);
+        
+        // Verify that the mock API message was set
+        Assert.True(controller.TempData.ContainsKey("ReviewInfo"));
+        var reviewInfo = controller.TempData["ReviewInfo"]?.ToString();
+        Assert.NotNull(reviewInfo);
+        Assert.Contains("Mock API", reviewInfo);
+    }
+
+    [Fact]
+    public async Task Create_WithMockApiDisabled_RegistrationFailure_ShouldShowErrorMessage()
+    {
+        var mockReviewClient = new Mock<IReviewApiClient>();
+        mockReviewClient
+            .Setup(c => c.RegisterProductAsync(It.IsAny<ProductDto>()))
+            .ReturnsAsync((int?)null); // simulate failure
+
+        var mockFeatureToggle = new Mock<IFeatureToggleService>();
+        mockFeatureToggle.Setup(f => f.UseMockReviewApi()).Returns(false);
+
+        var (controller, mockService) = CreateController(
+            reviewApiClient: mockReviewClient, 
+            featureToggleService: mockFeatureToggle);
+        
+        var product = new ProductViewModel { Name = "Test", Price = 10 };
+
+        var result = await controller.Create(product);
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Index", redirect.ActionName);
+        
+        // Verify that the error message was set
+        Assert.True(controller.TempData.ContainsKey("ReviewError"));
+        var reviewError = controller.TempData["ReviewError"]?.ToString();
+        Assert.NotNull(reviewError);
+        Assert.Contains("External product registration failed", reviewError);
     }
 
     [Fact]
@@ -196,5 +303,42 @@ public class AdminControllerTests : TestBase
         
         var redirect = Assert.IsType<RedirectToActionResult>(result);
         Assert.Equal("Index", redirect.ActionName);
+    }
+
+    [Fact]
+    public void Create_GET_ShouldSetFeatureToggleInViewBag()
+    {
+        // Arrange
+        var mockFeatureToggle = new Mock<IFeatureToggleService>();
+        mockFeatureToggle.Setup(f => f.UseMockReviewApi()).Returns(true);
+        var (controller, _) = CreateController(featureToggleService: mockFeatureToggle);
+
+        // Act
+        var result = controller.Create();
+
+        // Assert   
+        var viewResult = Assert.IsType<ViewResult>(result);
+        Assert.NotNull(controller.ViewBag.UseMockApi);
+        Assert.True((bool)controller.ViewBag.UseMockApi);
+    }
+
+    [Fact]
+    public async Task Edit_GET_ShouldSetFeatureToggleInViewBag()
+    {
+        var mockProductService = new Mock<IProductService>();
+        mockProductService
+            .Setup(s => s.GetProductByIdAsync(1))
+            .ReturnsAsync(new ProductDto { Id = 1, Name = "Test Product", Price = 10 });
+
+        var mockFeatureToggle = new Mock<IFeatureToggleService>();
+        mockFeatureToggle.Setup(f => f.UseMockReviewApi()).Returns(false);
+        
+        var (controller, _) = CreateController(mockProductService, featureToggleService: mockFeatureToggle);
+
+        var result = await controller.Edit(1);
+
+        var viewResult = Assert.IsType<ViewResult>(result);
+        Assert.NotNull(controller.ViewBag.UseMockApi);
+        Assert.False((bool)controller.ViewBag.UseMockApi);
     }
 }
