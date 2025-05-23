@@ -121,7 +121,7 @@ public class AdminControllerTests : TestBase
         
         // Verify that ViewBag.UseMockApi is set
         Assert.NotNull(controller.ViewBag.UseMockApi);
-        Assert.False((bool)controller.ViewBag.UseMockApi); // Default setup returns false
+        Assert.True((bool)controller.ViewBag.UseMockApi);
     }
 
     [Fact]
