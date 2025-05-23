@@ -16,9 +16,15 @@ SG01G02_MVC/
 ├── SG01G02_MVC.Application/
 │   ├── DTOs/
 │   │   ├── ProductDto.cs                           - Data Transfer Object for product data
-│   │   └── ReviewDto.cs                            - DTO for product reviews and ratings
+│   │   ├── ReviewDto.cs                            - DTO for product reviews and ratings
+│   │   └── ReviewResponseDto.cs                    - TODO:  
 │   ├── Interfaces/
 │   │   ├── IAuthService.cs                         - Authentication service contract
+│   │   ├── IBlobStorageService.cs                  - TODO:  
+│   │   ├── IFeatureToggleService.cs                - TODO:  
+│   │   ├── IKeyVaultService.cs                     - TODO:  
+│   │   ├── ILoggingService.cs                      - TODO:  
+│   │   ├── ILoggingServiceFactory.cs               - TODO:  
 │   │   ├── IProductRepository.cs                   - Product data access contract
 │   │   ├── IProductService.cs                      - Product business logic contract
 │   │   ├── IReviewApiClient.cs                     - Review API client contract
@@ -26,6 +32,7 @@ SG01G02_MVC/
 │   │   └── IUserRepository.cs                      - User data access contract
 │   ├── Services/
 │   │   ├── AuthService.cs                          - Authentication implementation
+│   │   ├── ProductReviewSyndService.cs             - TODO:  
 │   │   ├── ProductService.cs                       - Product business logic implementation
 │   │   └── ReviewService.cs                        - Review logic implementation
 │   └── SG01G02_MVC.Application.csproj
