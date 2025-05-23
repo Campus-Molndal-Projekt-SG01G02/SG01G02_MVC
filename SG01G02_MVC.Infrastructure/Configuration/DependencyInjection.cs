@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Infrastructure.Services;
 
-namespace SG01G02_MVC.Infrastructure;
+namespace SG01G02_MVC.Infrastructure.Configuration;
 
 public static class DependencyInjection
 {

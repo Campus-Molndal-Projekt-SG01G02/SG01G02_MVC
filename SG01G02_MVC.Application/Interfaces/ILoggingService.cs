@@ -1,10 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace SG01G02_MVC.Application.Interfaces
+namespace SG01G02_MVC.Application.Interfaces;
+
+public interface ILoggingService
 {
-    public interface ILoggingService
-    {
-        void ConfigureServices(IServiceCollection services, IConfiguration configuration);
-    }
+    void ConfigureServices(IServiceCollection services, IConfiguration configuration);
 }

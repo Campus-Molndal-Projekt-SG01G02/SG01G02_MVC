@@ -3,24 +3,23 @@ using SG01G02_MVC.Application.DTOs;
 using SG01G02_MVC.Application.Interfaces;
 using Moq;
 
-namespace SG01G02_MVC.Tests.Services
+namespace SG01G02_MVC.Tests.Services;
+
+public class ProductServiceTests
 {
-    public class ProductServiceTests
+    [Fact]
+    public async Task GetAllProductsAsync_ShouldReturnListOfProducts()
     {
-        [Fact]
-        public async Task GetAllProductsAsync_ShouldReturnListOfProducts()
-        {
-            // Arrange
-            var repo = new FakeProductRepository(); // Create a dummy in-memory test class
-            var fakeReviewApiClient = new Mock<IReviewApiClient>().Object; // or use a real fake if you have one
-            var service = new ProductService(repo, fakeReviewApiClient);
+        // Arrange
+        var repo = new FakeProductRepository();
+        var fakeReviewApiClient = new Mock<IReviewApiClient>().Object;
+        var service = new ProductService(repo, fakeReviewApiClient);
 
-            // Act
-            var result = await service.GetAllProductsAsync();
+        // Act
+        var result = await service.GetAllProductsAsync();
 
-            // Assert
-            Assert.NotNull(result);
-            Assert.IsAssignableFrom<IEnumerable<ProductDto>>(result);
-        }
+        // Assert
+        Assert.NotNull(result);
+        Assert.IsAssignableFrom<IEnumerable<ProductDto>>(result);
     }
 }

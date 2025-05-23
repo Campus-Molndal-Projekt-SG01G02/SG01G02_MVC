@@ -133,8 +133,5 @@ public class DatabaseConfigurator
         logger.LogInformation("Applying migrations to PostgreSQL...");
         db.Database.Migrate();
         logger.LogInformation("Migrations applied successfully.");
-
-        // Handle your existing PostgreSQL migration logic here...
-        // (I'll skip the detailed implementation to keep this example focused)
     }
 }

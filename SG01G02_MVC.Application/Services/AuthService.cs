@@ -1,10 +1,10 @@
 using SG01G02_MVC.Application.Interfaces;
 using SG01G02_MVC.Domain.Entities;
 
-namespace SG01G02_MVC.Application.Services
-{
-    /// Authenticates users using the IUserRepository.
-    public class AuthService : IAuthService
+namespace SG01G02_MVC.Application.Services;
+
+/// Authenticates users using the IUserRepository.
+public class AuthService : IAuthService
     {
         private readonly IUserRepository _userRepository;
 
@@ -20,7 +20,6 @@ namespace SG01G02_MVC.Application.Services
             if (user is null)
                 return null;
 
-            return _userRepository.ValidatePassword(user, password) ? user : null;
-        }
+        return _userRepository.ValidatePassword(user, password) ? user : null;
     }
 }

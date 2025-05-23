@@ -1,12 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace SG01G02_MVC.Web.Controllers
+namespace SG01G02_MVC.Web.Controllers;
+
+public class CartController : Controller
 {
-    public class CartController : Controller
+    public IActionResult Index()
     {
-        public IActionResult Index()
-        {
-            return View();
-        }
+        return View();
     }
 }
