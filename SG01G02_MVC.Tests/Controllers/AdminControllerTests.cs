@@ -13,7 +13,7 @@ using SG01G02_MVC.Infrastructure.Services;
 namespace SG01G02_MVC.Tests.Controllers;
 public class AdminControllerTests : TestBase
 {
-    // Helper method to create a controller with mocked dependencies
+    // This method creates a new instance of the AdminController with mocked dependencies.
     private (AdminController controller, Mock<IProductService> mockService) CreateController(
         Mock<IProductService>? productService = null,
         Mock<IUserSessionService>? sessionService = null,
@@ -22,7 +22,7 @@ public class AdminControllerTests : TestBase
         Mock<IFeatureToggleService>? featureToggleService = null)
     {
         var mockSession = sessionService ?? new Mock<IUserSessionService>();
-        mockSession.Setup(s => s.Role).Returns("Admin"); // Default role is admin for testing, override if needed
+        mockSession.Setup(s => s.Role).Returns("Admin");
 
         var mockProductService = productService ?? new Mock<IProductService>();
         var mockBlobService = blobStorageService ?? new Mock<IBlobStorageService>();
@@ -34,7 +34,7 @@ public class AdminControllerTests : TestBase
             .Setup(b => b.GetBlobUrl(It.IsAny<string>()))
             .Returns<string>(blobName => $"https://fakeblob.example.com/{blobName}");
 
-        // Setup default behavior for feature toggle (can be overridden in specific tests)
+        // Setup basic behavior for review API client
         mockFeatureToggle
             .Setup(f => f.UseMockReviewApi())
             .Returns(false); // Default to production mode
@@ -46,6 +46,11 @@ public class AdminControllerTests : TestBase
             mockReviewApiClient.Object,
             mockFeatureToggle.Object
         );
+
+        // Set up the controller context with a mock user
+        controller.TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(
+            new DefaultHttpContext(),
+            Mock.Of<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataProvider>());
 
         return (controller, mockProductService);
     }
@@ -296,16 +301,20 @@ public class AdminControllerTests : TestBase
     [Fact]
     public async Task Create_GET_ShouldSetFeatureToggleInViewBag()
     {
+        // Arrange
         var mockFeatureToggle = new Mock<IFeatureToggleService>();
         mockFeatureToggle.Setup(f => f.UseMockReviewApi()).Returns(true);
-        
         var (controller, _) = CreateController(featureToggleService: mockFeatureToggle);
 
+        // Act
         var result = controller.Create();
 
+        // Assert   
         var viewResult = Assert.IsType<ViewResult>(result);
         Assert.NotNull(controller.ViewBag.UseMockApi);
         Assert.True((bool)controller.ViewBag.UseMockApi);
+        
+        await Task.CompletedTask;
     }
 
     [Fact]
