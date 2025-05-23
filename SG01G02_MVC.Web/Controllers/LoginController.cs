@@ -39,8 +39,8 @@ public class LoginController : Controller
 
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, user.Role)
+            new(ClaimTypes.Name, user.Username),
+            new(ClaimTypes.Role, user.Role)
         };
         var identity = new ClaimsIdentity(claims, "CookieAuth");
         var principal = new ClaimsPrincipal(identity);
@@ -59,7 +59,7 @@ public class LoginController : Controller
         _session.Role = user.Role;
 
         // Handle cases where IUrlHelperFactory is not registered (tests)
-        if (HttpContext?.RequestServices == null || Url == null)
+        if (HttpContext.RequestServices == null || Url == null)
         {
             // Test environment without a proper service provider
             return user.Role switch
