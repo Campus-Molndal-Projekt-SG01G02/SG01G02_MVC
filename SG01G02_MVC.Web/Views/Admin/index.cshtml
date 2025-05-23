@@ -11,37 +11,31 @@
     @* Feature Toggle Control Panel *@
     <div class="card mb-4">
         <div class="card-body">
-            <h5 class="card-title">
-                <i class="fas fa-cog me-2"></i>Development Settings
-            </h5>
+            <h5 class="card-title">Development Settings</h5>
             <div class="d-flex align-items-center">
                 @if (ViewBag.UseMockApi == true)
                 {
                     <div class="me-3">
-                        <span class="badge bg-warning text-dark">
-                            <i class="fas fa-flask me-1"></i>Mock API Active
-                        </span>
+                        <span class="badge bg-warning text-dark">Mock API Active</span>
                     </div>
                     <form asp-action="ToggleFeatureFlag" method="post" class="d-inline">
                         <input type="hidden" name="featureName" value="UseMockApi" />
                         <input type="hidden" name="newValue" value="false" />
                         <button type="submit" class="btn btn-success btn-sm">
-                            <i class="fas fa-toggle-off me-1"></i>Switch to Production API
+                            Switch to Production API
                         </button>
                     </form>
                 }
                 else
                 {
                     <div class="me-3">
-                        <span class="badge bg-success">
-                            <i class="fas fa-cloud me-1"></i>Production API Active
-                        </span>
+                        <span class="badge bg-success">Production API Active</span>
                     </div>
                     <form asp-action="ToggleFeatureFlag" method="post" class="d-inline">
                         <input type="hidden" name="featureName" value="UseMockApi" />
                         <input type="hidden" name="newValue" value="true" />
                         <button type="submit" class="btn btn-warning btn-sm">
-                            <i class="fas fa-toggle-on me-1"></i>Switch to Mock API
+                            Switch to Mock API
                         </button>
                     </form>
                 }
@@ -56,7 +50,6 @@
     @if (ViewBag.UseMockApi == true)
     {
         <div class="alert alert-warning" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i>
             <strong>Utvecklingsläge:</strong> Använder Mock API för recensioner
         </div>
     }
@@ -65,7 +58,6 @@
     @if (TempData["ReviewInfo"] != null)
     {
         <div class="alert alert-info" role="alert">
-            <i class="fas fa-info-circle me-2"></i>
             @TempData["ReviewInfo"]
         </div>
     }
@@ -73,7 +65,6 @@
     @if (TempData["ReviewError"] != null)
     {
         <div class="alert alert-danger" role="alert">
-            <i class="fas fa-exclamation-circle me-2"></i>
             @TempData["ReviewError"]
         </div>
     }
@@ -81,7 +72,6 @@
     @if (TempData["FeatureToggleMessage"] != null)
     {
         <div class="alert alert-success" role="alert">
-            <i class="fas fa-check-circle me-2"></i>
             @TempData["FeatureToggleMessage"]
         </div>
     }
