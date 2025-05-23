@@ -8,9 +8,9 @@ using SG01G02_MVC.Tests.Helpers;
 using SG01G02_MVC.Web.Controllers;
 using SG01G02_MVC.Web.Models;
 using SG01G02_MVC.Web.Services;
-using SG01G02_MVC.Infrastructure.Services;
 
 namespace SG01G02_MVC.Tests.Controllers;
+
 public class AdminControllerTests : TestBase
 {
     // This method creates a new instance of the AdminController with mocked dependencies.
@@ -34,10 +34,13 @@ public class AdminControllerTests : TestBase
             .Setup(b => b.GetBlobUrl(It.IsAny<string>()))
             .Returns<string>(blobName => $"https://fakeblob.example.com/{blobName}");
 
-        // Setup basic behavior for review API client
-        mockFeatureToggle
-            .Setup(f => f.UseMockReviewApi())
-            .Returns(false); // Default to production mode
+        // IMPORTANT: Only set default if no specific featureToggleService was provided
+        if (featureToggleService == null)
+        {
+            mockFeatureToggle
+                .Setup(f => f.UseMockReviewApi())
+                .Returns(true); // Default to mock API
+        }
 
         var controller = new AdminController(
             mockProductService.Object,
@@ -189,8 +192,10 @@ public class AdminControllerTests : TestBase
         Assert.Equal("Index", redirect.ActionName);
         
         // Verify that the mock API message was set
-        Assert.NotNull(controller.TempData["ReviewInfo"]);
-        Assert.Contains("Mock API", controller.TempData["ReviewInfo"].ToString());
+        Assert.True(controller.TempData.ContainsKey("ReviewInfo"));
+        var reviewInfo = controller.TempData["ReviewInfo"]?.ToString();
+        Assert.NotNull(reviewInfo);
+        Assert.Contains("Mock API", reviewInfo);
     }
 
     [Fact]
@@ -216,8 +221,10 @@ public class AdminControllerTests : TestBase
         Assert.Equal("Index", redirect.ActionName);
         
         // Verify that the error message was set
-        Assert.NotNull(controller.TempData["ReviewError"]);
-        Assert.Contains("External product registration failed", controller.TempData["ReviewError"].ToString());
+        Assert.True(controller.TempData.ContainsKey("ReviewError"));
+        var reviewError = controller.TempData["ReviewError"]?.ToString();
+        Assert.NotNull(reviewError);
+        Assert.Contains("External product registration failed", reviewError);
     }
 
     [Fact]
@@ -299,7 +306,7 @@ public class AdminControllerTests : TestBase
     }
 
     [Fact]
-    public async Task Create_GET_ShouldSetFeatureToggleInViewBag()
+    public void Create_GET_ShouldSetFeatureToggleInViewBag()
     {
         // Arrange
         var mockFeatureToggle = new Mock<IFeatureToggleService>();
@@ -313,8 +320,6 @@ public class AdminControllerTests : TestBase
         var viewResult = Assert.IsType<ViewResult>(result);
         Assert.NotNull(controller.ViewBag.UseMockApi);
         Assert.True((bool)controller.ViewBag.UseMockApi);
-        
-        await Task.CompletedTask;
     }
 
     [Fact]
