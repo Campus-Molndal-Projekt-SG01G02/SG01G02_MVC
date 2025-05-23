@@ -63,13 +63,13 @@ public class ServicesConfigurator
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IUserSessionService, UserSessionService>();
         builder.Services.AddScoped<IReviewService, ReviewService>();
+        builder.Services.AddScoped<IFeatureToggleService, FeatureToggleService>();
     }
 
     private void RegisterHttpClients(WebApplicationBuilder builder)
     {
         var config = builder.Configuration;
         var services = builder.Services;
-        var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 
         // --- External API client registration ---
         var reviewApiUrl = config["ReviewApiURL"];
@@ -99,16 +99,17 @@ public class ServicesConfigurator
             });
         }
 
-        // --- Register DualReviewApiClient ---
+        // --- Register DualReviewApiClient dynamically with toggle ---
         services.AddScoped<IReviewApiClient>(sp =>
         {
             var httpFactory = sp.GetRequiredService<IHttpClientFactory>();
             var logger = sp.GetRequiredService<ILogger<DualReviewApiClient>>();
             var externalLogger = sp.GetRequiredService<ILogger<ReviewApiClient>>();
             var mockLogger = sp.GetRequiredService<ILogger<MockReviewApiClient>>();
-
             var config = sp.GetRequiredService<IConfiguration>();
+            var toggle = sp.GetRequiredService<IFeatureToggleService>();
 
+            // Instantiate both clients if config is valid
             IReviewApiClient? externalClient = null;
             IReviewApiClient? mockClient = null;
 
@@ -122,12 +123,18 @@ public class ServicesConfigurator
                 mockClient = new MockReviewApiClient(httpFactory.CreateClient("MockReviewApi"), config, mockLogger);
             }
 
-            if (externalClient != null && mockClient != null)
+            if (mockClient != null && externalClient != null)
             {
-                // PRIORITIZE MOCK, fallback to external
-                // This could have been updated to a config-based toggle:
-                // example : config["UseMockApi"] == "true"
-                return new DualReviewApiClient(mockClient, externalClient, logger);
+                if (toggle.UseMockReviewApi())
+                {
+                    logger.LogInformation("FeatureToggle: Using Mock API as primary.");
+                    return new DualReviewApiClient(mockClient, externalClient, logger);
+                }
+                else
+                {
+                    logger.LogInformation("FeatureToggle: Using External API as primary.");
+                    return new DualReviewApiClient(externalClient, mockClient, logger);
+                }
             }
             else if (mockClient != null)
             {
