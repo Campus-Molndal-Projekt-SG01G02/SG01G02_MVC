@@ -12,15 +12,18 @@ namespace SG01G02_MVC.Web.Controllers
         private readonly IProductService _productService;
         private readonly IUserSessionService _session;
         private readonly IBlobStorageService _blobStorageService;
+        private readonly IReviewApiClient _reviewApiClient;
 
         public AdminController(
             IProductService productService,
             IUserSessionService session,
-            IBlobStorageService blobStorageService)
+            IBlobStorageService blobStorageService,
+            IReviewApiClient reviewApiClient)
         {
             _productService = productService;
             _session = session;
             _blobStorageService = blobStorageService;
+            _reviewApiClient = reviewApiClient;
         }
 
         private bool IsAdmin => _session?.Role == "Admin";
@@ -108,8 +111,27 @@ namespace SG01G02_MVC.Web.Controllers
                 ImageName = model.ImageName
             };
 
-            await _productService.CreateProductAsync(productDto);
-            return RedirectToAction("Index");
+            try
+            {
+                // 1. Register product with external API
+                productDto.ExternalReviewApiProductId = await _reviewApiClient.RegisterProductAsync(productDto);
+
+                // Optional null check to inform the user
+                if (productDto.ExternalReviewApiProductId == null)
+                {
+                    TempData["ReviewError"] = "Extern produktregistrering misslyckades. Produkten sparades, men recensioner fungerar ej.";
+                }
+
+                // 2. Save product to internal DB
+                await _productService.CreateProductAsync(productDto);
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                // 3. Surface the exception to the UI for now (instead of _logger)
+                ModelState.AddModelError("", $"Ett fel uppstod vid skapande av produkten: {ex.Message}");
+                return View(model);
+            }
         }
 
         [HttpGet]

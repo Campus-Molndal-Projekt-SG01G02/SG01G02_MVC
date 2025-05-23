@@ -1,4 +1,10 @@
 @model SG01G02_MVC.Web.Models.ProductViewModel
+
+@if (TempData["ReviewError"] != null)
+{
+    <div class="alert alert-warning">@TempData["ReviewError"]</div>
+}
+
 @{
     ViewData["Title"] = "Create New Product";
 }
