@@ -148,7 +148,7 @@ public class HomeController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Health check failed with exception");
-            return StatusCode(500, new { Status = "Error", Message = ex.Message });
+            return StatusCode(500, new { Status = "Error", ex.Message });
         }
     }
 }
